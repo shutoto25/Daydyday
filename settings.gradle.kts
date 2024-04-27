@@ -15,4 +15,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "Wants"
 include(":app")
- 
+include(":feature")
+include(":domain")
+include(":data")
+include(":core")

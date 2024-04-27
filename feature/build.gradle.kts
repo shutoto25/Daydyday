@@ -1,24 +1,18 @@
 @Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
-    alias(libs.plugins.com.android.application)
+    alias(libs.plugins.com.android.library)
     alias(libs.plugins.org.jetbrains.kotlin.android)
 }
 
 android {
-    namespace = "com.gmail.shu10.dev.app.wants"
+    namespace = "com.gmail.shu10.dev.app.feature"
     compileSdk = 33
 
     defaultConfig {
-        applicationId = "com.gmail.shu10.dev.app.wants"
         minSdk = 29
-        targetSdk = 33
-        versionCode = 1
-        versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        vectorDrawables {
-            useSupportLibrary = true
-        }
+        consumerProguardFiles("consumer-rules.pro")
     }
 
     buildTypes {
@@ -37,19 +31,18 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
-    // Android DSLのパッケージ化オプションのエントリポイント
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
+    buildFeatures {
+        compose = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.4.3"
     }
 }
 
+
 dependencies {
     // モジュール依存関係
-    implementation(project(":feature"))
     implementation(project(":domain"))
-    implementation(project(":data"))
     implementation(project(":core"))
 
     implementation(libs.core.ktx)

@@ -1,15 +1,32 @@
+# 各モジュールに書かないでrootにまとめて記載すること
+
+# root module
 *.iml
 .gradle
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+/.idea
+!/.idea/compiler.xml
+!/.idea/gradle.xml
+!/.idea/misc.xml
 .DS_Store
 /build
 /captures
 .externalNativeBuild
 .cxx
 local.properties
+
+# app module
+app/build
+app/google-services.json
+
+# core module
+core/build
+
+# data module
+data/build
+
+# domain module
+domain/build
+
+# feature module
+feature/build

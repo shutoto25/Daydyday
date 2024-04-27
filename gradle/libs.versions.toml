@@ -1,7 +1,11 @@
 [versions]
+# project
+compileSdk = "33"
+targetSdk = "33"
+minSdk = "29"
+versionCode = "1"
+versionName = "1.0"
 agp = "8.1.1"
-org-jetbrains-kotlin-android = "1.8.10"
-org-jetbrains-dokka  = "1.9.0"
 core-ktx = "1.9.0"
 junit = "4.13.2"
 androidx-test-ext-junit = "1.1.5"
@@ -10,6 +14,12 @@ lifecycle-runtime-ktx = "2.6.2"
 activity-compose = "1.7.2"
 compose-bom = "2023.03.00"
 appcompat = "1.6.1"
+# jetbrains
+org-jetbrains-kotlin-android = "1.8.10"
+org-jetbrains-dokka = "1.9.0"
+# google
+com-google-gms-google-services = "4.4.1"
+firebase-bom = "32.8.1"
 material = "1.8.0"
 
 [libraries]
@@ -28,13 +38,20 @@ ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 material3 = { group = "androidx.compose.material3", name = "material3" }
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+# google
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
+firebase-analytics-ktx = { group = "com.google.firebase", name = "firebase-analytics-ktx" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 
 [plugins]
+# android
 com-android-application = { id = "com.android.application", version.ref = "agp" }
-org-jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "org-jetbrains-kotlin-android" }
-org-jetbrains-dokka = {id ="org.jetbrains.dokka", version.ref = "org-jetbrains-dokka" }
 com-android-library = { id = "com.android.library", version.ref = "agp" }
+# jetbrains
+org-jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "org-jetbrains-kotlin-android" }
+org-jetbrains-dokka = { id = "org.jetbrains.dokka", version.ref = "org-jetbrains-dokka" }
+# google
+com-google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "com-google-gms-google-services" }
 
 [bundles]
 

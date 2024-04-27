@@ -3,18 +3,19 @@ plugins {
     alias(libs.plugins.com.android.application)
     alias(libs.plugins.org.jetbrains.kotlin.android)
     alias(libs.plugins.org.jetbrains.dokka) // TODO パッケージ構成についても書くようにしたい https://qiita.com/foxsal/items/6c4a0dfbc8f8e3000077
+    alias(libs.plugins.com.google.gms.google.services)
 }
 
 android {
     namespace = "com.gmail.shu10.dev.app.wants"
-    compileSdk = 33
+    compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "com.gmail.shu10.dev.app.wants"
-        minSdk = 29
-        targetSdk = 33
-        versionCode = 1
-        versionName = "1.0"
+        targetSdk = libs.versions.targetSdk.get().toInt()
+        minSdk = libs.versions.minSdk.get().toInt()
+        versionCode = libs.versions.versionCode.get().toInt()
+        versionName = libs.versions.versionName.get()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -52,6 +53,10 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":data"))
     implementation(project(":core"))
+
+    // firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics.ktx)
 
     implementation(libs.core.ktx)
     implementation(libs.lifecycle.runtime.ktx)

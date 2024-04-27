@@ -2,7 +2,7 @@
 plugins {
     alias(libs.plugins.com.android.application)
     alias(libs.plugins.org.jetbrains.kotlin.android)
-    alias(libs.plugins.org.jetbrains.dokka)
+    alias(libs.plugins.org.jetbrains.dokka) // TODO パッケージ構成についても書くようにしたい https://qiita.com/foxsal/items/6c4a0dfbc8f8e3000077
 }
 
 android {

@@ -23,7 +23,7 @@ jobs:
       - name: Update Pages Artifact
         uses: actions/upload-pages-artifact@v1
         with:
-          path: ./build/dokka
+          path: ./build/dokka/htmlMultiModule
 
   # Deploy job
   deploy:

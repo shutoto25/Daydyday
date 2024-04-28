@@ -35,13 +35,11 @@ android {
 }
 
 dependencies {
-    // モジュール依存関係
+    // ----- モジュール依存関係 ----- //
     implementation(project(":data"))
     implementation(project(":core"))
 
-    implementation(libs.core.ktx)
-    implementation(libs.appcompat)
-    implementation(libs.material)
+    // ----- test ----- //
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.espresso.core)

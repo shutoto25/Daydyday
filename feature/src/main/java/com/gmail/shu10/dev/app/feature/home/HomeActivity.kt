@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.gmail.shu10.dev.app.core.CoreString
-import com.gmail.shu10.dev.app.feature.home.ui.theme.WantsTheme
+import com.gmail.shu10.dev.app.feature.theme.WantsTheme
 
 class HomeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

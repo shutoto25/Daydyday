@@ -10,12 +10,10 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Wants"
-        tools:targetApi="31">
+        android:theme="@style/Theme.Wants">
         <activity
             android:name="com.gmail.shu10.dev.app.feature.home.HomeActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.Wants">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -23,6 +21,19 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- widget用receiver -->
+        <receiver
+            android:name="com.gmail.shu10.dev.app.feature.widget.MyGlanceAppWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/appwidget_info" />
+        </receiver>
     </application>
 
 </manifest>

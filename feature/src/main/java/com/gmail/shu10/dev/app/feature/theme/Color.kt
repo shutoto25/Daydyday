@@ -1,4 +1,4 @@
-package com.gmail.shu10.dev.app.feature.home.ui.theme
+package com.gmail.shu10.dev.app.feature.theme
 
 import androidx.compose.ui.graphics.Color
 

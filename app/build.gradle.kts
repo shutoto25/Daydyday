@@ -48,16 +48,13 @@ android {
 }
 
 dependencies {
-    // モジュール依存関係
+    // ----- モジュール依存関係 ----- //
     implementation(project(":feature"))
     implementation(project(":domain"))
     implementation(project(":data"))
     implementation(project(":core"))
 
-    // firebase
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.analytics.ktx)
-
+    // ----- androidx ----- //
     implementation(libs.core.ktx)
     implementation(libs.lifecycle.runtime.ktx)
     implementation(libs.activity.compose)
@@ -66,6 +63,8 @@ dependencies {
     implementation(libs.ui.graphics)
     implementation(libs.ui.tooling.preview)
     implementation(libs.material3)
+
+    // ----- test ----- //
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.espresso.core)
@@ -73,4 +72,9 @@ dependencies {
     androidTestImplementation(libs.ui.test.junit4)
     debugImplementation(libs.ui.tooling)
     debugImplementation(libs.ui.test.manifest)
+
+    // ----- google ----- //
+    // firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics.ktx)
 }

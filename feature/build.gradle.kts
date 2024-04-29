@@ -58,6 +58,11 @@ dependencies {
     // widget
     implementation(libs.glance)
 
+    // ----- google ----- //
+    // hilt
+    implementation(libs.hilt.android)
+    implementation(libs.hilt.android.compiler)
+
     // ----- test ----- //
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)

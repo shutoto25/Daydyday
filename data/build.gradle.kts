@@ -38,6 +38,11 @@ dependencies {
     // ----- モジュール依存関係 ----- //
     implementation(project(":core"))
 
+    // ----- google ----- //
+    // hilt
+    implementation(libs.hilt.android)
+    implementation(libs.hilt.android.compiler)
+
     // ----- test ----- //
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)

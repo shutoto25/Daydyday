@@ -39,6 +39,11 @@ dependencies {
     implementation(project(":data"))
     implementation(project(":core"))
 
+    // ----- google ----- //
+    // hilt
+    implementation(libs.hilt.android)
+    implementation(libs.hilt.android.compiler)
+
     // ----- test ----- //
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)

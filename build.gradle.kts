@@ -7,6 +7,7 @@ plugins {
     // TODO tureにするとタスクが通るがfalseとの違いがわからない https://blog.mrhaki.com/2016/09/gradle-goodness-add-but-do-not-apply.html
     alias(libs.plugins.org.jetbrains.dokka) apply true
     alias(libs.plugins.com.google.gms.google.services) apply false
+    alias(libs.plugins.com.google.dagger.hilt.android) apply false
 }
 // Needed to make the Suppress annotation work for the plugins block
 true

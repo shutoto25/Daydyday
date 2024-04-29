@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.org.jetbrains.kotlin.android)
     alias(libs.plugins.org.jetbrains.dokka) // TODO パッケージ構成についても書くようにしたい https://qiita.com/foxsal/items/6c4a0dfbc8f8e3000077
     alias(libs.plugins.com.google.gms.google.services)
+    alias(libs.plugins.com.google.dagger.hilt.android)
 }
 
 android {
@@ -43,6 +44,7 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/gradle/incremental.annotation.processors"
         }
     }
 }
@@ -74,6 +76,9 @@ dependencies {
     debugImplementation(libs.ui.test.manifest)
 
     // ----- google ----- //
+    // hilt
+    implementation(libs.hilt.android)
+    implementation(libs.hilt.android.compiler)
     // firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics.ktx)

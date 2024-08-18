@@ -36,7 +36,7 @@ android {
 
 dependencies {
     // ----- モジュール依存関係 ----- //
-    implementation(project(":data"))
+    // implementation(project(":data"))
     implementation(project(":core"))
 
     // ----- google ----- //

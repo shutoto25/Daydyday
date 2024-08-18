@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.gmail.shu10.dev.app.wants"
+    namespace = "com.gmail.shu10.dev.app.daybyday"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.gmail.shu10.dev.app.wants"
+        applicationId = "com.gmail.shu10.dev.app.daybyday"
         targetSdk = libs.versions.targetSdk.get().toInt()
         minSdk = libs.versions.minSdk.get().toInt()
         versionCode = libs.versions.versionCode.get().toInt()

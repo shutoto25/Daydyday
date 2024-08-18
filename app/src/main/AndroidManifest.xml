@@ -10,11 +10,11 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Wants">
+        android:theme="@style/Theme.Daydyday">
         <activity
             android:name="com.gmail.shu10.dev.app.feature.home.HomeActivity"
             android:exported="true"
-            android:theme="@style/Theme.Wants">
+            android:theme="@style/Theme.Daydyday">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

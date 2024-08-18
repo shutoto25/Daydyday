@@ -1,9 +1,9 @@
 <resources>
-    <string name="app_name">Wants</string>
+    <string name="app_name">Day dy day</string>
     <string name="hello">Hello</string>
     <string name="hello_glance">Hello glance!</string>
 
     <!-- Widget -->
-    <string name="widget_label">Wants Widget!</string>
-    <string name="widget_description">shortcut add new wants</string>
+    <string name="widget_label">Day dy day Widget!</string>
+    <string name="widget_description">shortcut add new Daydyday</string>
 </resources>

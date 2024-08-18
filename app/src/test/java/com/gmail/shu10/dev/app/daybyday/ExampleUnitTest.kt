@@ -1,4 +1,4 @@
-package com.gmail.shu10.dev.app.wants
+package com.gmail.shu10.dev.app.daybyday
 
 import org.junit.Test
 

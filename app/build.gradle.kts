@@ -1,10 +1,13 @@
 @Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
     alias(libs.plugins.com.android.application)
-    alias(libs.plugins.org.jetbrains.kotlin.android)
+//    alias(libs.plugins.org.jetbrains.kotlin.android)
     alias(libs.plugins.org.jetbrains.dokka) // TODO パッケージ構成についても書くようにしたい https://qiita.com/foxsal/items/6c4a0dfbc8f8e3000077
     alias(libs.plugins.com.google.gms.google.services)
     alias(libs.plugins.com.google.dagger.hilt.android)
+
+    kotlin("android")
+    kotlin("kapt")
 }
 
 android {
@@ -34,11 +37,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
     // Android DSLのパッケージ化オプションのエントリポイント
     packaging {
@@ -78,7 +81,7 @@ dependencies {
     // ----- google ----- //
     // hilt
     implementation(libs.hilt.android)
-    implementation(libs.hilt.android.compiler)
+    kapt(libs.hilt.android.compiler)
     // firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics.ktx)

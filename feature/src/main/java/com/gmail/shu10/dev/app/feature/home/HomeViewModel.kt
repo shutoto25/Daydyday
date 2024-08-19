@@ -2,6 +2,7 @@ package com.gmail.shu10.dev.app.feature.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gmail.shu10.dev.app.domain.SampleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,7 +13,8 @@ import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
-class HomeViewModel @Inject constructor() : ViewModel() {
+class HomeViewModel @Inject constructor(private val sampleUseCase: SampleUseCase) : ViewModel() {
+
 
     private val _dataList = MutableStateFlow<List<String>>(emptyList())
     val dataList: StateFlow<List<String>> = _dataList
@@ -39,11 +41,11 @@ class HomeViewModel @Inject constructor() : ViewModel() {
         return dateList
     }
 
-//    fun getStringFromSharedPreference(key: String): String {
-//        return sampleUseCase.getStringFromSharedPreference(key)
-//    }
-//
-//    fun saveStringToSharedPreference(key: String, value: String) {
-//        sampleUseCase.saveStringToSharedPreference(key, value)
-//    }
+    fun getStringFromSharedPreference(key: String): String {
+        return sampleUseCase.getStringFromSharedPreference(key)
+    }
+
+    fun saveStringToSharedPreference(key: String, value: String) {
+        sampleUseCase.saveStringToSharedPreference(key, value)
+    }
 }

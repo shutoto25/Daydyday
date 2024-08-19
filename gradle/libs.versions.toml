@@ -20,7 +20,7 @@ org-jetbrains-kotlin-android = "1.8.10"
 org-jetbrains-dokka = "1.9.0"
 # ------ google ------ #
 com-google-gms-google-services = "4.4.1"
-com-google-dagger-hilt-android = "2.48"
+com-google-dagger-hilt = "2.48"
 firebase-bom = "33.1.2"
 material = "1.8.0"
 
@@ -33,7 +33,7 @@ org-jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.re
 org-jetbrains-dokka = { id = "org.jetbrains.dokka", version.ref = "org-jetbrains-dokka" }
 # ------ google ------ #
 com-google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "com-google-gms-google-services" }
-com-google-dagger-hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "com-google-dagger-hilt-android" }
+com-google-dagger-hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "com-google-dagger-hilt" }
 
 [libraries]
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
@@ -53,8 +53,8 @@ material3 = { group = "androidx.compose.material3", name = "material3" }
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 glance = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance" }
 # ------ google ------ #
-hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "com-google-dagger-hilt-android" }
-hilt-android-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "com-google-dagger-hilt-android" }
+hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "com-google-dagger-hilt" }
+hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "com-google-dagger-hilt" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
 firebase-analytics-ktx = { group = "com.google.firebase", name = "firebase-analytics-ktx" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }

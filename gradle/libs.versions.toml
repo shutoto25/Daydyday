@@ -19,7 +19,7 @@ glance = "1.0.0"
 org-jetbrains-kotlin-android = "1.8.10"
 org-jetbrains-dokka = "1.9.0"
 # ------ google ------ #
-com-google-gms-google-services = "4.4.1"
+com-google-gms-google-services = "4.4.2"
 com-google-dagger-hilt = "2.48"
 firebase-bom = "33.1.2"
 material = "1.8.0"

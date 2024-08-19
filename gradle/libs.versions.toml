@@ -17,7 +17,7 @@ appcompat = "1.6.1"
 glance = "1.0.0"
 # ------ jetbrains ------ #
 org-jetbrains-kotlin-android = "1.8.10"
-org-jetbrains-dokka = "1.9.0"
+org-jetbrains-dokka = "1.9.20"
 # ------ google ------ #
 com-google-gms-google-services = "4.4.1"
 com-google-dagger-hilt = "2.48"

@@ -24,7 +24,8 @@ class HomeActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    InfiniteDateList(viewModel = homeViewModel)
+//                    InfiniteDateList(viewModel = homeViewModel)
+                    AppNavHost()
                 }
             }
         }

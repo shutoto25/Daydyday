@@ -9,10 +9,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -24,7 +22,8 @@ import kotlinx.coroutines.flow.StateFlow
 @Composable
 fun InfiniteDateList(viewModel: HomeViewModel = viewModel()) {
     val dateList by viewModel.dateList.collectAsState()
-    val listState = rememberLazyListState()
+    // リスト初期位置は今日
+    val listState = rememberLazyListState(initialFirstVisibleItemIndex = 365)
 
     LazyColumn(
         state = listState,
@@ -37,30 +36,6 @@ fun InfiniteDateList(viewModel: HomeViewModel = viewModel()) {
             )
         }
     }
-
-    LaunchedEffect(listState) {
-        snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
-            .collect { (index, offset) ->
-                if (index == 0 && offset <= 10) {
-                    viewModel.loadMoreDateList(ScrollDirection.UP)
-                } else if (index >= dateList.size - 1) {
-                    viewModel.loadMoreDateList(ScrollDirection.DOWN)
-                }
-            }
-    }
-//    LaunchedEffect(listState) {
-//        snapshotFlow { listState.layoutInfo.visibleItemsInfo }
-//            .distinctUntilChanged()
-//            .collect { visibleItems ->
-//                val lastVisibleItemIndex = visibleItems.lastOrNull()?.index ?: 0
-//                val firstVisibleItemIndex = visibleItems.firstOrNull()?.index ?: 0
-//                if (firstVisibleItemIndex == 0) {
-//                    viewModel.loadMoreDateList(ScrollDirection.UP)
-//                } else if (lastVisibleItemIndex >= dateList.size - 1) {
-//                    viewModel.loadMoreDateList(ScrollDirection.DOWN)
-//                }
-//            }
-//    }
 }
 
 @Preview(showBackground = true)

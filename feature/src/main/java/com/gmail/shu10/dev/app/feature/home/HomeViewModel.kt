@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
 import javax.annotation.Nonnull
@@ -24,77 +26,23 @@ open class HomeViewModel @Inject constructor() : ViewModel() {
         const val GENERATE_LIST_COUNT = 20
     }
 
-    private val _dateList = MutableStateFlow(generateFeatureDateList())
+    private val _dateList = MutableStateFlow(generateDateList())
     open val dateList: StateFlow<List<String>> = _dateList
 
     /**
-     * アイテムを追加で20件読み込む
+     * 今日を起点に過去1年と未来1年の日付リストを生成
      */
-    fun loadMoreDateList(direction: ScrollDirection) {
-        viewModelScope.launch {
-            // 追加で20件アイテムを読み込む
-            val newItems =
-                when (direction) {
-                    ScrollDirection.UP -> generatePastDateList(_dateList.value.first())
-                    ScrollDirection.DOWN -> generateFeatureDateList(_dateList.value.last())
-                }
-            when (direction) {
-                ScrollDirection.UP -> _dateList.update { newItems + it }
-                ScrollDirection.DOWN -> _dateList.update { it + newItems }
-            }
-            // 読み込むたびにアイテムが追加されてメモリに保持され続けてしまうのでメモリ効率向上のために最大サイズを制限する
-//            _dateList.value = when (direction) {
-//                ScrollDirection.UP -> if (updateList.size > 100) updateList.take(100) else updateList
-//                ScrollDirection.DOWN -> if (updateList.size > 100) updateList.takeLast(100) else updateList
-//            }
-            // メモ：表示に使用するLazyColumnは、スクロールごとに表示されるアイテムを適宜再利用し、
-            // 表示するアイテムのみをメモリに保持するのでUI表示の面では効率的
-        }
+    private fun generateDateList(): List<String> {
+        val today = LocalDate.now()
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+
+        // 過去1年分の日付を生成（365日）
+        val pastDates = (1..365).map { today.minusDays(it.toLong()).format(formatter) }.reversed()
+
+        // 未来1年分の日付を生成（365日）
+        val futureDates = (1..365).map { today.plusDays(it.toLong()).format(formatter) }
+
+        // 今日の日付を中央に配置してリストを統合
+        return pastDates + today.format(formatter) + futureDates
     }
-
-    /**
-     * 未来の日付リストを生成
-     * @param startDate 読み込み開始日
-     */
-    private fun generateFeatureDateList(@Nullable startDate: String? = null): List<String> {
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val calendar = Calendar.getInstance()
-        // 開始日指定がある場合
-        startDate?.let {
-            calendar.time = dateFormat.parse(it)!!
-            calendar.add(Calendar.DAY_OF_YEAR, 1)
-        }
-
-        return List(GENERATE_LIST_COUNT) {
-            dateFormat.format(calendar.time).also {
-                calendar.add(Calendar.DAY_OF_YEAR, 1)
-            }
-        }
-    }
-
-    /**
-     * 過去の日付リストを生成
-     * @param startDate 読み込み開始日
-     */
-    private fun generatePastDateList(@Nonnull startDate: String): List<String> {
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val calendar = Calendar.getInstance().apply {
-            time = dateFormat.parse(startDate)!!
-            add(Calendar.DAY_OF_YEAR, -1)
-        }
-
-        return List(GENERATE_LIST_COUNT) {
-            dateFormat.format(calendar.time).also {
-                calendar.add(Calendar.DAY_OF_YEAR, -1)
-            }
-        }.reversed() // 過去の日付は逆順で生成されるため、再度逆順にして追加
-    }
-}
-
-/**
- * スクロール向き
- */
-enum class ScrollDirection {
-    UP,
-    DOWN
 }

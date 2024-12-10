@@ -17,15 +17,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 
 /**
- * 日付リスト
+ * ホーム画面(日付リスト)
  */
 @Composable
 fun InfiniteDateList(navController: NavController) {
@@ -44,31 +39,9 @@ fun InfiniteDateList(navController: NavController) {
                 modifier = Modifier
                     .padding(vertical = 20.dp)
                     .clickable {
-                        navController.navigate("dateDetail/$date")
+                        navController.navigate(AppScreen.Detail(date).createRoute())
                     }
             )
-        }
-    }
-}
-
-/**
- * 画面遷移ホスト
- */
-@Composable
-fun AppNavHost() {
-    val navController = rememberNavController()
-
-    NavHost(
-        navController = navController,
-        startDestination = "dateList"
-    ) {
-        composable("dateList") {
-            InfiniteDateList(navController)
-        }
-
-        composable("dateDetail/{selectedDate}") { navBackStackEntry ->
-            val selectedDate = navBackStackEntry.arguments?.getString("selectedDate") ?: ""
-            DateDetailView(selectedDate)
         }
     }
 }
@@ -81,13 +54,7 @@ fun InfiniteDateListPreview() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-//            InfiniteDateList(viewModel = PreviewViewModel())
             AppNavHost()
         }
     }
-}
-
-class PreviewViewModel : HomeViewModel() {
-    override val dateList: StateFlow<List<String>>
-        get() = MutableStateFlow(listOf("2024-08-20", "2024-08-21"))
 }

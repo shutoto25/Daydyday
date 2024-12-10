@@ -23,7 +23,7 @@ fun AppNavHost() {
         // 日付詳細画面
         composable(AppScreen.Detail("{selectedDate}").route) { navBackStackEntry ->
             val selectedDate = navBackStackEntry.arguments?.getString("selectedDate") ?: ""
-            DateDetailView(selectedDate)
+            DateDetailScreen(selectedDate)
         }
     }
 }

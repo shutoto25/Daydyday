@@ -17,7 +17,7 @@ import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
  * 詳細ページ
  */
 @Composable
-fun DateDetailView(selectedDate: String) {
+fun DateDetailScreen(selectedDate: String) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -38,7 +38,7 @@ fun DateDetailViewPreview() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            DateDetailView("2025-01-01")
+            DateDetailScreen("2025-01-01")
         }
     }
 }

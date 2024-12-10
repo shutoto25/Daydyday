@@ -1,5 +1,8 @@
 package com.gmail.shu10.dev.app.feature.home
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -58,7 +61,10 @@ fun InfiniteDateList(navController: NavController) {
 
     Scaffold(
         floatingActionButton = {
-            if (isFabVisible) {
+            AnimatedVisibility(
+                visible = isFabVisible,
+                enter = fadeIn(),
+                exit = fadeOut()) {
                 FloatingActionButton(
                     shape = RoundedCornerShape(50),
                     onClick = {

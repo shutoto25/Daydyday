@@ -1,12 +1,20 @@
 package com.gmail.shu10.dev.app.feature.home
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,6 +30,7 @@ import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 /**
  * ホーム画面(日付リスト)
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InfiniteDateList(navController: NavController) {
     val viewModel: HomeViewModel = viewModel()
@@ -29,19 +38,39 @@ fun InfiniteDateList(navController: NavController) {
     // リスト初期位置は今日
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = 365)
 
-    LazyColumn(
-        state = listState,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        items(dateList) { date ->
-            Text(
-                text = date,
-                modifier = Modifier
-                    .padding(vertical = 20.dp)
-                    .clickable {
-                        navController.navigate(AppScreen.Detail(date).createRoute())
-                    }
-            )
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(onClick = {
+                Log.d("TAG", "FloatingActionButton clicked!")
+            }) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowDown,
+                    contentDescription = "scroll to today's position"
+                )
+            }
+        },
+        floatingActionButtonPosition = FabPosition.Center
+    ) { innerPadding ->
+        LazyColumn(
+            state = listState,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            items(dateList) { date ->
+                Text(
+                    text = date,
+                    modifier = Modifier
+                        .padding(vertical = 20.dp)
+                        .clickable {
+                            navController.navigate(
+                                AppScreen
+                                    .Detail(date)
+                                    .createRoute()
+                            )
+                        }
+                )
+            }
         }
     }
 }

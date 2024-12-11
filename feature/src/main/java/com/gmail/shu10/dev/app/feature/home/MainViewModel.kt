@@ -1,26 +1,18 @@
 package com.gmail.shu10.dev.app.feature.home
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.Calendar
-import java.util.Locale
-import javax.annotation.Nonnull
-import javax.annotation.Nullable
 import javax.inject.Inject
 
 /**
  *
  */
 @HiltViewModel
-open class HomeViewModel @Inject constructor() : ViewModel() {
+open class MainViewModel @Inject constructor() : ViewModel() {
 
     companion object {
         const val GENERATE_LIST_COUNT = 20

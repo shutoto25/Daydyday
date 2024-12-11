@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Daydyday">
         <activity
-            android:name="com.gmail.shu10.dev.app.feature.home.HomeActivity"
+            android:name="com.gmail.shu10.dev.app.feature.home.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.Daydyday">
             <intent-filter>

@@ -42,7 +42,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InfiniteDateList(navController: NavController) {
-    val viewModel: HomeViewModel = viewModel()
+    val viewModel: MainViewModel = viewModel()
     val coroutineScope = rememberCoroutineScope()
     val dateList by viewModel.dateList.collectAsState()
     // リスト初期位置は今日

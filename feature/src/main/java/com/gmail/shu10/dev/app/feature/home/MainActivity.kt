@@ -10,8 +10,11 @@ import androidx.compose.ui.Modifier
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 import dagger.hilt.android.AndroidEntryPoint
 
+/**
+ * 画面基盤
+ */
 @AndroidEntryPoint
-class HomeActivity : ComponentActivity() {
+class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

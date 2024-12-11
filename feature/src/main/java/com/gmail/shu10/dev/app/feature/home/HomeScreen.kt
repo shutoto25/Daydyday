@@ -1,6 +1,7 @@
 package com.gmail.shu10.dev.app.feature.home
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
@@ -55,7 +56,9 @@ fun InfiniteDateList(navController: NavController) {
         derivedStateOf {
             if (listState.firstVisibleItemIndex < 365)
                 Icons.Default.KeyboardArrowDown
-            else Icons.Default.KeyboardArrowUp
+            else if (listState.firstVisibleItemIndex > 365)
+                Icons.Default.KeyboardArrowUp
+            else null
         }
     }
 
@@ -63,8 +66,9 @@ fun InfiniteDateList(navController: NavController) {
         floatingActionButton = {
             AnimatedVisibility(
                 visible = isFabVisible,
-                enter = fadeIn(),
-                exit = fadeOut()) {
+                enter = fadeIn(animationSpec = tween(durationMillis = 500)),
+                exit = fadeOut(animationSpec = tween(durationMillis = 500))
+            ) {
                 FloatingActionButton(
                     shape = RoundedCornerShape(50),
                     onClick = {
@@ -72,10 +76,12 @@ fun InfiniteDateList(navController: NavController) {
                             listState.animateScrollToItem(index = 365)
                         }
                     }) {
-                    Icon(
-                        imageVector = fabIcon,
-                        contentDescription = "scroll to today's position"
-                    )
+                    fabIcon?.let {
+                        Icon(
+                            imageVector = it,
+                            contentDescription = "scroll to today's position"
+                        )
+                    }
                 }
             }
         },

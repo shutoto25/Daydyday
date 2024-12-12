@@ -2,8 +2,8 @@ package com.gmail.shu10.dev.app.data.di
 
 import android.content.Context
 import androidx.room.Room
-import com.gmail.shu10.dev.app.data.AppDataBase
-import com.gmail.shu10.dev.app.data.DiaryDao
+import com.gmail.shu10.dev.app.data.database.AppDataBase
+import com.gmail.shu10.dev.app.data.database.DiaryDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

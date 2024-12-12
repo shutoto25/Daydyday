@@ -1,4 +1,4 @@
-package com.gmail.shu10.dev.app.data
+package com.gmail.shu10.dev.app.data.database
 
 import androidx.room.Dao
 import androidx.room.Insert

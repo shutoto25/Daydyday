@@ -11,13 +11,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 
 /**
  * 詳細ページ
  */
 @Composable
-fun DateDetailScreen(selectedDate: String) {
+fun DateDetailScreen(
+    selectedDate: String,
+    viewModel: DiaryViewModel = hiltViewModel()
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()

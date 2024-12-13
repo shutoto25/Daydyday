@@ -7,6 +7,7 @@ import com.gmail.shu10.dev.app.data.database.DiaryDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -15,9 +16,9 @@ import javax.inject.Singleton
 class DatabaseModule {
     @Provides
     @Singleton
-    fun provideDatabase(context: Context): AppDataBase {
+    fun provideDatabase(@ApplicationContext context: Context): AppDataBase {
         return Room.databaseBuilder(
-            context.applicationContext,
+            context,
             AppDataBase::class.java,
             "app_database"
         ).build()

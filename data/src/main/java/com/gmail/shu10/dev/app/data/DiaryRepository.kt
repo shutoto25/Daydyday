@@ -12,6 +12,10 @@ class DiaryRepository @Inject constructor(private val diaryDao: DiaryDao) : IDia
 
     fun getAllDiaries(): Flow<List<DiaryEntity>> = diaryDao.getAllDiaries()
 
+    override suspend fun getDiary(date: String): Flow<Diary?> {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun saveDiary(diary: Diary) {
         diaryDao.insert(diary.toEntity())
     }

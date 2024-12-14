@@ -19,7 +19,7 @@ fun DiaryEntity.toDomain(): Diary {
  */
 fun Diary.toEntity(): DiaryEntity {
     return DiaryEntity(
-        id = this.id,
+        id = this.id ?: 0, // idがnullの場合は新規作成（0を指定してautoGenerateに任せる）
         content = this.content,
         date = this.date
     )

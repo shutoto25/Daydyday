@@ -17,11 +17,11 @@ class DiaryViewModel @Inject constructor(
     private val saveDiaryUseCase: SaveDiaryUseCase
 ) : ViewModel() {
 
-     suspend fun getDiaryById(id: String?): Flow<Diary?> {
-        return if (id == null) {
+     fun getDiaryByDate(date: String?): Flow<Diary?> {
+        return if (date == null) {
             flowOf(null)
         } else {
-            getDiaryUseCase(id)
+            getDiaryUseCase(date)
         }
     }
 

@@ -2,14 +2,18 @@ package com.gmail.shu10.dev.app.data.database
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface DiaryDao {
-    @Insert
+    /**
+     * データ保存（同じIDの場合は上書きして更新）
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(dairy: DiaryEntity)
 
-    @Query("SELECT * FROM diaries ORDER BY id DESC")
-    fun getAllDiaries(): Flow<List<DiaryEntity>>
+    @Query("SELECT * FROM diaries WHERE date = :date LIMIT 1")
+    fun getDiaryByDate(date: String): Flow<DiaryEntity?>
 }

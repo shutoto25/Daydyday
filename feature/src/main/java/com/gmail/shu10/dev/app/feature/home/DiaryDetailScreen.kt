@@ -26,6 +26,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
+import java.util.UUID
 
 /**
  * 詳細ページ
@@ -39,6 +40,10 @@ fun DateDetailScreen(
 ) {
     // FlowをcollectAsStateで監視
     val diary by viewModel.getDiaryByDate(selectedDate).collectAsState(initial = null)
+    var title by remember { mutableStateOf("") }
+    LaunchedEffect(diary) {
+        title = diary?.title ?: ""
+    }
     var content by remember { mutableStateOf("") }
     LaunchedEffect(diary) {
         content = diary?.content ?: ""
@@ -50,6 +55,15 @@ fun DateDetailScreen(
     ) {
         Text(
             text = "Selected Date: $selectedDate",
+        )
+        TextField(
+            value = title,
+            onValueChange = { title = it },
+            label = { Text("タイトル") },
+            modifier = Modifier
+                .fillMaxWidth(),
+            maxLines = Int.MAX_VALUE,
+            singleLine = true
         )
         TextField(
             value = content,
@@ -65,8 +79,14 @@ fun DateDetailScreen(
         Button(onClick = {
             val saveData = Diary(
                 id = diary?.id,
+                uuid = diary?.uuid ?: UUID.randomUUID().toString(),
                 date = selectedDate,
-                content = content
+                title = title,
+                content = content,
+                photoPath = null,
+                videoPath = null,
+                location = null,
+                isSynced = false
             )
             viewModel.saveDiary(saveData)
         }, modifier = Modifier.fillMaxWidth()) {

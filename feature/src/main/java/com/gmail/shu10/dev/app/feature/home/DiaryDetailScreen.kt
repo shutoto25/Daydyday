@@ -1,6 +1,7 @@
 package com.gmail.shu10.dev.app.feature.home
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 import java.util.UUID
@@ -33,8 +33,7 @@ import java.util.UUID
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DateDetailScreen(
-    navController: NavHostController,
+fun DiaryDetailScreen(
     selectedDate: String,
     viewModel: DiaryViewModel = hiltViewModel()
 ) {
@@ -65,6 +64,30 @@ fun DateDetailScreen(
             maxLines = Int.MAX_VALUE,
             singleLine = true
         )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+        ) {
+            Button(modifier = Modifier
+                .fillMaxWidth()
+                .weight(0.5f)
+                .padding(4.dp),
+                onClick = {
+                    // TODO
+                }) {
+                Text("写真/動画を追加")
+            }
+            Button(modifier = Modifier
+                .fillMaxWidth()
+                .weight(0.5f)
+                .padding(4.dp),
+                onClick = {
+                    // TODO
+                }) {
+                Text("位置情報を追加")
+            }
+        }
         TextField(
             value = content,
             onValueChange = { content = it },
@@ -103,10 +126,8 @@ fun DateDetailViewPreview() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-//            DateDetailScreen("2025-01-01")
+            DiaryDetailScreen("2025-01-01")
         }
     }
 }
 
-//collectAsStateについて教えて。
-//navCOntrollerはpop的なことできないの？

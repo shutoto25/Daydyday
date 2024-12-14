@@ -2,7 +2,7 @@
 # ------ project ------ #
 compileSdk = "34"
 targetSdk = "34"
-minSdk = "31"
+minSdk = "33"
 versionCode = "1"
 versionName = "1.0"
 agp = "8.1.1"

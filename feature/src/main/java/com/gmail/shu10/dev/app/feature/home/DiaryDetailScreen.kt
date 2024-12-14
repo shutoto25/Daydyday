@@ -27,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.glance.Button
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 
 /**
@@ -36,9 +37,9 @@ import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 @Composable
 fun DateDetailScreen(
     selectedDate: String,
-//    viewModel: DiaryViewModel = hiltViewModel()
+    viewModel: DiaryViewModel = hiltViewModel()
 ) {
-//    val diary = viewModel.getDiaryById(selectedDate).collectAsState(initial = null)
+//    val diary by viewModel.getDiaryById(selectedDate).collectAsState(initial = null)
     var content by remember { mutableStateOf("") }
 
     Column(
@@ -60,7 +61,9 @@ fun DateDetailScreen(
             singleLine = false
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = {}, modifier = Modifier.fillMaxWidth()) {
+        Button(onClick = {
+//            viewModel.saveDiary(diary = Diary(null, content, selectedDate))
+        }, modifier = Modifier.fillMaxWidth()) {
             Text("保存")
         }
     }

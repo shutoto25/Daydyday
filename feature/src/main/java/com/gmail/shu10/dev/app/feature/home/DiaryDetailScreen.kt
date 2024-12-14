@@ -34,19 +34,19 @@ import java.util.UUID
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiaryDetailScreen(
-    selectedDate: String,
-    viewModel: DiaryViewModel = hiltViewModel()
+    selectedDate: String, viewModel: DiaryViewModel = hiltViewModel()
 ) {
     // FlowをcollectAsStateで監視
     val diary by viewModel.getDiaryByDate(selectedDate).collectAsState(initial = null)
+    // 状態管理
     var title by remember { mutableStateOf("") }
+    var content by remember { mutableStateOf("") }
+    // 状態監視
     LaunchedEffect(diary) {
         title = diary?.title ?: ""
-    }
-    var content by remember { mutableStateOf("") }
-    LaunchedEffect(diary) {
         content = diary?.content ?: ""
     }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -55,67 +55,114 @@ fun DiaryDetailScreen(
         Text(
             text = "Selected Date: $selectedDate",
         )
-        TextField(
-            value = title,
-            onValueChange = { title = it },
-            label = { Text("タイトル") },
-            modifier = Modifier
-                .fillMaxWidth(),
-            maxLines = Int.MAX_VALUE,
-            singleLine = true
+        DiaryTitleInput(
+            title = title,
+            onTitleChange = { title = it }
         )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
-        ) {
-            Button(modifier = Modifier
-                .fillMaxWidth()
-                .weight(0.5f)
-                .padding(4.dp),
-                onClick = {
-                    // TODO
-                }) {
-                Text("写真/動画を追加")
-            }
-            Button(modifier = Modifier
-                .fillMaxWidth()
-                .weight(0.5f)
-                .padding(4.dp),
-                onClick = {
-                    // TODO
-                }) {
-                Text("位置情報を追加")
-            }
-        }
-        TextField(
-            value = content,
-            onValueChange = { content = it },
-            label = { Text("内容") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            maxLines = Int.MAX_VALUE,
-            singleLine = false
+        DiaryActionButtons(
+            onAddPhotoOrVideo = { /* TODO: 写真/動画を追加 */ },
+            onAddLocation = { /* TODO: 位置情報を追加 */ }
         )
+        DiaryContentInput(
+            modifier = Modifier.weight(1f),
+            content = content,
+            onContentChange = { content = it }
+        )
+
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = {
-            val saveData = Diary(
-                id = diary?.id,
-                uuid = diary?.uuid ?: UUID.randomUUID().toString(),
-                date = selectedDate,
-                title = title,
-                content = content,
-                photoPath = null,
-                videoPath = null,
-                location = null,
-                isSynced = false
-            )
-            viewModel.saveDiary(saveData)
-        }, modifier = Modifier.fillMaxWidth()) {
-            Text("保存")
+
+        DiarySaveButton(
+            onSave = {
+                val saveData = Diary(
+                    id = diary?.id,
+                    uuid = diary?.uuid ?: UUID.randomUUID().toString(),
+                    date = selectedDate,
+                    title = title,
+                    content = content,
+                    photoPath = null,
+                    videoPath = null,
+                    location = null,
+                    isSynced = false
+                )
+                viewModel.saveDiary(saveData)
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DiaryTitleInput(title: String, onTitleChange: (String) -> Unit) {
+    TextField(
+        value = title,
+        onValueChange = onTitleChange,
+        label = { Text("タイトル") },
+        modifier = Modifier.fillMaxWidth(),
+        maxLines = Int.MAX_VALUE,
+        singleLine = true
+    )
+}
+
+@Composable
+fun DiaryActionButtons(
+    onAddPhotoOrVideo: () -> Unit,
+    onAddLocation: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        Button(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(0.5f)
+                .padding(4.dp),
+            onClick = onAddPhotoOrVideo
+        ) {
+            Text("写真/動画を追加")
+        }
+        Button(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(0.5f)
+                .padding(4.dp),
+            onClick = onAddLocation
+        ) {
+            Text("位置情報を追加")
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DiaryContentInput(
+    modifier: Modifier,
+    content: String,
+    onContentChange: (String) -> Unit
+) {
+    TextField(
+        value = content,
+        onValueChange = onContentChange,
+        label = { Text("内容") },
+        modifier = modifier.fillMaxWidth(),
+        maxLines = Int.MAX_VALUE,
+        singleLine = false
+    )
+}
+
+@Composable
+fun DiarySaveButton(onSave: () -> Unit) {
+    Button(
+        onClick = onSave,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text("保存")
+    }
+}
+
+private fun createSaveData(diary: Diary) {
+
 }
 
 @Preview(showBackground = true)

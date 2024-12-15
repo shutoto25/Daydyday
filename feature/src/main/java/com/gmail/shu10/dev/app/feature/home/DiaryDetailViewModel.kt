@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class DiaryViewModel @Inject constructor(
+class DiaryDetailViewModel @Inject constructor(
     private val getDiaryUseCase: GetDiaryUseCase,
     private val saveDiaryUseCase: SaveDiaryUseCase
 ) : ViewModel() {

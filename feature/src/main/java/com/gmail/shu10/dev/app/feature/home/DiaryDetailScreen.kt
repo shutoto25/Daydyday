@@ -1,5 +1,10 @@
 package com.gmail.shu10.dev.app.feature.home
 
+import android.content.Context
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -8,10 +13,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -21,30 +26,59 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
+import java.io.File
 import java.util.UUID
 
 /**
  * 詳細ページ
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiaryDetailScreen(
-    selectedDate: String, viewModel: DiaryViewModel = hiltViewModel()
+    selectedDate: String, viewModel: DiaryDetailViewModel = hiltViewModel()
 ) {
     // FlowをcollectAsStateで監視
     val diary by viewModel.getDiaryByDate(selectedDate).collectAsState(initial = null)
     // 状態管理
     var title by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
+    var photoUri by remember { mutableStateOf<Uri?>(null) }
+    var videoUri by remember { mutableStateOf<Uri?>(null) }
     // 状態監視
     LaunchedEffect(diary) {
         title = diary?.title ?: ""
         content = diary?.content ?: ""
+        photoUri = diary?.photoPath?.toUri()
+        videoUri = diary?.videoPath?.toUri()
+    }
+
+    val context = LocalContext.current
+    // Photo PickerのLauncher
+    val phonePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        uri?.let {
+            val mimeType = context.contentResolver.getType(it)
+            when (mimeType) {
+                "image" -> {
+                    photoUri = it
+                    savePhotoToAppDir(context, it)
+                }
+
+                "video" -> {
+                    videoUri = it
+                    saveVideoToAppDir(context, it)
+                }
+
+                else -> {}
+            }
+        }
     }
 
     Column(
@@ -60,8 +94,12 @@ fun DiaryDetailScreen(
             onTitleChange = { title = it }
         )
         DiaryActionButtons(
-            onAddPhotoOrVideo = { /* TODO: 写真/動画を追加 */ },
-            onAddLocation = { /* TODO: 位置情報を追加 */ }
+            onClickAddPhotoOrVideo = {
+                phonePickerLauncher.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
+                )
+            },
+            onClickAddLocation = { /* TODO: 位置情報を追加 */ }
         )
         DiaryContentInput(
             modifier = Modifier.weight(1f),
@@ -79,8 +117,8 @@ fun DiaryDetailScreen(
                     date = selectedDate,
                     title = title,
                     content = content,
-                    photoPath = null,
-                    videoPath = null,
+                    photoPath = photoUri.toString(),
+                    videoPath = videoUri.toString(),
                     location = null,
                     isSynced = false
                 )
@@ -105,8 +143,8 @@ fun DiaryTitleInput(title: String, onTitleChange: (String) -> Unit) {
 
 @Composable
 fun DiaryActionButtons(
-    onAddPhotoOrVideo: () -> Unit,
-    onAddLocation: () -> Unit
+    onClickAddPhotoOrVideo: () -> Unit,
+    onClickAddLocation: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -118,7 +156,7 @@ fun DiaryActionButtons(
                 .fillMaxWidth()
                 .weight(0.5f)
                 .padding(4.dp),
-            onClick = onAddPhotoOrVideo
+            onClick = onClickAddPhotoOrVideo
         ) {
             Text("写真/動画を追加")
         }
@@ -127,7 +165,7 @@ fun DiaryActionButtons(
                 .fillMaxWidth()
                 .weight(0.5f)
                 .padding(4.dp),
-            onClick = onAddLocation
+            onClick = onClickAddLocation
         ) {
             Text("位置情報を追加")
         }
@@ -161,10 +199,6 @@ fun DiarySaveButton(onSave: () -> Unit) {
     }
 }
 
-private fun createSaveData(diary: Diary) {
-
-}
-
 @Preview(showBackground = true)
 @Composable
 fun DateDetailViewPreview() {
@@ -178,3 +212,38 @@ fun DateDetailViewPreview() {
     }
 }
 
+/**
+ * 写真保存
+ */
+private fun savePhotoToAppDir(context: Context, uri: Uri) {
+
+    val inputStream = context.contentResolver.openInputStream(uri) ?: return
+
+    val appDir = File(context.filesDir, "images")
+    if (!appDir.exists()) appDir.mkdirs()
+
+    val file = File(appDir, "selected_${System.currentTimeMillis()}.jpg")
+    inputStream.use { input ->
+        file.outputStream().use { output ->
+            input.copyTo(output)
+        }
+    }
+}
+
+/**
+ * 動画保存
+ */
+private fun saveVideoToAppDir(context: Context, uri: Uri) {
+
+    val inputStream = context.contentResolver.openInputStream(uri) ?: return
+
+    val appDir = File(context.filesDir, "videos")
+    if (!appDir.exists()) appDir.mkdirs()
+
+    val file = File(appDir, "selected_${System.currentTimeMillis()}.mp4")
+    inputStream.use { input ->
+        file.outputStream().use { output ->
+            input.copyTo(output)
+        }
+    }
+}

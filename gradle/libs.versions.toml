@@ -26,6 +26,7 @@ com-google-gms-google-services = "4.4.1"
 com-google-dagger-hilt = "2.48"
 firebase-bom = "33.1.2"
 material = "1.8.0"
+exoplayer = "2.20.0"
 # ------ google ------ #
 coil = "2.4.0"
 
@@ -70,6 +71,7 @@ hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.r
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
 firebase-analytics-ktx = { group = "com.google.firebase", name = "firebase-analytics-ktx" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+exoplayer = { module = "com.google.android.exoplayer:exoplayer", version.ref = "exoplayer" }
 
 # ------ coil ------ #
 # TODO 他のやつもmoduleの記載に変えてしまっていいかも

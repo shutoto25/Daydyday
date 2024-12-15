@@ -66,6 +66,7 @@ dependencies {
     // hilt
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
+    implementation(libs.exoplayer)
 
     // ----- coil ----- //
     implementation(libs.coil.compose)

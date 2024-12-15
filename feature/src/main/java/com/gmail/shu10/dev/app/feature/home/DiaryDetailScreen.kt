@@ -35,6 +35,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
+import com.gmail.shu10.dev.app.feature.utils.toContentUri
 import java.io.File
 import java.util.UUID
 
@@ -71,16 +72,12 @@ fun DiaryDetailScreen(
             when {
                 mimeType?.startsWith("image") == true -> {
                     val file = savePhotoToAppDir(context, url)
-                    photoUri = file?.let {
-                        FileProvider.getUriForFile(
-                            context, "${context.packageName}.fileprovider", file
-                        )
-                    }
+                    photoUri = file?.toContentUri(context)
                 }
 
                 mimeType?.startsWith("video") == true -> {
                     val file = saveVideoToAppDir(context, url)
-                    videoUri = Uri.fromFile(file)
+                    videoUri = file?.toContentUri(context)
                 }
 
                 else -> {}
@@ -187,7 +184,7 @@ fun MediaPreview(uri: Uri?) {
     uri?.let {
         AsyncImage(
             model = uri,
-            contentDescription = "",
+            contentDescription = "dairy's photo",
             modifier = Modifier
                 .fillMaxWidth()
                 .height(200.dp)

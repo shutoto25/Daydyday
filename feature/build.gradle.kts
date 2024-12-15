@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.ui.graphics)
     implementation(libs.ui.tooling.preview)
     implementation(libs.material3)
+    implementation(libs.media3.exoplayer)
     // widget
     implementation(libs.glance)
 
@@ -66,7 +67,6 @@ dependencies {
     // hilt
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
-    implementation(libs.exoplayer)
 
     // ----- coil ----- //
     implementation(libs.coil.compose)

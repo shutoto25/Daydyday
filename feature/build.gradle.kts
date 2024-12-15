@@ -59,7 +59,7 @@ dependencies {
     implementation(libs.ui.graphics)
     implementation(libs.ui.tooling.preview)
     implementation(libs.material3)
-    implementation(libs.media3.exoplayer)
+//    implementation(libs.media3.exoplayer)
     // widget
     implementation(libs.glance)
 

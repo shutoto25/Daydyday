@@ -29,8 +29,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 import java.io.File
@@ -59,21 +61,26 @@ fun DiaryDetailScreen(
     }
 
     val context = LocalContext.current
-    // Photo PickerのLauncher
     val phonePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
-    ) { uri ->
-        uri?.let {
-            val mimeType = context.contentResolver.getType(it)
-            when (mimeType) {
-                "image" -> {
-                    photoUri = it
-                    savePhotoToAppDir(context, it)
+    ) { mediaUri ->
+        mediaUri?.let { url ->
+            val mimeType = context.contentResolver.getType(url)
+
+            // TODO 画像が変わったときに古い画像を消さないとゴミデータがどんどん溜まっていく
+            when {
+                mimeType?.startsWith("image") == true -> {
+                    val file = savePhotoToAppDir(context, url)
+                    photoUri = file?.let {
+                        FileProvider.getUriForFile(
+                            context, "${context.packageName}.fileprovider", file
+                        )
+                    }
                 }
 
-                "video" -> {
-                    videoUri = it
-                    saveVideoToAppDir(context, it)
+                mimeType?.startsWith("video") == true -> {
+                    val file = saveVideoToAppDir(context, url)
+                    videoUri = Uri.fromFile(file)
                 }
 
                 else -> {}
@@ -101,8 +108,11 @@ fun DiaryDetailScreen(
             },
             onClickAddLocation = { /* TODO: 位置情報を追加 */ }
         )
+        Spacer(modifier = Modifier.height(16.dp))
+        MediaPreview(uri = photoUri)
+        Spacer(modifier = Modifier.height(16.dp))
         DiaryContentInput(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier,
             content = content,
             onContentChange = { content = it }
         )
@@ -172,6 +182,19 @@ fun DiaryActionButtons(
     }
 }
 
+@Composable
+fun MediaPreview(uri: Uri?) {
+    uri?.let {
+        AsyncImage(
+            model = uri,
+            contentDescription = "",
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+        )
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiaryContentInput(
@@ -215,9 +238,9 @@ fun DateDetailViewPreview() {
 /**
  * 写真保存
  */
-private fun savePhotoToAppDir(context: Context, uri: Uri) {
+private fun savePhotoToAppDir(context: Context, uri: Uri): File? {
 
-    val inputStream = context.contentResolver.openInputStream(uri) ?: return
+    val inputStream = context.contentResolver.openInputStream(uri) ?: return null
 
     val appDir = File(context.filesDir, "images")
     if (!appDir.exists()) appDir.mkdirs()
@@ -228,14 +251,15 @@ private fun savePhotoToAppDir(context: Context, uri: Uri) {
             input.copyTo(output)
         }
     }
+    return file
 }
 
 /**
  * 動画保存
  */
-private fun saveVideoToAppDir(context: Context, uri: Uri) {
+private fun saveVideoToAppDir(context: Context, uri: Uri): File? {
 
-    val inputStream = context.contentResolver.openInputStream(uri) ?: return
+    val inputStream = context.contentResolver.openInputStream(uri) ?: return null
 
     val appDir = File(context.filesDir, "videos")
     if (!appDir.exists()) appDir.mkdirs()
@@ -246,4 +270,5 @@ private fun saveVideoToAppDir(context: Context, uri: Uri) {
             input.copyTo(output)
         }
     }
+    return file
 }

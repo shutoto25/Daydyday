@@ -40,6 +40,11 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":core"))
 
+    // ----- androidx ----- //
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    kapt(libs.room.compiler)
+
     // ----- google ----- //
     // hilt
     implementation(libs.hilt.android)

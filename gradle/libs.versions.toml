@@ -14,17 +14,17 @@ kotlin = "1.8.10"
 dokka = "1.9.20"
 ## ------ google ------ ##
 gms = "4.4.2"
-dagger-hilt = "2.48"
+dagger-hilt = "2.49"
 
 # ------ libraries version ------ #
 ## ------ androidx ------ ##
-core-ktx = "1.9.0"
-lifecycle = "2.8.4"
-activity-compose = "1.9.1"
-navigation-compose = "2.7.3"
-hilt-navigation-compose = "1.0.0"
-compose-bom = "2023.03.00"
-room = "2.5.0"
+core-ktx = "1.13.1"
+lifecycle = "2.8.7"
+activity-compose = "1.9.3"
+navigation-compose = "2.8.5"
+hilt-navigation-compose = "1.2.0"
+compose-bom = "2024.12.01"
+room = "2.6.1"
 media3-exoplayer = "1.0.3"
 glance = "1.1.1"
 ## ------ test ------ ##
@@ -32,7 +32,7 @@ androidx-test-ext-junit = "1.2.1"
 espresso-core = "3.6.1"
 junit = "4.13.2"
 ## ------ google ------ ##
-firebase-bom = "33.1.2"
+firebase-bom = "33.7.0"
 ## ------ google ------ ##
 coil = "2.4.0"
 

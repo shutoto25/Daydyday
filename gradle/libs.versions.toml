@@ -25,6 +25,7 @@ org-jetbrains-dokka = "1.9.20"
 com-google-gms-google-services = "4.4.2"
 com-google-dagger-hilt = "2.48"
 firebase-bom = "33.1.2"
+material = "1.12.0"
 # ------ google ------ #
 coil = "2.4.0"
 

@@ -1,7 +1,7 @@
 plugins {
-    alias(libs.plugins.com.android.library)
-    alias(libs.plugins.org.jetbrains.dokka)
-    alias(libs.plugins.com.google.dagger.hilt.android)
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.dokka)
+    alias(libs.plugins.dagger.hilt)
     kotlin("android")
     kotlin("kapt")
 }

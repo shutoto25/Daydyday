@@ -1,8 +1,9 @@
 plugins {
-    alias(libs.plugins.com.android.application)
-    alias(libs.plugins.org.jetbrains.dokka) // TODO パッケージ構成についても書くようにしたい https://qiita.com/foxsal/items/6c4a0dfbc8f8e3000077
-    alias(libs.plugins.com.google.gms.google.services)
-    alias(libs.plugins.com.google.dagger.hilt.android)
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.dokka) // TODO パッケージ構成についても書くようにしたい https://qiita.com/foxsal/items/6c4a0dfbc8f8e3000077
+    alias(libs.plugins.gms)
+    alias(libs.plugins.dagger.hilt)
+    id("com.google.devtools.ksp") version "2.0.21-1.0.27" apply false
     kotlin("android")
     kotlin("kapt")
 }

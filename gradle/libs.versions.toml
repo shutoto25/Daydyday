@@ -14,7 +14,7 @@ kotlin = "1.8.10"
 dokka = "1.9.20"
 ## ------ google ------ ##
 gms = "4.4.2"
-dagger-hilt = "2.49"
+dagger-hilt = "2.53.1"
 
 # ------ libraries version ------ #
 ## ------ androidx ------ ##

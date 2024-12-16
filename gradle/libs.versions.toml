@@ -10,7 +10,7 @@ versionName = "1.0"
 ## ------ android ------ ##
 agp = "8.6.0"
 ## ------ jetbrains ------ ##
-kotlin = "1.8.10"
+kotlin = "2.1.0"
 dokka = "1.9.20"
 ## ------ google ------ ##
 gms = "4.4.2"

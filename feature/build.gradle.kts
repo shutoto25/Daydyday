@@ -59,12 +59,10 @@ dependencies {
     implementation(libs.ui.graphics)
     implementation(libs.ui.tooling.preview)
     implementation(libs.material3)
-//    implementation(libs.media3.exoplayer)
-    // widget
+    implementation(libs.media3.exoplayer)
     implementation(libs.glance)
 
     // ----- google ----- //
-    // hilt
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
 

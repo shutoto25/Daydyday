@@ -60,6 +60,7 @@ dependencies {
     implementation(libs.ui.tooling.preview)
     implementation(libs.material3)
     implementation(libs.media3.exoplayer)
+    implementation(libs.media3.ui)
     implementation(libs.glance)
 
     // ----- google ----- //

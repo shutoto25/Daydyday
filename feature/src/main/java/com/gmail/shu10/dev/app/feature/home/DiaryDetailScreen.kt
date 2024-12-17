@@ -1,7 +1,9 @@
 package com.gmail.shu10.dev.app.feature.home
 
 import android.content.Context
+import android.graphics.DiscretePathEffect
 import android.net.Uri
+import android.provider.MediaStore.Audio.Media
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -19,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -29,9 +32,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
@@ -108,6 +116,8 @@ fun DiaryDetailScreen(
         Spacer(modifier = Modifier.height(16.dp))
         MediaPreview(uri = photoUri)
         Spacer(modifier = Modifier.height(16.dp))
+        VideoPlayer(context = context, uri = videoUri)
+        Spacer(modifier = Modifier.height(16.dp))
         DiaryContentInput(
             modifier = Modifier,
             content = content,
@@ -135,7 +145,6 @@ fun DiaryDetailScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiaryTitleInput(title: String, onTitleChange: (String) -> Unit) {
     TextField(
@@ -192,7 +201,28 @@ fun MediaPreview(uri: Uri?) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun VideoPlayer(context: Context, uri: Uri?) {
+    uri?.let {
+        val expPlayer = remember {
+            ExoPlayer.Builder(context).build().apply {
+                setMediaItem(MediaItem.fromUri(uri))
+                prepare()
+                playWhenReady = true
+            }
+        }
+        AndroidView(
+            factory = { PlayerView(context).apply { player = expPlayer } },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+        )
+        DisposableEffect(Unit) {
+            onDispose { expPlayer.release() }
+        }
+    }
+}
+
 @Composable
 fun DiaryContentInput(
     modifier: Modifier,

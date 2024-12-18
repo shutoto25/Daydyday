@@ -61,6 +61,7 @@ dependencies {
     implementation(libs.material3)
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.ui)
+    implementation(libs.media3.transformer)
     implementation(libs.glance)
 
     // ----- google ----- //

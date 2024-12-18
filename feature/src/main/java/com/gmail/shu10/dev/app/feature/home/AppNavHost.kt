@@ -1,6 +1,8 @@
 package com.gmail.shu10.dev.app.feature.home
 
+import android.net.Uri
 import androidx.compose.runtime.Composable
+import androidx.core.net.toUri
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -23,7 +25,10 @@ fun AppNavHost() {
         // 日付詳細画面
         composable(AppScreen.Detail("{selectedDate}").route) { navBackStackEntry ->
             val selectedDate = navBackStackEntry.arguments?.getString("selectedDate") ?: ""
-            DiaryDetailScreen(selectedDate)
+            DiaryDetailScreen(navController, selectedDate)
+        }
+        composable(AppScreen.VideoEdit.route) {
+            VideoEditScreen(navController)
         }
     }
 }
@@ -34,6 +39,7 @@ fun AppNavHost() {
 sealed class AppScreen(val route: String) {
     object Home : AppScreen("home")
     data class Detail(val date: String) : AppScreen("detail/{selectedDate}")
+    object VideoEdit : AppScreen("videoEdit")
 }
 
 /**
@@ -45,5 +51,7 @@ fun AppScreen.createRoute(): String {
         is AppScreen.Home -> route
         // 日付詳細画面へ遷移
         is AppScreen.Detail -> route.replace("{selectedDate}", date)
+        // 動画編集画面へ遷移
+        is AppScreen.VideoEdit -> route
     }
 }

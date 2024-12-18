@@ -40,6 +40,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
@@ -52,7 +53,9 @@ import java.util.UUID
  */
 @Composable
 fun DiaryDetailScreen(
-    selectedDate: String, viewModel: DiaryDetailViewModel = hiltViewModel()
+    navHostController: NavHostController,
+    selectedDate: String,
+    viewModel: DiaryDetailViewModel = hiltViewModel()
 ) {
     // FlowをcollectAsStateで監視
     val diary by viewModel.getDiaryByDate(selectedDate).collectAsState(initial = null)
@@ -84,8 +87,12 @@ fun DiaryDetailScreen(
                 }
 
                 mimeType?.startsWith("video") == true -> {
-                    val file = saveVideoToAppDir(context, url)
-                    videoUri = file?.toContentUri(context)
+                    navHostController.currentBackStackEntry?.savedStateHandle?.set(
+                        "selectedVideoUri", url.toString()
+                    )
+                    navHostController.navigate("videoEdit")
+//                    val file = saveVideoToAppDir(context, url)
+//                    videoUri = file?.toContentUri(context)
                 }
 
                 else -> {}
@@ -249,18 +256,18 @@ fun DiarySaveButton(onSave: () -> Unit) {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun DateDetailViewPreview() {
-    DaydydayTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            DiaryDetailScreen("2025-01-01")
-        }
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun DateDetailViewPreview() {
+//    DaydydayTheme {
+//        Surface(
+//            modifier = Modifier.fillMaxSize(),
+//            color = MaterialTheme.colorScheme.background
+//        ) {
+//            DiaryDetailScreen("2025-01-01")
+//        }
+//    }
+//}
 
 /**
  * 写真保存

@@ -1,9 +1,7 @@
 package com.gmail.shu10.dev.app.feature.home
 
 import android.content.Context
-import android.graphics.DiscretePathEffect
 import android.net.Uri
-import android.provider.MediaStore.Audio.Media
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -14,11 +12,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -31,21 +26,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.MediaItem
-import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.gmail.shu10.dev.app.domain.Diary
-import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 import com.gmail.shu10.dev.app.feature.utils.toContentUri
-import java.io.File
 import java.util.UUID
 
 /**
@@ -82,7 +72,7 @@ fun DiaryDetailScreen(
             // TODO 画像が変わったときに古い画像を消さないとゴミデータがどんどん溜まっていく
             when {
                 mimeType?.startsWith("image") == true -> {
-                    val file = savePhotoToAppDir(context, url)
+                    val file = viewModel.savePhotoToAppDir(context, url)
                     photoUri = file?.toContentUri(context)
                 }
 
@@ -268,41 +258,3 @@ fun DiarySaveButton(onSave: () -> Unit) {
 //        }
 //    }
 //}
-
-/**
- * 写真保存
- */
-private fun savePhotoToAppDir(context: Context, uri: Uri): File? {
-
-    val inputStream = context.contentResolver.openInputStream(uri) ?: return null
-
-    val appDir = File(context.filesDir, "images")
-    if (!appDir.exists()) appDir.mkdirs()
-
-    val file = File(appDir, "selected_${System.currentTimeMillis()}.jpg")
-    inputStream.use { input ->
-        file.outputStream().use { output ->
-            input.copyTo(output)
-        }
-    }
-    return file
-}
-
-/**
- * 動画保存
- */
-private fun saveVideoToAppDir(context: Context, uri: Uri): File? {
-
-    val inputStream = context.contentResolver.openInputStream(uri) ?: return null
-
-    val appDir = File(context.filesDir, "videos")
-    if (!appDir.exists()) appDir.mkdirs()
-
-    val file = File(appDir, "selected_${System.currentTimeMillis()}.mp4")
-    inputStream.use { input ->
-        file.outputStream().use { output ->
-            input.copyTo(output)
-        }
-    }
-    return file
-}

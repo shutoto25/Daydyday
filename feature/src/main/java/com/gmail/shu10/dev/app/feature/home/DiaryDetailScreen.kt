@@ -39,7 +39,7 @@ import com.gmail.shu10.dev.app.feature.utils.toContentUri
 import java.util.UUID
 
 /**
- * 詳細ページ
+ * 日記詳細画面
  */
 @Composable
 fun DiaryDetailScreen(
@@ -142,6 +142,9 @@ fun DiaryDetailScreen(
     }
 }
 
+/**
+ * タイトル入力欄
+ */
 @Composable
 fun DiaryTitleInput(title: String, onTitleChange: (String) -> Unit) {
     TextField(
@@ -154,6 +157,9 @@ fun DiaryTitleInput(title: String, onTitleChange: (String) -> Unit) {
     )
 }
 
+/**
+ * 追加ボタン
+ */
 @Composable
 fun DiaryActionButtons(
     onClickAddPhotoOrVideo: () -> Unit,
@@ -185,6 +191,9 @@ fun DiaryActionButtons(
     }
 }
 
+/**
+ * メディアプレビュー
+ */
 @Composable
 fun MediaPreview(uri: Uri?) {
     uri?.let {
@@ -198,6 +207,9 @@ fun MediaPreview(uri: Uri?) {
     }
 }
 
+/**
+ * 動画プレビュー
+ */
 @Composable
 fun VideoPlayer(context: Context, uri: Uri?) {
     uri?.let {
@@ -220,6 +232,9 @@ fun VideoPlayer(context: Context, uri: Uri?) {
     }
 }
 
+/**
+ * 内容入力欄
+ */
 @Composable
 fun DiaryContentInput(
     modifier: Modifier,
@@ -236,6 +251,9 @@ fun DiaryContentInput(
     )
 }
 
+/**
+ * 保存ボタン
+ */
 @Composable
 fun DiarySaveButton(onSave: () -> Unit) {
     Button(

@@ -36,7 +36,7 @@ android {
 
 dependencies {
     // ----- モジュール依存関係 ----- //
-    // 依存なし
+    implementation(libs.core.ktx)
 
     // ----- test ----- //
     testImplementation(libs.junit)

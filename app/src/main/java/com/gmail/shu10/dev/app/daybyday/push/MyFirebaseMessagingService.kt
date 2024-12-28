@@ -4,12 +4,10 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.pm.PackageManager
 import android.util.Log
-import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import androidx.core.content.ContextCompat
+import com.gmail.shu10.dev.app.core.utils.hasPermission
 import com.gmail.shu10.dev.app.daybyday.R
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -29,19 +27,12 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         super.onMessageReceived(message)
         Log.d(this.javaClass.simpleName, "onMessageReceived() called with: message = $message")
 
-        if (hasPermission(Manifest.permission.POST_NOTIFICATIONS)) {
+        if (hasPermission(this, Manifest.permission.POST_NOTIFICATIONS)) {
             message.notification?.let {
                 shouNotification(it.title, it.body)
             }
         }
     }
-
-    /**
-     * 権限があるかどうか
-     * @param permission 権限チェックをしたいパーミッション名
-     */
-    private fun hasPermission(permission: String): Boolean =
-        ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED
 
     /**
      * 通知表示

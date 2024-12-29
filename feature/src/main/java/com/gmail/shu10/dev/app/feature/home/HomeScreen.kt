@@ -14,7 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -32,7 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 import kotlinx.coroutines.launch
@@ -40,7 +38,6 @@ import kotlinx.coroutines.launch
 /**
  * ホーム画面(日付リスト)
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InfiniteDateList(navController: NavController) {
     val viewModel: MainViewModel = hiltViewModel()

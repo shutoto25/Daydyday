@@ -1,5 +1,6 @@
 package com.gmail.shu10.dev.app.feature.home
 
+import android.Manifest
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -25,6 +26,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     AppNavHost()
+                    RequestPermission(this, Manifest.permission.POST_NOTIFICATIONS)
                 }
             }
         }

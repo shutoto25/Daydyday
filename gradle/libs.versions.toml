@@ -19,6 +19,9 @@ dagger-hilt = "2.49"
 # ------ libraries version ------ #
 ## ------ androidx ------ ##
 core-ktx = "1.13.1"
+work-ktx = "2.10.0"
+hilt-work = "1.2.0"
+hilt-compiler = "1.0.0"
 lifecycle = "2.8.7"
 activity-compose = "1.9.3"
 navigation-compose = "2.8.5"
@@ -50,6 +53,9 @@ dagger-hilt = { id = "com.google.dagger.hilt.android", version.ref = "dagger-hil
 [libraries]
 ## ------ androidx ------ ##
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "core-ktx" }
+hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hilt-work" }
+hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hilt-compiler" }
+work = { module = "androidx.work:work-runtime-ktx", version.ref = "work-ktx" }
 lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
 lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity-compose" }
@@ -75,8 +81,8 @@ androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "a
 espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espresso-core" }
 junit = { module = "junit:junit", version.ref = "junit" }
 ## ------ google ------ ##
-hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "dagger-hilt" }
-hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "dagger-hilt" }
+dagger-hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "dagger-hilt" }
+dagger-hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "dagger-hilt" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-analytics-ktx = { module = "com.google.firebase:firebase-analytics-ktx" }
 firebase-messaging-ktx = { module = "com.google.firebase:firebase-messaging-ktx" }

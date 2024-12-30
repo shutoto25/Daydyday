@@ -61,6 +61,9 @@ dependencies {
 
     // ----- androidx ----- //
     implementation(libs.core.ktx)
+    kapt(libs.hilt.compiler)
+    implementation(libs.hilt.work)
+    implementation(libs.work)
     implementation(libs.lifecycle.runtime.ktx)
     implementation(libs.activity.compose)
     implementation(platform(libs.compose.bom))
@@ -80,8 +83,8 @@ dependencies {
 
     // ----- google ----- //
     // hilt
-    implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
+    implementation(libs.dagger.hilt.android)
+    kapt(libs.dagger.hilt.compiler)
     // firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics.ktx)

@@ -7,8 +7,8 @@ import android.app.NotificationManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.gmail.shu10.dev.app.core.CoreDrawable
 import com.gmail.shu10.dev.app.core.utils.hasPermission
-import com.gmail.shu10.dev.app.daybyday.R
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
@@ -50,7 +50,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
 
         val notification = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_fcm_notification)
+            .setSmallIcon(CoreDrawable.ic_fcm_notification)
             .setContentTitle(title)
             .setContentText(body)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)

@@ -117,7 +117,7 @@ fun InfiniteDateListPreview() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            AppNavHost()
+//            AppNavHost()
         }
     }
 }

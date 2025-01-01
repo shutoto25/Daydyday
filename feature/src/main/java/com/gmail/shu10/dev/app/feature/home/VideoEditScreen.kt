@@ -120,13 +120,15 @@ fun ThumbnailTimeline(
     thumbnails: List<Bitmap>,
     onThumbnailClick: (Long) -> Unit
 ) {
+    val thumbnailSize = 80.dp
+    val selectionWidth = thumbnailSize * 2
     LazyRow {
         itemsIndexed(thumbnails) { index, bitmap ->
             Image(
                 bitmap = bitmap.asImageBitmap(),
                 contentDescription = "Thumbnail $index",
                 modifier = Modifier
-                    .height(80.dp)
+                    .height(thumbnailSize)
                     .clickable { onThumbnailClick(index * 500L) }
             )
         }

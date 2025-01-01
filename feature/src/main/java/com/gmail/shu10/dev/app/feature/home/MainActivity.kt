@@ -37,6 +37,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+        handleIntent(intent)
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -49,11 +50,7 @@ class MainActivity : ComponentActivity() {
         uri?.let {
             val date = it.getQueryParameter("date")
             if (date != null) {
-                when (it.path) {
-                    "/diary" -> {
-                        navController.navigate(AppScreen.Detail(date).route)
-                    }
-                }
+                navController.navigate(AppScreen.Detail(date).route)
             }
         }
     }

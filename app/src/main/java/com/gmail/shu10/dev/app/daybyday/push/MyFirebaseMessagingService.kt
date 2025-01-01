@@ -4,11 +4,15 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.gmail.shu10.dev.app.core.CoreDrawable
 import com.gmail.shu10.dev.app.core.utils.hasPermission
-import com.gmail.shu10.dev.app.daybyday.R
+import com.gmail.shu10.dev.app.feature.home.MainActivity
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
@@ -28,8 +32,13 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         Log.d(this.javaClass.simpleName, "onMessageReceived() called with: message = $message")
 
         if (hasPermission(this, Manifest.permission.POST_NOTIFICATIONS)) {
+
+            // カスタムデータを取得
+            val date = message.data["date"] ?: "未設定"
+            Log.d("FCM", "受信した日付: $date")
+
             message.notification?.let {
-                shouNotification(it.title, it.body)
+                shouNotification(it.title, it.body, date)
             }
         }
     }
@@ -40,9 +49,24 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
      * @param body 通知本文
      */
     @SuppressLint("MissingPermission") // 権限チェック済み
-    private fun shouNotification(title: String?, body: String?) {
+    private fun shouNotification(title: String?, body: String?, date: String?) {
         val channelId = "default_channel_id"
         val channelName = "default channel"
+
+        val pendingIntent = if (date != null) {
+            val intent = Intent(applicationContext, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                data = Uri.parse("daybyday://diary/detail?date=$date")
+            }
+            PendingIntent.getActivity(
+                applicationContext,
+                0,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        } else {
+            null
+        }
 
         val channel = NotificationChannel(
             channelId, channelName, NotificationManager.IMPORTANCE_DEFAULT
@@ -50,9 +74,10 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
 
         val notification = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_fcm_notification)
+            .setSmallIcon(CoreDrawable.ic_fcm_notification)
             .setContentTitle(title)
             .setContentText(body)
+            .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .build()
 

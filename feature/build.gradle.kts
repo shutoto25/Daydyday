@@ -49,6 +49,9 @@ dependencies {
 
     // ----- androidx ----- //
     implementation(libs.core.ktx)
+    kapt(libs.hilt.compiler)
+    implementation(libs.hilt.work)
+    implementation(libs.work)
     implementation(libs.lifecycle.runtime.ktx)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.activity.compose)

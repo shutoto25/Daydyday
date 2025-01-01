@@ -1,9 +1,8 @@
 package com.gmail.shu10.dev.app.feature.home
 
-import android.Manifest
-import android.net.Uri
 import androidx.compose.runtime.Composable
-import androidx.core.net.toUri
+import androidx.compose.runtime.LaunchedEffect
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -12,8 +11,15 @@ import androidx.navigation.compose.rememberNavController
  * 画面遷移ホスト
  */
 @Composable
-fun AppNavHost() {
+fun AppNavHost(
+    externalNavController: (NavController) -> Unit // 外部にNavControllerを提供する
+) {
     val navController = rememberNavController()
+
+    // 外部にNavControllerを提供
+    LaunchedEffect(Unit) {
+        externalNavController(navController)
+    }
 
     NavHost(
         navController = navController,

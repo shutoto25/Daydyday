@@ -18,7 +18,7 @@ dagger-hilt = "2.49"
 
 # ------ libraries version ------ #
 ## ------ androidx ------ ##
-core-ktx = "1.13.1"
+core-ktx = "1.15.0"
 work-ktx = "2.9.1"
 hilt-work = "1.2.0"
 hilt-compiler = "1.0.0"

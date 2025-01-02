@@ -20,6 +20,7 @@ fun AppNavHost(intent: MutableState<Intent?>) {
         intent.value?.data?.let {
             val date = it.getQueryParameter("date")
             if (date != null) {
+                // 日記詳細画面へ遷移
                 navController.navigate(AppScreen.Detail(date).route)
             }
         }

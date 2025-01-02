@@ -1,7 +1,6 @@
 package com.gmail.shu10.dev.app.feature.notification
 
 import android.Manifest
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
@@ -13,6 +12,8 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.gmail.shu10.dev.app.core.CoreDrawable
+import com.gmail.shu10.dev.app.core.constants.NotificationConstant.DEFAULT_MY_CHANNEL_ID
+import com.gmail.shu10.dev.app.core.utils.createDefaultChannel
 import com.gmail.shu10.dev.app.core.utils.hasPermission
 import com.gmail.shu10.dev.app.feature.home.MainActivity
 import dagger.assisted.Assisted
@@ -42,14 +43,14 @@ class NotificationWorker @AssistedInject constructor(
      */
     @Suppress("MissingPermission")
     private fun showNotification(date: String) {
-        val channelId = "default_channel_id"
-        val channelName = "日記通知"
+        // チャンネル作成
+        applicationContext.getSystemService(NotificationManager::class.java)
+            .createNotificationChannel(createDefaultChannel())
 
         val intent = Intent(applicationContext, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             data = Uri.parse("daybyday://diary/detail?date=$date")
         }
-
         val pendingIntent = PendingIntent.getActivity(
             applicationContext,
             0,
@@ -57,13 +58,8 @@ class NotificationWorker @AssistedInject constructor(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val channel = NotificationChannel(
-            channelId, channelName, NotificationManager.IMPORTANCE_DEFAULT
-        )
-        applicationContext.getSystemService(NotificationManager::class.java)
-            .createNotificationChannel(channel)
-
-        val notification = NotificationCompat.Builder(applicationContext, channelId)
+        // 通知作成
+        val notification = NotificationCompat.Builder(applicationContext, DEFAULT_MY_CHANNEL_ID)
             .setSmallIcon(CoreDrawable.ic_fcm_notification)
             .setContentTitle("日記を書きましょう")
             .setContentText("日記を書くことで、日々の気づきを振り返ることができます")
@@ -71,7 +67,6 @@ class NotificationWorker @AssistedInject constructor(
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()
-
         NotificationManagerCompat.from(applicationContext).notify(0, notification)
     }
 }

@@ -2,7 +2,6 @@ package com.gmail.shu10.dev.app.daybyday.push
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
@@ -11,6 +10,8 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.gmail.shu10.dev.app.core.CoreDrawable
+import com.gmail.shu10.dev.app.core.constants.NotificationConstant.DEFAULT_MY_CHANNEL_ID
+import com.gmail.shu10.dev.app.core.utils.createDefaultChannel
 import com.gmail.shu10.dev.app.core.utils.hasPermission
 import com.gmail.shu10.dev.app.feature.home.MainActivity
 import com.google.firebase.messaging.FirebaseMessagingService
@@ -32,13 +33,8 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         Log.d(this.javaClass.simpleName, "onMessageReceived() called with: message = $message")
 
         if (hasPermission(this, Manifest.permission.POST_NOTIFICATIONS)) {
-
-            // カスタムデータを取得
-            val date = message.data["date"] ?: "未設定"
-            Log.d("FCM", "受信した日付: $date")
-
             message.notification?.let {
-                shouNotification(it.title, it.body, date)
+                shouNotification(it.title, it.body, message.data["date"])
             }
         }
     }
@@ -47,13 +43,17 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
      * 通知表示
      * @param title 通知タイトル
      * @param body 通知本文
+     * @param date 日付
      */
     @SuppressLint("MissingPermission") // 権限チェック済み
     private fun shouNotification(title: String?, body: String?, date: String?) {
-        val channelId = "default_channel_id"
-        val channelName = "default channel"
+        // チャンネル作成
+        getSystemService(NotificationManager::class.java).createNotificationChannel(
+            createDefaultChannel()
+        )
 
-        val pendingIntent = if (date != null) {
+        // 通知タップ時のPendingIntent作成
+        val pendingIntent = date?.let {
             val intent = Intent(applicationContext, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 data = Uri.parse("daybyday://diary/detail?date=$date")
@@ -64,23 +64,16 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
-        } else {
-            null
         }
 
-        val channel = NotificationChannel(
-            channelId, channelName, NotificationManager.IMPORTANCE_DEFAULT
-        )
-        getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
-
-        val notification = NotificationCompat.Builder(this, channelId)
+        // 通知表示
+        val notification = NotificationCompat.Builder(this, DEFAULT_MY_CHANNEL_ID)
             .setSmallIcon(CoreDrawable.ic_fcm_notification)
             .setContentTitle(title)
             .setContentText(body)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .build()
-
         NotificationManagerCompat.from(this).notify(0, notification)
     }
 }

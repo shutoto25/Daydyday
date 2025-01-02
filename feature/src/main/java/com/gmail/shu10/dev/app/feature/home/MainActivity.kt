@@ -8,8 +8,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavController
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -19,38 +19,39 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    private lateinit var navController: NavController
+    // Intentの状態管理
+    private val currentIntent = mutableStateOf<Intent?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        currentIntent.value = intent
+
+        setContentValue()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+
+        // Recent Apps から起動されたとき
+        if (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0) {
+            return
+        }
+        currentIntent.value = intent
+    }
+
+    /**
+     * 画面コンテンツ設定
+     */
+    private fun setContentValue() {
         setContent {
             DaydydayTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AppNavHost { controller ->
-                        // controllerを外部に保持
-                        navController = controller
-                    }
+                    AppNavHost(currentIntent)
                     RequestPermission(this, Manifest.permission.POST_NOTIFICATIONS)
                 }
-            }
-        }
-        handleIntent(intent)
-    }
-
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        handleIntent(intent)
-    }
-
-    private fun handleIntent(intent: Intent) {
-        val uri = intent.data
-        uri?.let {
-            val date = it.getQueryParameter("date")
-            if (date != null) {
-                navController.navigate(AppScreen.Detail(date).route)
             }
         }
     }

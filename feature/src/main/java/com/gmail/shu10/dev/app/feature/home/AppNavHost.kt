@@ -1,8 +1,9 @@
 package com.gmail.shu10.dev.app.feature.home
 
+import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.navigation.NavController
+import androidx.compose.runtime.MutableState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -11,14 +12,17 @@ import androidx.navigation.compose.rememberNavController
  * 画面遷移ホスト
  */
 @Composable
-fun AppNavHost(
-    externalNavController: (NavController) -> Unit // 外部にNavControllerを提供する
-) {
+fun AppNavHost(intent: MutableState<Intent?>) {
     val navController = rememberNavController()
 
-    // 外部にNavControllerを提供
-    LaunchedEffect(Unit) {
-        externalNavController(navController)
+    // Intentの監視と画面遷移
+    LaunchedEffect(intent.value) {
+        intent.value?.data?.let {
+            val date = it.getQueryParameter("date")
+            if (date != null) {
+                navController.navigate(AppScreen.Detail(date).route)
+            }
+        }
     }
 
     NavHost(
@@ -26,17 +30,14 @@ fun AppNavHost(
         startDestination = AppScreen.Home.route
     ) {
         // ホーム画面
-        composable(AppScreen.Home.route) {
-            InfiniteDateList(navController)
-        }
+        composable(AppScreen.Home.route) { InfiniteDateList(navController) }
         // 日付詳細画面
         composable(AppScreen.Detail("{selectedDate}").route) { navBackStackEntry ->
             val selectedDate = navBackStackEntry.arguments?.getString("selectedDate") ?: ""
             DiaryDetailScreen(navController, selectedDate)
         }
-        composable(AppScreen.VideoEdit.route) {
-            VideoEditScreen(navController)
-        }
+        // 動画編集画面
+        composable(AppScreen.VideoEdit.route) { VideoEditScreen(navController) }
     }
 }
 

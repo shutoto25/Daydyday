@@ -18,6 +18,8 @@ import com.gmail.shu10.dev.app.core.utils.hasPermission
 import com.gmail.shu10.dev.app.feature.home.MainActivity
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 /**
  * 通知を表示するWorker
@@ -29,12 +31,10 @@ class NotificationWorker @AssistedInject constructor(
 ) : Worker(context, workerParams) {
 
     override fun doWork(): Result {
-        val date = inputData.getString("date") ?: return Result.failure()
-
         if (!hasPermission(context, Manifest.permission.POST_NOTIFICATIONS)) {
             return Result.failure()
         }
-        showNotification(date)
+        showNotification()
         return Result.success()
     }
 
@@ -42,14 +42,18 @@ class NotificationWorker @AssistedInject constructor(
      * 通知を表示する
      */
     @Suppress("MissingPermission")
-    private fun showNotification(date: String) {
+    private fun showNotification() {
         // チャンネル作成
         applicationContext.getSystemService(NotificationManager::class.java)
             .createNotificationChannel(createDefaultChannel())
 
+        val today = LocalDate.now()
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val dateString = today.format(formatter)
+
         val intent = Intent(applicationContext, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            data = Uri.parse("daybyday://diary/detail?date=$date")
+            data = Uri.parse("daybyday://diary/detail?date=$dateString")
         }
         val pendingIntent = PendingIntent.getActivity(
             applicationContext,

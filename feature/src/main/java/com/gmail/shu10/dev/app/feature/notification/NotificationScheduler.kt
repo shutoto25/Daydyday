@@ -1,20 +1,40 @@
 package com.gmail.shu10.dev.app.feature.notification
 
 import android.content.Context
-import androidx.work.Data
-import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
-fun scheduleNotification(context: Context, date: String, tileInMilliSeconds: Long) {
-    val inputData = Data.Builder().putString("date", date).build()
+/**
+ * 通知スケジューラ
+ */
+fun scheduleNotification(context: Context) {
+    val workManager = WorkManager.getInstance(context)
 
-    val delay = tileInMilliSeconds - System.currentTimeMillis()
+    val currentTime = System.currentTimeMillis()
+    val targetTime = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 12)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.timeInMillis
 
-    val workRequest = OneTimeWorkRequestBuilder<NotificationWorker>()
-        .setInputData(inputData)
+    val delay = if (currentTime > targetTime) {
+        targetTime + TimeUnit.DAYS.toMillis(1) - currentTime
+    } else {
+        targetTime - currentTime
+    }
+    // WorkRequestを作成
+    val workRequest = PeriodicWorkRequestBuilder<NotificationWorker>(1, TimeUnit.DAYS)
         .setInitialDelay(delay, TimeUnit.MILLISECONDS)
         .build()
 
-    WorkManager.getInstance(context).enqueue(workRequest)
+    // Workerをスケジュール
+    workManager.enqueueUniquePeriodicWork(
+        "notification",
+        ExistingPeriodicWorkPolicy.UPDATE,
+        workRequest
+    )
 }

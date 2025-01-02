@@ -14,10 +14,6 @@ import javax.inject.Inject
 @HiltViewModel
 open class MainViewModel @Inject constructor() : ViewModel() {
 
-    companion object {
-        const val GENERATE_LIST_COUNT = 20
-    }
-
     private val _dateList = MutableStateFlow(generateDateList())
     open val dateList: StateFlow<List<String>> = _dateList
 

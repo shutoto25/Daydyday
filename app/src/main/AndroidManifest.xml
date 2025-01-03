@@ -17,6 +17,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Daydyday">
+
+        <!-- firebase cloud messaging デフォルトアイコン設定 -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_fcm_notification" />
+
         <!-- provider -->
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -27,6 +33,7 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
         <!-- activity -->
         <activity
             android:name="com.gmail.shu10.dev.app.feature.home.MainActivity"

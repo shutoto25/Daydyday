@@ -53,7 +53,7 @@ class NotificationWorker @AssistedInject constructor(
 
         val intent = Intent(applicationContext, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            data = Uri.parse("daybyday://diary/detail?date=$dateString")
+            data = Uri.parse("daybyday://diary/detail?selectedDate=$dateString")
         }
         val pendingIntent = PendingIntent.getActivity(
             applicationContext,

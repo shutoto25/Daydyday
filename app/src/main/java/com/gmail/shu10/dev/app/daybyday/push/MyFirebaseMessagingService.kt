@@ -34,7 +34,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
         if (hasPermission(this, Manifest.permission.POST_NOTIFICATIONS)) {
             message.notification?.let {
-                shouNotification(it.title, it.body, message.data["selectedDate"])
+                shouNotification(it.title, it.body, message.data["date"])
             }
         }
     }
@@ -56,7 +56,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val pendingIntent = date?.let {
             val intent = Intent(applicationContext, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                data = Uri.parse("daybyday://diary/detail?selectedDate=$date")
+                data = Uri.parse("daybyday://diary/detail?date=$date")
             }
             PendingIntent.getActivity(
                 applicationContext,

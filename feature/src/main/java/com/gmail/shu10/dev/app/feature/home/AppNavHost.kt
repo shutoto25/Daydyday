@@ -21,7 +21,7 @@ fun AppNavHost(intent: MutableState<Intent?>) {
             val date = it.getQueryParameter("date")
             if (date != null) {
                 // 日記詳細画面へ遷移
-                navController.navigate(AppScreen.Detail(date).route)
+                navController.navigate(AppScreen.Detail(date).createRoute())
             }
         }
     }
@@ -33,8 +33,8 @@ fun AppNavHost(intent: MutableState<Intent?>) {
         // ホーム画面
         composable(AppScreen.Home.route) { InfiniteDateList(navController) }
         // 日付詳細画面
-        composable(AppScreen.Detail("{selectedDate}").route) { navBackStackEntry ->
-            val selectedDate = navBackStackEntry.arguments?.getString("selectedDate") ?: ""
+        composable(AppScreen.Detail("{date}").route) { navBackStackEntry ->
+            val selectedDate = navBackStackEntry.arguments?.getString("date") ?: ""
             DiaryDetailScreen(navController, selectedDate)
         }
         // 動画編集画面
@@ -47,7 +47,7 @@ fun AppNavHost(intent: MutableState<Intent?>) {
  */
 sealed class AppScreen(val route: String) {
     object Home : AppScreen("home")
-    data class Detail(val date: String) : AppScreen("detail/{selectedDate}")
+    data class Detail(val date: String) : AppScreen("detail/{date}")
     object VideoEdit : AppScreen("videoEdit")
 }
 
@@ -59,7 +59,7 @@ fun AppScreen.createRoute(): String {
         // ホーム画面へ遷移
         is AppScreen.Home -> route
         // 日付詳細画面へ遷移
-        is AppScreen.Detail -> route.replace("{selectedDate}", date)
+        is AppScreen.Detail -> route.replace("{date}", date)
         // 動画編集画面へ遷移
         is AppScreen.VideoEdit -> route
     }

@@ -1,7 +1,7 @@
 [versions]
 # ------ project ------ #
-compileSdk = "34"
-targetSdk = "34"
+compileSdk = "35"
+targetSdk = "35"
 minSdk = "33"
 versionCode = "1"
 versionName = "1.0"

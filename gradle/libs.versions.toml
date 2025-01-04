@@ -8,7 +8,7 @@ versionName = "1.0"
 
 # ------ plugins version ------ #
 ## ------ android ------ ##
-agp = "8.7.3"
+agp = "8.6.0"
 ## ------ jetbrains ------ ##
 kotlin = "1.8.10"
 dokka = "1.9.20"

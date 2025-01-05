@@ -5,15 +5,17 @@ targetSdk = "35"
 minSdk = "33"
 versionCode = "1"
 versionName = "1.0"
+jvmTarget = "17"
 
 # ------ plugins version ------ #
 ## ------ android ------ ##
-agp = "8.6.0"
+agp = "8.6.1"
 ## ------ jetbrains ------ ##
-kotlin = "1.8.10"
+kotlin = "1.9.10"
 dokka = "1.9.20"
 ## ------ google ------ ##
 gms = "4.4.2"
+ksp = "1.9.10"
 dagger-hilt = "2.49"
 
 # ------ libraries version ------ #
@@ -27,6 +29,7 @@ activity-compose = "1.9.3"
 navigation-compose = "2.8.5"
 hilt-navigation-compose = "1.2.0"
 compose-bom = "2024.12.01"
+compose-compiler = "1.5.3"
 room = "2.6.1"
 media3 = "1.5.1"
 glance = "1.1.1"
@@ -48,6 +51,7 @@ kotlin = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 ## ------ google ------ ##
 gms = { id = "com.google.gms.google-services", version.ref = "gms" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 dagger-hilt = { id = "com.google.dagger.hilt.android", version.ref = "dagger-hilt" }
 
 [libraries]

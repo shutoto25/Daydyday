@@ -5,6 +5,9 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,8 +15,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Text
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -23,9 +31,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -35,6 +46,7 @@ import androidx.media3.ui.PlayerView
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.gmail.shu10.dev.app.domain.Diary
+import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 import com.gmail.shu10.dev.app.feature.utils.toContentUri
 import java.util.UUID
 
@@ -63,6 +75,7 @@ fun DiaryDetailScreen(
     }
 
     val context = LocalContext.current
+    // 画像/動画選択
     val phonePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { mediaUri ->
@@ -98,22 +111,24 @@ fun DiaryDetailScreen(
         Text(
             text = "Selected Date: $selectedDate",
         )
-        DiaryTitleInput(
-            title = title,
-            onTitleChange = { title = it }
-        )
-        DiaryActionButtons(
+        MediaView(
+            context = context,
+            videoUri = videoUri,
+            photoUri = photoUri,
             onClickAddPhotoOrVideo = {
                 phonePickerLauncher.launch(
                     PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
                 )
-            },
-            onClickAddLocation = { /* TODO: 位置情報を追加 */ }
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        MediaPreview(uri = photoUri)
-        Spacer(modifier = Modifier.height(16.dp))
-        VideoPlayer(context = context, uri = videoUri)
+            })
+        LocationSetting { /* TODO: 位置情報設定画面へ遷移 */ }
+//        DiaryTitleInput(
+//            title = title,
+//            onTitleChange = { title = it }
+//        )
+//        Spacer(modifier = Modifier.height(16.dp))
+//        MediaPreview(uri = photoUri)
+//        Spacer(modifier = Modifier.height(16.dp))
+//        VideoPlayer(context = context, uri = videoUri)
         Spacer(modifier = Modifier.height(16.dp))
         DiaryContentInput(
             modifier = Modifier,
@@ -131,8 +146,8 @@ fun DiaryDetailScreen(
                     date = selectedDate,
                     title = title,
                     content = content,
-                    photoPath = photoUri.toString(),
-                    videoPath = videoUri.toString(),
+                    photoPath = photoUri?.toString(),
+                    videoPath = videoUri?.toString(),
                     location = null,
                     isSynced = false
                 )
@@ -158,36 +173,67 @@ fun DiaryTitleInput(title: String, onTitleChange: (String) -> Unit) {
 }
 
 /**
- * 追加ボタン
+ * メディア表示
  */
 @Composable
-fun DiaryActionButtons(
-    onClickAddPhotoOrVideo: () -> Unit,
-    onClickAddLocation: () -> Unit
+fun MediaView(
+    context: Context,
+    photoUri: Uri?,
+    videoUri: Uri?,
+    onClickAddPhotoOrVideo: () -> Unit
 ) {
+    if (photoUri != null) {
+        MediaPreview(photoUri)
+    } else if (videoUri != null) {
+        VideoPlayer(context, videoUri)
+    } else {
+        NoMediaView(onClickAddPhotoOrVideo)
+    }
+}
+
+/**
+ * メディアがない場合のビュー（追加ボタン）
+ */
+@Composable
+fun NoMediaView(onClickAddPhotoOrVideo: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(150.dp)
+            .background(Color.Gray)
+            .clickable { onClickAddPhotoOrVideo() },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.Add,
+            contentDescription = "add",
+            modifier = Modifier.size(48.dp)
+        )
+        Text("写真/動画を追加")
+    }
+}
+
+/**
+ * 位置情報設定
+ */
+@Composable
+fun LocationSetting(onClickAddLocation: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
+            .height(48.dp)
+            .clickable { onClickAddLocation() },
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Button(
+        Icon(
+            imageVector = Icons.Default.LocationOn,
+            contentDescription = "add",
             modifier = Modifier
-                .fillMaxWidth()
-                .weight(0.5f)
-                .padding(4.dp),
-            onClick = onClickAddPhotoOrVideo
-        ) {
-            Text("写真/動画を追加")
-        }
-        Button(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(0.5f)
-                .padding(4.dp),
-            onClick = onClickAddLocation
-        ) {
-            Text("位置情報を追加")
-        }
+                .padding(8.dp)
+                .size(24.dp)
+        )
+        Text("位置情報を追加")
     }
 }
 
@@ -195,40 +241,36 @@ fun DiaryActionButtons(
  * メディアプレビュー
  */
 @Composable
-fun MediaPreview(uri: Uri?) {
-    uri?.let {
-        AsyncImage(
-            model = uri,
-            contentDescription = "dairy's photo",
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-        )
-    }
+fun MediaPreview(uri: Uri) {
+    AsyncImage(
+        model = uri,
+        contentDescription = "dairy's photo",
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+    )
 }
 
 /**
  * 動画プレビュー
  */
 @Composable
-fun VideoPlayer(context: Context, uri: Uri?) {
-    uri?.let {
-        val expPlayer = remember {
-            ExoPlayer.Builder(context).build().apply {
-                setMediaItem(MediaItem.fromUri(uri))
-                prepare()
-                playWhenReady = true
-            }
+fun VideoPlayer(context: Context, uri: Uri) {
+    val expPlayer = remember {
+        ExoPlayer.Builder(context).build().apply {
+            setMediaItem(MediaItem.fromUri(uri))
+            prepare()
+            playWhenReady = true
         }
-        AndroidView(
-            factory = { PlayerView(context).apply { player = expPlayer } },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-        )
-        DisposableEffect(Unit) {
-            onDispose { expPlayer.release() }
-        }
+    }
+    AndroidView(
+        factory = { PlayerView(context).apply { player = expPlayer } },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+    )
+    DisposableEffect(Unit) {
+        onDispose { expPlayer.release() }
     }
 }
 
@@ -264,15 +306,17 @@ fun DiarySaveButton(onSave: () -> Unit) {
     }
 }
 
-//@Preview(showBackground = true)
-//@Composable
-//fun DateDetailViewPreview() {
-//    DaydydayTheme {
-//        Surface(
-//            modifier = Modifier.fillMaxSize(),
-//            color = MaterialTheme.colorScheme.background
-//        ) {
-//            DiaryDetailScreen("2025-01-01")
-//        }
-//    }
-//}
+@Preview(showBackground = true)
+@Composable
+fun DateDetailViewPreview() {
+    DaydydayTheme {
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            LocationSetting {}
+        }
+    }
+}

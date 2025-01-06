@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.dokka) // TODO パッケージ構成についても書くようにしたい https://qiita.com/foxsal/items/6c4a0dfbc8f8e3000077
     alias(libs.plugins.gms)
     alias(libs.plugins.dagger.hilt)
-    id("com.google.devtools.ksp") version "2.1.0-1.0.29" apply false
+    id("com.google.devtools.ksp") version "2.1.0-1.0.29" apply false // TODO ちゃんと動かん
     kotlin("android")
     kotlin("kapt")
 }

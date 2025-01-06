@@ -23,7 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -61,7 +61,7 @@ fun VideoEditScreen(
     // サムネイルリスト
     val thumbnails = remember { viewModel.extractThumbnails(context, videoUri) }
     // 動画再生位置
-    var currentPosition by remember { mutableStateOf(0L) }
+    var currentPosition by remember { mutableLongStateOf(0L) }
 
     Column {
         VideoPlayer(context = context, exoPlayer = exoPlayer, uri = videoUri)

@@ -109,10 +109,10 @@ fun DiaryDetailScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(8.dp)
     ) {
         DateTitle(date = selectedDate)
-        MediaView(
+        MediaContentArea(
             context = context,
             videoUri = videoUri,
             photoUri = photoUri,
@@ -120,8 +120,9 @@ fun DiaryDetailScreen(
                 phonePickerLauncher.launch(
                     PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
                 )
-            })
-        LocationSetting { /* TODO: 位置情報設定画面へ遷移 */ }
+            },
+            onClickAddLocation = { /* TODO: 位置情報設定画面へ遷移 */ }
+        )
 //        DiaryTitleInput(
 //            title = title,
 //            onTitleChange = { title = it }
@@ -170,11 +171,11 @@ fun DateTitle(date: String) {
     ) {
         Text(
             text = convertDateFormat(date),
-            fontSize = 24.sp
+            fontSize = 28.sp
         )
         Text(
             text = getDayOfWeek(date),
-            fontSize = 16.sp,
+            fontSize = 20.sp,
         )
     }
 }
@@ -198,23 +199,40 @@ fun DiaryTitleInput(title: String, onTitleChange: (String) -> Unit) {
  * メディア表示
  */
 @Composable
-fun MediaView(
+fun MediaContentArea(
     context: Context,
     photoUri: Uri?,
     videoUri: Uri?,
-    onClickAddPhotoOrVideo: () -> Unit
+    onClickAddPhotoOrVideo: () -> Unit,
+    onClickAddLocation: () -> Unit
 ) {
-    if (photoUri != null) {
-        MediaPreview(photoUri)
-    } else if (videoUri != null) {
-        VideoPlayer(context, videoUri)
-    } else {
-        NoMediaView(onClickAddPhotoOrVideo)
+    when {
+        photoUri != null -> {
+            MediaPreView({ PhotoImage(photoUri) }) { onClickAddLocation() }
+        }
+
+        videoUri != null -> {
+            MediaPreView({ VideoPlayer(context, videoUri) }) { onClickAddLocation() }
+        }
+
+        else -> {
+            NoMediaView(onClickAddPhotoOrVideo)
+        }
     }
+}
+
+@Composable
+fun MediaPreView(
+    content: @Composable () -> Unit,
+    onClickAddLocation: () -> Unit
+) {
+    content()
+    LocationSetting { onClickAddLocation() }
 }
 
 /**
  * メディアがない場合のビュー（追加ボタン）
+ * @param onClickAddPhotoOrVideo 写真/動画追加ボタンクリックコールバック
  */
 @Composable
 fun NoMediaView(onClickAddPhotoOrVideo: () -> Unit) {
@@ -238,6 +256,7 @@ fun NoMediaView(onClickAddPhotoOrVideo: () -> Unit) {
 
 /**
  * 位置情報設定
+ * @param onClickAddLocation 位置情報追加ボタンクリックコールバック
  */
 @Composable
 fun LocationSetting(onClickAddLocation: () -> Unit) {
@@ -260,10 +279,11 @@ fun LocationSetting(onClickAddLocation: () -> Unit) {
 }
 
 /**
- * メディアプレビュー
+ * 写真プレビュー
+ * @param uri 写真URI
  */
 @Composable
-fun MediaPreview(uri: Uri) {
+fun PhotoImage(uri: Uri) {
     AsyncImage(
         model = uri,
         contentDescription = "dairy's photo",
@@ -275,6 +295,8 @@ fun MediaPreview(uri: Uri) {
 
 /**
  * 動画プレビュー
+ * @param context Context
+ * @param uri 動画URI
  */
 @Composable
 fun VideoPlayer(context: Context, uri: Uri) {

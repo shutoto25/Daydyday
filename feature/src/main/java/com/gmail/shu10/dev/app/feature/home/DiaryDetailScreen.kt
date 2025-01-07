@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -45,6 +46,8 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.gmail.shu10.dev.app.core.utils.convertDateFormat
+import com.gmail.shu10.dev.app.core.utils.getDayOfWeek
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 import com.gmail.shu10.dev.app.feature.utils.toContentUri
@@ -108,9 +111,7 @@ fun DiaryDetailScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text(
-            text = "Selected Date: $selectedDate",
-        )
+        DateTitle(date = selectedDate)
         MediaView(
             context = context,
             videoUri = videoUri,
@@ -153,6 +154,27 @@ fun DiaryDetailScreen(
                 )
                 viewModel.saveDiary(saveData)
             }
+        )
+    }
+}
+
+/**
+ * 日付タイトル
+ */
+@Composable
+fun DateTitle(date: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp, horizontal = 8.dp)
+    ) {
+        Text(
+            text = convertDateFormat(date),
+            fontSize = 24.sp
+        )
+        Text(
+            text = getDayOfWeek(date),
+            fontSize = 16.sp,
         )
     }
 }
@@ -316,6 +338,7 @@ fun DateDetailViewPreview() {
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
+            DateTitle(date = "2022-01-01")
             LocationSetting {}
         }
     }

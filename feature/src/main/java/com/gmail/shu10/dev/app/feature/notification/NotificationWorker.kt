@@ -67,7 +67,7 @@ class NotificationWorker @AssistedInject constructor(
             .setSmallIcon(CoreDrawable.ic_fcm_notification)
             .setContentTitle("日記を書きましょう")
             .setContentText("日記を書くことで、日々の気づきを振り返ることができます")
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()

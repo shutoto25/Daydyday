@@ -72,7 +72,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .setContentTitle(title)
             .setContentText(body)
             .setContentIntent(pendingIntent)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
         NotificationManagerCompat.from(this).notify(0, notification)
     }

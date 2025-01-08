@@ -31,7 +31,7 @@ fun AppNavHost(intent: MutableState<Intent?>) {
         startDestination = AppScreen.Home.route
     ) {
         // ホーム画面
-        composable(AppScreen.Home.route) { InfiniteDateList(navController) }
+        composable(AppScreen.Home.route) { HomeScreen(navController) }
         // 日付詳細画面
         composable(AppScreen.Detail("{date}").route) { navBackStackEntry ->
             val selectedDate = navBackStackEntry.arguments?.getString("date") ?: ""

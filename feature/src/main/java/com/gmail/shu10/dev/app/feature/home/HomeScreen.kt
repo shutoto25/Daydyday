@@ -86,6 +86,12 @@ fun HomeScreen(navController: NavController) {
 
 /**
  * ホーム画面コンテンツ
+ * @param dateList 日付リスト
+ * @param gridState LazyGridState
+ * @param isFabVisible FAB表示フラグ
+ * @param fabIcon FABアイコン
+ * @param onFabClick FABクリック時の処理
+ * @param onDateClick 日付クリック時の処理
  */
 @Composable
 fun HomeScreenContent(
@@ -119,6 +125,9 @@ fun HomeScreenContent(
 
 /**
  * FABアイコン
+ * @param isFabVisible FAB表示フラグ
+ * @param icon FABアイコン
+ * @param onClick FABクリック時の処理
  */
 @Composable
 fun DateFloatingActionButton(
@@ -145,6 +154,10 @@ fun DateFloatingActionButton(
 
 /**
  * 日付リスト
+ * @param dateList 日付リスト
+ * @param gridState LazyGridState
+ * @param onDateClick 日付クリック時の処理
+ * @param modifier Modifier
  */
 @Composable
 fun DateGrid(
@@ -169,6 +182,8 @@ fun DateGrid(
 
 /**
  * 日付アイテム
+ * @param date 日付
+ * @param onClickItem アイテムクリック時の処理
  */
 @Composable
 fun DateGridItem(date: String, onClickItem: () -> Unit) {

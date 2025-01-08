@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -35,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -54,66 +56,115 @@ fun HomeScreen(navController: NavController) {
     // リスト初期位置は今日
     val gridState = rememberLazyGridState(initialFirstVisibleItemIndex = 365)
     // FAB表示フラグ（今日に近い場合はFABを表示しない）
-    val isFabVisible by remember {
-        derivedStateOf { gridState.firstVisibleItemIndex != 365 }
-    }
+    val isFabVisible by remember { derivedStateOf { gridState.firstVisibleItemIndex !in 360..365 } }
     // FABアイコン（今日を基準に過去は下向きアイコン、未来は上向きアイコンを設定）
     val fabIcon by remember {
         derivedStateOf {
-            if (gridState.firstVisibleItemIndex < 365)
-                Icons.Default.KeyboardArrowDown
-            else if (gridState.firstVisibleItemIndex > 365)
-                Icons.Default.KeyboardArrowUp
-            else null
+            when {
+                gridState.firstVisibleItemIndex <= 365 -> Icons.Default.KeyboardArrowDown
+                gridState.firstVisibleItemIndex > 365 -> Icons.Default.KeyboardArrowUp
+                else -> Icons.Default.KeyboardArrowDown // ならない想定なのでデフォルト下向きアイコン設定
+            }
         }
     }
-    Scaffold(
-        floatingActionButton = {
-            AnimatedVisibility(
-                visible = isFabVisible,
-                enter = fadeIn(animationSpec = tween(durationMillis = 500)),
-                exit = fadeOut(animationSpec = tween(durationMillis = 500))
-            ) {
-                FloatingActionButton(
-                    shape = RoundedCornerShape(50),
-                    onClick = {
-                        coroutineScope.launch {
-                            gridState.animateScrollToItem(index = 365)
-                        }
-                    }) {
-                    fabIcon?.let {
-                        Icon(
-                            imageVector = it,
-                            contentDescription = "scroll to today's position"
-                        )
-                    }
-                }
+
+    HomeScreenContent(
+        dateList = dateList,
+        gridState = gridState,
+        isFabVisible = isFabVisible,
+        fabIcon = fabIcon,
+        onFabClick = {
+            coroutineScope.launch {
+                gridState.animateScrollToItem(index = 365)
             }
         },
-        floatingActionButtonPosition = FabPosition.Center,
-        content = { innerPadding ->
-            LazyVerticalGrid(
-                state = gridState,
-                columns = GridCells.Fixed(3),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentPadding = PaddingValues(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(dateList) { date ->
-                    DateGridItem(date) {
-                        navController.navigate(
-                            AppScreen
-                                .Detail(date)
-                                .createRoute()
-                        )
-                    }
-                }
-            }
+        onDateClick = { date ->
+            navController.navigate(AppScreen.Detail(date).createRoute())
         }
     )
+}
+
+/**
+ * ホーム画面コンテンツ
+ */
+@Composable
+fun HomeScreenContent(
+    dateList: List<String>,
+    gridState: LazyGridState,
+    isFabVisible: Boolean,
+    fabIcon: ImageVector,
+    onFabClick: () -> Unit,
+    onDateClick: (String) -> Unit
+) {
+    Scaffold(floatingActionButton = {
+        DateFloatingActionButton(
+            isFabVisible = isFabVisible,
+            icon = fabIcon,
+            onClick = onFabClick
+        )
+    },
+        floatingActionButtonPosition = FabPosition.Center,
+        content = { innerPadding ->
+            DateGrid(
+                dateList = dateList,
+                gridState = gridState,
+                onDateClick = onDateClick,
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            )
+        }
+    )
+}
+
+/**
+ * FABアイコン
+ */
+@Composable
+fun DateFloatingActionButton(
+    isFabVisible: Boolean,
+    icon: ImageVector,
+    onClick: () -> Unit
+) {
+    AnimatedVisibility(
+        visible = isFabVisible,
+        enter = fadeIn(animationSpec = tween(durationMillis = 500)),
+        exit = fadeOut(animationSpec = tween(durationMillis = 500))
+    ) {
+        FloatingActionButton(
+            shape = RoundedCornerShape(50),
+            onClick = { onClick() }
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = "scroll to today's position"
+            )
+        }
+    }
+}
+
+/**
+ * 日付リスト
+ */
+@Composable
+fun DateGrid(
+    dateList: List<String>,
+    gridState: LazyGridState,
+    onDateClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyVerticalGrid(
+        state = gridState,
+        columns = GridCells.Fixed(3),
+        modifier = modifier,
+        contentPadding = PaddingValues(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(dateList) { date ->
+            DateGridItem(date) { onDateClick(date) }
+        }
+    }
 }
 
 /**

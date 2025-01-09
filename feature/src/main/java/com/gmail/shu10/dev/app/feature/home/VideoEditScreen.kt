@@ -4,9 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -146,33 +145,45 @@ fun ThumbnailTimeline(
     thumbnails: List<Bitmap>,
     onThumbnailClick: (Long) -> Unit
 ) {
+    // TODO 1秒の範囲を算出して余白と黄色枠の大きさを決める
     val thumbnailSize = 80.dp
-    val selectionWidth = thumbnailSize * 2
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(thumbnailSize)
-            .width(selectionWidth)
-    ) {
-        LazyRow {
-            itemsIndexed(thumbnails) { index, bitmap ->
-                Image(
-                    bitmap = bitmap.asImageBitmap(),
-                    contentDescription = "Thumbnail $index",
-                    modifier = Modifier
-                        .height(thumbnailSize)
-                        .clickable { onThumbnailClick(index * 500L) }
-                )
+
+    Box(modifier = Modifier.fillMaxWidth()) {
+        LazyRow(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+
+            item {
+                Spacer(modifier = Modifier.width(100.dp))
+            }
+
+            items(thumbnails) { thumbnail ->
+                ThumbnailItem(bitmap = thumbnail, size = thumbnailSize)
+            }
+
+            item {
+                Spacer(modifier = Modifier.width(100.dp))
             }
         }
-        // 切り取りエリアを示す枠
+        // 固定された黄色い枠
         Box(
             modifier = Modifier
                 .align(Alignment.Center)
-                .size(100.dp)
+                .size(thumbnailSize)
                 .border(2.dp, Color.Yellow)
         )
     }
+}
+
+@Composable
+fun ThumbnailItem(bitmap: Bitmap, size: Dp) {
+    Image(
+        bitmap = bitmap.asImageBitmap(),
+        contentDescription = "Thumbnail",
+        modifier = Modifier
+            .height(size)
+//            .clickable { onThumbnailClick(index * 500L) }
+    )
 }
 
 /**

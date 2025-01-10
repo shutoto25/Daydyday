@@ -8,13 +8,13 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -145,43 +146,46 @@ fun ThumbnailTimeline(
     thumbnails: List<Bitmap>,
     onThumbnailClick: (Long) -> Unit
 ) {
-    // TODO 1秒の範囲を算出して余白と黄色枠の大きさを決める
-    val thumbnailSize = 80.dp
+    val timelineHeight = 80.dp
+    val thumbnailWidth = calculateCropWidth(thumbnails[0], timelineHeight)
+    val cropWidth = thumbnailWidth * 2 // 1秒分
 
     Box(modifier = Modifier.fillMaxWidth()) {
         LazyRow(
             modifier = Modifier.fillMaxWidth()
         ) {
-
-            item {
-                Spacer(modifier = Modifier.width(100.dp))
-            }
-
             items(thumbnails) { thumbnail ->
-                ThumbnailItem(bitmap = thumbnail, size = thumbnailSize)
-            }
-
-            item {
-                Spacer(modifier = Modifier.width(100.dp))
+                ThumbnailItem(bitmap = thumbnail, height = timelineHeight)
             }
         }
         // 固定された黄色い枠
         Box(
             modifier = Modifier
                 .align(Alignment.Center)
-                .size(thumbnailSize)
+                .height(timelineHeight)
+                .width(cropWidth)
                 .border(2.dp, Color.Yellow)
         )
     }
 }
 
 @Composable
-fun ThumbnailItem(bitmap: Bitmap, size: Dp) {
+fun calculateCropWidth(thumbnail: Bitmap, targetHeight: Dp): Dp {
+    val density = LocalDensity.current
+    val aspectRatio = thumbnail.width.toFloat() / thumbnail.height.toFloat()
+
+    val targetHeightPx = with(density) { targetHeight.toPx() }
+    val newWithPx = aspectRatio * targetHeightPx
+    return with(density) { newWithPx.toDp() }
+}
+
+@Composable
+fun ThumbnailItem(bitmap: Bitmap, height: Dp) {
     Image(
         bitmap = bitmap.asImageBitmap(),
         contentDescription = "Thumbnail",
         modifier = Modifier
-            .height(size)
+            .height(height)
 //            .clickable { onThumbnailClick(index * 500L) }
     )
 }

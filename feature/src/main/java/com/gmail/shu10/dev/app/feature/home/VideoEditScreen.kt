@@ -3,6 +3,7 @@ package com.gmail.shu10.dev.app.feature.home
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -34,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
@@ -146,13 +148,22 @@ fun ThumbnailTimeline(
     thumbnails: List<Bitmap>,
     onThumbnailClick: (Long) -> Unit
 ) {
+    var offset by remember { mutableIntStateOf(0) }
     val timelineHeight = 80.dp
     val thumbnailWidth = calculateCropWidth(thumbnails[0], timelineHeight)
     val cropWidth = thumbnailWidth * 2 // 1秒分
 
-    Box(modifier = Modifier.fillMaxWidth()) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .onSizeChanged { size ->
+                Log.d("TEST", "ThumbnailTimeline() called with: size = ${size.width}, cropWidth = ${cropWidth.value}, cropWidthInt = ${cropWidth.value.toInt()}")
+                offset = (size.width - cropWidth.value.toInt()) / 2
+            }
+    ) {
         LazyRow(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(start = offset.toDp(), end = offset.toDp())
         ) {
             items(thumbnails) { thumbnail ->
                 ThumbnailItem(bitmap = thumbnail, height = timelineHeight)
@@ -169,16 +180,11 @@ fun ThumbnailTimeline(
     }
 }
 
-@Composable
-fun calculateCropWidth(thumbnail: Bitmap, targetHeight: Dp): Dp {
-    val density = LocalDensity.current
-    val aspectRatio = thumbnail.width.toFloat() / thumbnail.height.toFloat()
-
-    val targetHeightPx = with(density) { targetHeight.toPx() }
-    val newWithPx = aspectRatio * targetHeightPx
-    return with(density) { newWithPx.toDp() }
-}
-
+/**
+ * サムネイルアイテム
+ * @param bitmap サムネイル画像
+ * @param height 高さ
+ */
 @Composable
 fun ThumbnailItem(bitmap: Bitmap, height: Dp) {
     Image(
@@ -188,6 +194,30 @@ fun ThumbnailItem(bitmap: Bitmap, height: Dp) {
             .height(height)
 //            .clickable { onThumbnailClick(index * 500L) }
     )
+}
+
+/**
+ * IntをDpに変換
+ */
+@Composable
+fun Int.toDp(): Dp {
+    val density = LocalDensity.current
+    return with(density) { this@toDp.toDp() }
+}
+
+/**
+ * サムネイル高さからクロップ幅を計算
+ * @param thumbnail サムネイル画像
+ * @param targetHeight ターゲット高さ
+ */
+@Composable
+fun calculateCropWidth(thumbnail: Bitmap, targetHeight: Dp): Dp {
+    val density = LocalDensity.current
+    val aspectRatio = thumbnail.width.toFloat() / thumbnail.height.toFloat()
+
+    val targetHeightPx = with(density) { targetHeight.toPx() }
+    val newHeightPx = aspectRatio * targetHeightPx
+    return with(density) { newHeightPx.toDp() }
 }
 
 /**

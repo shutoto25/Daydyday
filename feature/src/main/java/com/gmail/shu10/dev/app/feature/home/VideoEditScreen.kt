@@ -3,7 +3,6 @@ package com.gmail.shu10.dev.app.feature.home
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -27,7 +26,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -150,39 +148,30 @@ fun ThumbnailTimeline(
     onThumbnailClick: (Long) -> Unit
 ) {
     var offset by remember { mutableStateOf(0.dp) }
+    val density = LocalDensity.current
     val timelineHeight = 80.dp
     val thumbnailWidth = calculateCropWidth(thumbnails[0], timelineHeight)
     val cropWidth = thumbnailWidth * 2 // 1秒分
-    val density = LocalDensity.current
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .onSizeChanged { size ->
-                Log.d(
-                    "TEST",
-                    "ThumbnailTimeline() called with: size = ${size.width}, cropWidth = ${cropWidth.value}, cropWidthInt = ${cropWidth.value.toInt()}"
-                )
                 offset = with(density) { (size.width).toDp() / 2 - thumbnailWidth }
             }
     ) {
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(
-                start = offset,
-                end = offset
-            )
+            contentPadding = PaddingValues(start = offset, end = offset)
         ) {
             items(thumbnails) { thumbnail ->
                 ThumbnailItem(bitmap = thumbnail, height = timelineHeight)
             }
         }
-        // 固定された黄色い枠
-        Box(
+        CropIndicator(
             modifier = Modifier
                 .align(Alignment.Center)
                 .height(timelineHeight)
                 .width(cropWidth)
-                .border(2.dp, Color.Yellow)
         )
     }
 }
@@ -204,12 +193,12 @@ fun ThumbnailItem(bitmap: Bitmap, height: Dp) {
 }
 
 /**
- * IntをDpに変換
+ * クロップインジケーター
+ * @param modifier Modifier
  */
 @Composable
-fun Int.toDp(): Dp {
-    val density = LocalDensity.current
-    return with(density) { this@toDp.toDp() }
+fun CropIndicator(modifier: Modifier) {
+    Box(modifier = modifier.border(2.dp, Color.Yellow))
 }
 
 /**

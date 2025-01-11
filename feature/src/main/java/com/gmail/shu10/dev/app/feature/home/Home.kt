@@ -50,7 +50,7 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun HomeScreen(navController: NavController) {
-    val viewModel: MainViewModel = hiltViewModel()
+    val viewModel: HomeViewModel = hiltViewModel()
     val coroutineScope = rememberCoroutineScope()
     val dateList by viewModel.dateList.collectAsState()
     // リスト初期位置は今日
@@ -79,7 +79,7 @@ fun HomeScreen(navController: NavController) {
             }
         },
         onDateClick = { date ->
-            navController.navigate(AppScreen.Detail(date).createRoute())
+            navController.navigate(AppScreen.DiaryDetail(date).createRoute())
         }
     )
 }

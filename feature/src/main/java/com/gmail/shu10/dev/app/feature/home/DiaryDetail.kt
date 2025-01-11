@@ -96,7 +96,7 @@ fun DiaryDetailScreen(
                     navHostController.currentBackStackEntry?.savedStateHandle?.set(
                         "selectedVideoUri", url.toString()
                     )
-                    navHostController.navigate("videoEdit")
+                    navHostController.navigate("videoEditor")
 //                    val file = saveVideoToAppDir(context, url)
 //                    videoUri = file?.toContentUri(context)
                 }

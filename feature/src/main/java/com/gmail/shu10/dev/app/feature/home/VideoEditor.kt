@@ -54,11 +54,11 @@ import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
  * @param navHostController ナビゲーションコントローラー
  */
 @Composable
-fun VideoEditScreen(
+fun VideoEditorScreen(
     navHostController: NavHostController,
 //    viewModel: DiaryDetailViewModel = hiltViewModel()
 ) {
-    val viewModel: VideoEditViewModel = hiltViewModel()
+    val viewModel: VideoEditorViewModel = hiltViewModel()
     // 画面遷移元からの動画URI
     val videoUriString =
         navHostController.previousBackStackEntry?.savedStateHandle?.get<String>("selectedVideoUri")
@@ -269,7 +269,7 @@ fun VideoEditScreenPreview() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            VideoEditScreen(rememberNavController())
+            VideoEditorScreen(rememberNavController())
         }
     }
 }

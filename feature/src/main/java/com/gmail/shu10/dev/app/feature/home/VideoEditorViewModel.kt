@@ -11,7 +11,7 @@ import androidx.lifecycle.ViewModel
 /**
  * 動画編集画面のViewModel
  */
-class VideoEditViewModel : ViewModel() {
+class VideoEditorViewModel : ViewModel() {
 
     /**
      * 動画からサムネイル（フレーム）を切り出す
@@ -42,7 +42,7 @@ class VideoEditViewModel : ViewModel() {
             MediaMetadataRetriever.METADATA_KEY_DURATION
         )?.toLongOrNull() ?: 0L
         Log.d(
-            "VideoEditViewModel",
+            "VideoEditorViewModel",
             "extractThumbnails() called:" +
                     "Width: $videoWidth, Height: $videoHeight, " +
                     "Rotation:$rotation, DurationMs: $durationMs"

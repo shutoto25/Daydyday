@@ -12,7 +12,7 @@ import javax.inject.Inject
  *
  */
 @HiltViewModel
-open class MainViewModel @Inject constructor() : ViewModel() {
+open class HomeViewModel @Inject constructor() : ViewModel() {
 
     private val _dateList = MutableStateFlow(generateDateList())
     open val dateList: StateFlow<List<String>> = _dateList

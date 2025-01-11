@@ -6,7 +6,15 @@ import android.graphics.Matrix
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.util.Log
+import androidx.annotation.OptIn
 import androidx.lifecycle.ViewModel
+import androidx.media3.common.MediaItem
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.transformer.Composition
+import androidx.media3.transformer.ExportException
+import androidx.media3.transformer.ExportResult
+import androidx.media3.transformer.Transformer
+import java.io.File
 
 /**
  * 動画編集画面のViewModel
@@ -93,5 +101,51 @@ class VideoEditorViewModel : ViewModel() {
             if (rotation == 0) videoWidth else videoHeight,
             true
         )
+    }
+
+    /**
+     * 動画をトリミングする
+     */
+    @OptIn(UnstableApi::class)
+    fun trimVideo(
+        context: Context,
+        inputUri: Uri,
+        outputFile: File,
+        startMs: Long,
+        onSuccess: (ExportResult) -> Unit,
+        onError: (ExportException) -> Unit
+    ) {
+        val transformer = Transformer.Builder(context)
+            .addListener(object : Transformer.Listener {
+                override fun onCompleted(composition: Composition, exportResult: ExportResult) {
+                    // トリミング成功
+                    onSuccess(exportResult)
+                }
+
+                override fun onError(
+                    composition: Composition,
+                    exportResult: ExportResult,
+                    exportException: ExportException
+                ) {
+                    // トリミング失敗
+                    onError(exportException)
+                }
+            }).build()
+
+        val mediaItem = MediaItem.Builder()
+            .setUri(inputUri)
+            .setClippingConfiguration(
+                MediaItem.ClippingConfiguration.Builder()
+                    .setStartPositionMs(startMs)
+                    .setEndPositionMs(startMs + 1000)
+                    .build()
+            ).build()
+
+//        // 出力ファイルの事前確認
+//        if (outputFile.exists()) {
+//            outputFile.delete()
+//        }
+
+        transformer.start(mediaItem, outputFile.absolutePath)
     }
 }

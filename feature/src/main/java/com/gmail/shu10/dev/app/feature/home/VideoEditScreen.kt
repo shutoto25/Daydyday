@@ -29,6 +29,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -148,22 +149,28 @@ fun ThumbnailTimeline(
     thumbnails: List<Bitmap>,
     onThumbnailClick: (Long) -> Unit
 ) {
-    var offset by remember { mutableIntStateOf(0) }
+    var offset by remember { mutableStateOf(0.dp) }
     val timelineHeight = 80.dp
     val thumbnailWidth = calculateCropWidth(thumbnails[0], timelineHeight)
     val cropWidth = thumbnailWidth * 2 // 1秒分
-
+    val density = LocalDensity.current
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .onSizeChanged { size ->
-                Log.d("TEST", "ThumbnailTimeline() called with: size = ${size.width}, cropWidth = ${cropWidth.value}, cropWidthInt = ${cropWidth.value.toInt()}")
-                offset = (size.width - cropWidth.value.toInt()) / 2
+                Log.d(
+                    "TEST",
+                    "ThumbnailTimeline() called with: size = ${size.width}, cropWidth = ${cropWidth.value}, cropWidthInt = ${cropWidth.value.toInt()}"
+                )
+                offset = with(density) { (size.width).toDp() / 2 - thumbnailWidth }
             }
     ) {
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(start = offset.toDp(), end = offset.toDp())
+            contentPadding = PaddingValues(
+                start = offset,
+                end = offset
+            )
         ) {
             items(thumbnails) { thumbnail ->
                 ThumbnailItem(bitmap = thumbnail, height = timelineHeight)

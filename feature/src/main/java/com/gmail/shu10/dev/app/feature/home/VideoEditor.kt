@@ -3,6 +3,8 @@ package com.gmail.shu10.dev.app.feature.home
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
+import android.util.Log
+import androidx.annotation.OptIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -50,6 +52,7 @@ import androidx.media3.ui.PlayerView
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
+import java.io.File
 
 /**
  * 動画編集画面
@@ -74,6 +77,7 @@ fun VideoEditorScreen(
 
     ViewEditScreenContent(
         context = context,
+        viewModel = viewModel,
         exoPlayer = exoPlayer,
         videoUri = videoUri,
         thumbnails = thumbnails
@@ -86,6 +90,7 @@ fun VideoEditorScreen(
 @Composable
 fun ViewEditScreenContent(
     context: Context,
+    viewModel: VideoEditorViewModel,
     exoPlayer: ExoPlayer,
     videoUri: Uri?,
     thumbnails: List<Bitmap>
@@ -104,7 +109,22 @@ fun ViewEditScreenContent(
         }
         VideoControlButtons(
             onPreview = {},
-            onTrim = {}
+            onTrim = {
+                viewModel.trimVideo(
+                    context = context,
+                    inputUri = videoUri!!,
+                    outputFile = File(context.cacheDir, "1ms.mp4"),
+                    startMs = position,
+                    onSuccess = {
+                        // トリミング成功
+                        Log.d("TEST", "ViewEditScreenContent() called trim success")
+                    },
+                    onError = {
+                        // トリミング失敗
+                        Log.d("TEST", "ViewEditScreenContent() called trim error")
+                    }
+                )
+            }
         )
     }
 }
@@ -247,22 +267,21 @@ fun calculateTrimWidth(thumbnail: Bitmap, targetHeight: Dp): Dp {
  * @param onTrim トリミングボタンクリック時のコールバック
  */
 @Composable
-fun VideoControlButtons(onPreview: () -> Unit, onTrim: () -> Unit) {
+fun VideoControlButtons(
+    onPreview: () -> Unit,
+    onTrim: () -> Unit
+) {
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        Button(onClick = onPreview) {
-            Text("Preview")
-        }
+        Button(onClick = onPreview) { Text("Preview") }
         Button(
             onClick = onTrim,
             colors = ButtonDefaults.buttonColors(containerColor = Color.Yellow)
-        ) {
-            Text("Trim")
-        }
+        ) { Text("Trim") }
     }
 }
 

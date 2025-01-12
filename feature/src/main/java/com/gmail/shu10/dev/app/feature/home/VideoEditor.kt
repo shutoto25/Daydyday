@@ -17,19 +17,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -89,19 +91,17 @@ fun ViewEditScreenContent(
     thumbnails: List<Bitmap>
 ) {
     // 動画再生位置
-    var currentPosition by remember { mutableLongStateOf(0L) }
+    var position by remember { mutableLongStateOf(0L) }
     Column {
-        VideoPlayer(context = context, exoPlayer = exoPlayer, uri = videoUri)
-        ThumbnailTimeline(thumbnails = thumbnails) { newPosition ->
-            exoPlayer.seekTo(newPosition)
-            currentPosition = newPosition
+        VideoPlayer(
+            context = context,
+            startPositionMs = position,
+            exoPlayer = exoPlayer,
+            uri = videoUri
+        )
+        ThumbnailTimeline(thumbnails = thumbnails) { startMs ->
+            position = startMs
         }
-
-        VideoSeekBar(
-            currentPosition = currentPosition,
-            duration = 10000L
-        ) { newPosition -> currentPosition = newPosition }
-
         VideoControlButtons(
             onPreview = {},
             onTrim = {}
@@ -116,7 +116,12 @@ fun ViewEditScreenContent(
  * @param uri 動画URI
  */
 @Composable
-fun VideoPlayer(context: Context, exoPlayer: ExoPlayer, uri: Uri?) {
+fun VideoPlayer(
+    context: Context,
+    startPositionMs: Long,
+    exoPlayer: ExoPlayer,
+    uri: Uri?
+) {
     uri?.let {
         DisposableEffect(Unit) {
             exoPlayer.apply {
@@ -127,31 +132,34 @@ fun VideoPlayer(context: Context, exoPlayer: ExoPlayer, uri: Uri?) {
             // 画面破棄のタイミングでPlayerを解放
             onDispose { exoPlayer.release() }
         }
+        LaunchedEffect(startPositionMs) {
+            exoPlayer.seekTo(startPositionMs)
+        }
+        // PlayerViewとexpPlayerをAndroidView経由で統合
+        AndroidView(
+            factory = { PlayerView(context).apply { this.player = exoPlayer } },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(400.dp)
+        )
     }
-    // PlayerViewとexpPlayerをAndroidView経由で統合
-    AndroidView(
-        factory = { PlayerView(context).apply { this.player = exoPlayer } },
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(400.dp)
-    )
 }
 
 /**
  * サムネイルタイムライン
  * @param thumbnails サムネイルリスト
- * @param onThumbnailClick サムネイルクリック時のコールバック
  */
 @Composable
 fun ThumbnailTimeline(
     thumbnails: List<Bitmap>,
-    onThumbnailClick: (Long) -> Unit
+    onTrimRangeChanged: (startMs: Long) -> Unit
 ) {
     var offset by remember { mutableStateOf(0.dp) }
+    val listState = rememberLazyListState()
     val density = LocalDensity.current
-    val timelineHeight = 80.dp
-    val thumbnailWidth = calculateCropWidth(thumbnails[0], timelineHeight)
-    val cropWidth = thumbnailWidth * 2 // 1秒分
+    val timelineHeight = 100.dp
+    val thumbnailWidth = calculateTrimWidth(thumbnails[0], timelineHeight)
+    val trimWidth = thumbnailWidth * 2 // 1秒分
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -160,6 +168,7 @@ fun ThumbnailTimeline(
             }
     ) {
         LazyRow(
+            state = listState,
             modifier = Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(start = offset, end = offset)
         ) {
@@ -167,12 +176,29 @@ fun ThumbnailTimeline(
                 ThumbnailItem(bitmap = thumbnail, height = timelineHeight)
             }
         }
-        CropIndicator(
+        TrimIndicator(
             modifier = Modifier
                 .align(Alignment.Center)
                 .height(timelineHeight)
-                .width(cropWidth)
+                .width(trimWidth)
         )
+    }
+
+    // LazyRowのスクロール位置からトリム範囲を計算
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
+            .collect { (index, offset) ->
+                val totalOffsetPx = with(density) {
+                    index * thumbnailWidth.toPx() + offset
+                }
+                val trimWidthPx = with(density) {
+                    trimWidth.toPx()
+                }
+                val startMs = (totalOffsetPx / trimWidthPx * 1000).toLong()
+
+                // トリム範囲をコールバック
+                onTrimRangeChanged(startMs)
+            }
     }
 }
 
@@ -188,7 +214,6 @@ fun ThumbnailItem(bitmap: Bitmap, height: Dp) {
         contentDescription = "Thumbnail",
         modifier = Modifier
             .height(height)
-//            .clickable { onThumbnailClick(index * 500L) }
     )
 }
 
@@ -197,7 +222,7 @@ fun ThumbnailItem(bitmap: Bitmap, height: Dp) {
  * @param modifier Modifier
  */
 @Composable
-fun CropIndicator(modifier: Modifier) {
+fun TrimIndicator(modifier: Modifier) {
     Box(modifier = modifier.border(2.dp, Color.Yellow))
 }
 
@@ -207,33 +232,13 @@ fun CropIndicator(modifier: Modifier) {
  * @param targetHeight ターゲット高さ
  */
 @Composable
-fun calculateCropWidth(thumbnail: Bitmap, targetHeight: Dp): Dp {
+fun calculateTrimWidth(thumbnail: Bitmap, targetHeight: Dp): Dp {
     val density = LocalDensity.current
     val aspectRatio = thumbnail.width.toFloat() / thumbnail.height.toFloat()
 
     val targetHeightPx = with(density) { targetHeight.toPx() }
     val newHeightPx = aspectRatio * targetHeightPx
     return with(density) { newHeightPx.toDp() }
-}
-
-/**
- * 動画再生位置スライダー
- * @param currentPosition 現在位置
- * @param duration 動画再生時間
- * @param onPositionChange 位置変更時のコールバック
- */
-@Composable
-fun VideoSeekBar(
-    currentPosition: Long,
-    duration: Long,
-    onPositionChange: (Long) -> Unit
-) {
-    Slider(
-        value = currentPosition.toFloat(),
-        onValueChange = { onPositionChange(it.toLong()) },
-        valueRange = 0f..duration.toFloat(),
-        modifier = Modifier.padding(horizontal = 24.dp)
-    )
 }
 
 /**

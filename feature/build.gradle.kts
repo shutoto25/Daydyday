@@ -73,6 +73,9 @@ dependencies {
     implementation(libs.dagger.hilt.android)
     kapt(libs.dagger.hilt.compiler)
 
+    // ----- jetbrains ----- //
+    implementation(libs.kotlinx.serialization.json)
+
     // ----- coil ----- //
     implementation(libs.coil.compose)
 

@@ -16,7 +16,7 @@ dokka = "1.9.20"
 ## ------ google ------ ##
 gms = "4.4.2"
 ksp = "2.1.0-1.0.29"
-dagger-hilt = "2.49"
+dagger-hilt = "2.55"
 
 # ------ libraries version ------ #
 ## ------ androidx ------ ##

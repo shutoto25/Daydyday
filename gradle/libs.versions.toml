@@ -39,7 +39,9 @@ espresso-core = "3.6.1"
 junit = "4.13.2"
 ## ------ google ------ ##
 firebase-bom = "33.7.0"
-## ------ google ------ ##
+## ------ jetbrains ------ ##
+kotlinx-serialization-json = "1.6.0"
+## ------ coil ------ ##
 coil = "2.4.0"
 
 [plugins]
@@ -92,6 +94,8 @@ dagger-hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-analytics-ktx = { module = "com.google.firebase:firebase-analytics-ktx" }
 firebase-messaging-ktx = { module = "com.google.firebase:firebase-messaging-ktx" }
+## ------ jetbrains ------ ##
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
 ## ------ coil ------ ##
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 

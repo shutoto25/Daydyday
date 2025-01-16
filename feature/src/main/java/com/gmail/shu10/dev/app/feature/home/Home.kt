@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.gmail.shu10.dev.app.core.utils.convertDateFormat
+import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 import kotlinx.coroutines.launch
 
@@ -49,10 +50,12 @@ import kotlinx.coroutines.launch
  * ホーム画面(日付リスト)
  */
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(
+    navController: NavController
+) {
     val viewModel: HomeViewModel = hiltViewModel()
     val coroutineScope = rememberCoroutineScope()
-    val dateList by viewModel.dateList.collectAsState()
+    val diaryList by viewModel.diaryList.collectAsState()
     // リスト初期位置は今日
     val gridState = rememberLazyGridState(initialFirstVisibleItemIndex = 365)
     // FAB表示フラグ（今日に近い場合はFABを表示しない）
@@ -69,7 +72,7 @@ fun HomeScreen(navController: NavController) {
     }
 
     HomeScreenContent(
-        dateList = dateList,
+        diaryList = diaryList,
         gridState = gridState,
         isFabVisible = isFabVisible,
         fabIcon = fabIcon,
@@ -86,7 +89,7 @@ fun HomeScreen(navController: NavController) {
 
 /**
  * ホーム画面コンテンツ
- * @param dateList 日付リスト
+ * @param diaryList 日記リスト
  * @param gridState LazyGridState
  * @param isFabVisible FAB表示フラグ
  * @param fabIcon FABアイコン
@@ -95,7 +98,7 @@ fun HomeScreen(navController: NavController) {
  */
 @Composable
 fun HomeScreenContent(
-    dateList: List<String>,
+    diaryList: List<Diary>,
     gridState: LazyGridState,
     isFabVisible: Boolean,
     fabIcon: ImageVector,
@@ -112,7 +115,7 @@ fun HomeScreenContent(
         floatingActionButtonPosition = FabPosition.Center,
         content = { innerPadding ->
             DateGrid(
-                dateList = dateList,
+                diaryList = diaryList,
                 gridState = gridState,
                 onDateClick = onDateClick,
                 Modifier
@@ -154,14 +157,14 @@ fun DateFloatingActionButton(
 
 /**
  * 日付リスト
- * @param dateList 日付リスト
+ * @param diaryList 日記リスト
  * @param gridState LazyGridState
  * @param onDateClick 日付クリック時の処理
  * @param modifier Modifier
  */
 @Composable
 fun DateGrid(
-    dateList: List<String>,
+    diaryList: List<Diary>,
     gridState: LazyGridState,
     onDateClick: (String) -> Unit,
     modifier: Modifier = Modifier
@@ -174,19 +177,19 @@ fun DateGrid(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(dateList) { date ->
-            DateGridItem(date) { onDateClick(date) }
+        items(diaryList) { diary ->
+            DateGridItem(diary) { onDateClick(diary.date) }
         }
     }
 }
 
 /**
  * 日付アイテム
- * @param date 日付
+ * @param diary 日記
  * @param onClickItem アイテムクリック時の処理
  */
 @Composable
-fun DateGridItem(date: String, onClickItem: () -> Unit) {
+fun DateGridItem(diary: Diary, onClickItem: () -> Unit) {
     Surface(
         modifier = Modifier
             .clickable { onClickItem() }
@@ -197,7 +200,7 @@ fun DateGridItem(date: String, onClickItem: () -> Unit) {
             )
             .padding(2.dp)
     ) {
-        Text(text = convertDateFormat(date), Modifier.padding(8.dp))
+        Text(text = convertDateFormat(diary.date), Modifier.padding(8.dp))
     }
 }
 
@@ -209,7 +212,7 @@ fun InfiniteDateListPreview() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            DateGridItem("2022-01-01", onClickItem = {})
+            DateGridItem(Diary(date = "2025-01-01"), onClickItem = {})
         }
     }
 }

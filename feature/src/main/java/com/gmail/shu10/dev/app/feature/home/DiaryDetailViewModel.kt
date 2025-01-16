@@ -24,7 +24,8 @@ class DiaryDetailViewModel @Inject constructor(
         return if (date == null) {
             flowOf(null)
         } else {
-            getDiaryUseCase(date)
+//            getDiaryUseCase(date)
+            flowOf(null)
         }
     }
 

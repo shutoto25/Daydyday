@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.dokka)
     alias(libs.plugins.dagger.hilt)
     kotlin("android")
@@ -44,6 +45,9 @@ dependencies {
     // hilt
     implementation(libs.dagger.hilt.android)
     kapt(libs.dagger.hilt.compiler)
+
+    // ----- jetbrains ----- //
+    implementation(libs.kotlinx.serialization.json)
 
     // ----- test ----- //
     testImplementation(libs.junit)

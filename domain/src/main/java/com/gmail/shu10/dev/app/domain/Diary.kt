@@ -1,8 +1,11 @@
 package com.gmail.shu10.dev.app.domain
 
+import kotlinx.serialization.Serializable
+
 /**
  * 日記データクラス
  */
+ @Serializable
 data class Diary(
     /** ID（更新時にのみ使用）*/
     val id: Long? = null,

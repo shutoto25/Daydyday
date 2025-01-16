@@ -59,23 +59,23 @@ import java.util.UUID
 @Composable
 fun DiaryDetailScreen(
     navHostController: NavHostController,
-    selectedDate: String,
+    diary: Diary,
     viewModel: DiaryDetailViewModel = hiltViewModel()
 ) {
     // FlowをcollectAsStateで監視
-    val diary by viewModel.getDiaryByDate(selectedDate).collectAsState(initial = null)
+//    val selectedDate by viewModel.getDiaryByDate(diary.date).collectAsState(initial = null)
     // 状態管理
-    var title by remember { mutableStateOf("") }
-    var content by remember { mutableStateOf("") }
-    var photoUri by remember { mutableStateOf<Uri?>(null) }
-    var videoUri by remember { mutableStateOf<Uri?>(null) }
+    val title by remember { mutableStateOf(diary.title) }
+    var content by remember { mutableStateOf(diary.content) }
+    var photoUri by remember { mutableStateOf(diary.photoPath?.toUri()) }
+    val videoUri by remember { mutableStateOf(diary.videoPath?.toUri()) }
     // 状態監視
-    LaunchedEffect(diary) {
-        title = diary?.title ?: ""
-        content = diary?.content ?: ""
-        photoUri = diary?.photoPath?.toUri()
-        videoUri = diary?.videoPath?.toUri()
-    }
+//    LaunchedEffect(selectedDate) {
+//        title = selectedDate?.title ?: ""
+//        content = selectedDate?.content ?: ""
+//        photoUri = selectedDate?.photoPath?.toUri()
+//        videoUri = selectedDate?.videoPath?.toUri()
+//    }
 
     val context = LocalContext.current
     // 画像/動画選択
@@ -111,7 +111,7 @@ fun DiaryDetailScreen(
             .fillMaxSize()
             .padding(8.dp)
     ) {
-        DateTitle(date = selectedDate)
+        DateTitle(date = diary.date)
         MediaContentArea(
             context = context,
             videoUri = videoUri,
@@ -143,15 +143,15 @@ fun DiaryDetailScreen(
         DiarySaveButton(
             onSave = {
                 val saveData = Diary(
-                    id = diary?.id,
-                    uuid = diary?.uuid ?: UUID.randomUUID().toString(),
-                    date = selectedDate,
+                    id = diary.id,
+                    uuid = diary.uuid.ifEmpty { UUID.randomUUID().toString() },
+                    date = diary.date,
                     title = title,
                     content = content,
                     photoPath = photoUri?.toString(),
                     videoPath = videoUri?.toString(),
-                    location = null,
-                    isSynced = false
+                    location = diary.location,
+                    isSynced = diary.isSynced
                 )
                 viewModel.saveDiary(saveData)
             }

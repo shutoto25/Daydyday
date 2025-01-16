@@ -45,6 +45,8 @@ import com.gmail.shu10.dev.app.core.utils.convertDateFormat
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 /**
  * ホーム画面(日付リスト)
@@ -81,8 +83,8 @@ fun HomeScreen(
                 gridState.animateScrollToItem(index = 365)
             }
         },
-        onDateClick = { date ->
-            navController.navigate(AppScreen.DiaryDetail(date).createRoute())
+        onDateClick = { diary ->
+            navController.navigate(AppScreen.DiaryDetail(Json.encodeToString(diary)).createRoute())
         }
     )
 }
@@ -103,7 +105,7 @@ fun HomeScreenContent(
     isFabVisible: Boolean,
     fabIcon: ImageVector,
     onFabClick: () -> Unit,
-    onDateClick: (String) -> Unit
+    onDateClick: (Diary) -> Unit
 ) {
     Scaffold(floatingActionButton = {
         DateFloatingActionButton(
@@ -166,7 +168,7 @@ fun DateFloatingActionButton(
 fun DateGrid(
     diaryList: List<Diary>,
     gridState: LazyGridState,
-    onDateClick: (String) -> Unit,
+    onDateClick: (Diary) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyVerticalGrid(
@@ -178,7 +180,7 @@ fun DateGrid(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(diaryList) { diary ->
-            DateGridItem(diary) { onDateClick(diary.date) }
+            DateGridItem(diary) { onDateClick(diary) }
         }
     }
 }

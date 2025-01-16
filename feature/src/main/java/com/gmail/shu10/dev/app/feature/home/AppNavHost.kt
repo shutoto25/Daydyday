@@ -1,12 +1,15 @@
 package com.gmail.shu10.dev.app.feature.home
 
 import android.content.Intent
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.gmail.shu10.dev.app.domain.Diary
+import kotlinx.serialization.json.Json
 
 /**
  * 画面遷移ホスト
@@ -33,9 +36,10 @@ fun AppNavHost(intent: MutableState<Intent?>) {
         // ホーム画面
         composable(AppScreen.Home.route) { HomeScreen(navController) }
         // 日付詳細画面
-        composable(AppScreen.DiaryDetail("{date}").route) { navBackStackEntry ->
-            val selectedDate = navBackStackEntry.arguments?.getString("date") ?: ""
-            DiaryDetailScreen(navController, selectedDate)
+        composable(AppScreen.DiaryDetail("{diaryJson}").route) { navBackStackEntry ->
+           val json = navBackStackEntry.arguments?.getString("diaryJson") ?: ""
+            val diary = Json.decodeFromString<Diary>(Uri.decode(json))
+              DiaryDetailScreen(navController, diary)
         }
         // 動画編集画面
         composable(AppScreen.VideoEditor.route) { VideoEditorScreen(navController) }
@@ -47,7 +51,7 @@ fun AppNavHost(intent: MutableState<Intent?>) {
  */
 sealed class AppScreen(val route: String) {
     data object Home : AppScreen("home")
-    data class DiaryDetail(val date: String) : AppScreen("detail/{date}")
+    data class DiaryDetail(val diaryJson: String) : AppScreen("detail/{diaryJson}")
     data object VideoEditor : AppScreen("videoEditor")
 }
 
@@ -59,7 +63,7 @@ fun AppScreen.createRoute(): String {
         // ホーム画面へ遷移
         is AppScreen.Home -> route
         // 日付詳細画面へ遷移
-        is AppScreen.DiaryDetail -> route.replace("{date}", date)
+        is AppScreen.DiaryDetail -> "detail/${Uri.encode(diaryJson)}"
         // 動画編集画面へ遷移
         is AppScreen.VideoEditor -> route
     }

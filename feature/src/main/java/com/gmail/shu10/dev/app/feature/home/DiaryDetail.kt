@@ -25,8 +25,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,6 +49,8 @@ import com.gmail.shu10.dev.app.core.utils.getDayOfWeek
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 import com.gmail.shu10.dev.app.feature.utils.toContentUri
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import java.util.UUID
 
 /**
@@ -62,20 +62,11 @@ fun DiaryDetailScreen(
     diary: Diary,
     viewModel: DiaryDetailViewModel = hiltViewModel()
 ) {
-    // FlowをcollectAsStateで監視
-//    val selectedDate by viewModel.getDiaryByDate(diary.date).collectAsState(initial = null)
     // 状態管理
     val title by remember { mutableStateOf(diary.title) }
     var content by remember { mutableStateOf(diary.content) }
     var photoUri by remember { mutableStateOf(diary.photoPath?.toUri()) }
     val videoUri by remember { mutableStateOf(diary.videoPath?.toUri()) }
-    // 状態監視
-//    LaunchedEffect(selectedDate) {
-//        title = selectedDate?.title ?: ""
-//        content = selectedDate?.content ?: ""
-//        photoUri = selectedDate?.photoPath?.toUri()
-//        videoUri = selectedDate?.videoPath?.toUri()
-//    }
 
     val context = LocalContext.current
     // 画像/動画選択
@@ -154,6 +145,9 @@ fun DiaryDetailScreen(
                     isSynced = diary.isSynced
                 )
                 viewModel.saveDiary(saveData)
+                val json = Json.encodeToString(saveData)
+                navHostController.previousBackStackEntry?.savedStateHandle?.set("updateDiary", json)
+                navHostController.popBackStack()
             }
         )
     }

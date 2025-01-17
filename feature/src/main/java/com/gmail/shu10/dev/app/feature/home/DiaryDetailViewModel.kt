@@ -5,30 +5,21 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gmail.shu10.dev.app.domain.Diary
-import com.gmail.shu10.dev.app.domain.GetDiaryUseCase
 import com.gmail.shu10.dev.app.domain.SaveDiaryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
 class DiaryDetailViewModel @Inject constructor(
-    private val getDiaryUseCase: GetDiaryUseCase,
     private val saveDiaryUseCase: SaveDiaryUseCase
 ) : ViewModel() {
 
-    fun getDiaryByDate(date: String?): Flow<Diary?> {
-        return if (date == null) {
-            flowOf(null)
-        } else {
-//            getDiaryUseCase(date)
-            flowOf(null)
-        }
-    }
-
+    /**
+     * 日記保存
+     * @param diary 日記
+     */
     fun saveDiary(diary: Diary) {
         viewModelScope.launch {
             saveDiaryUseCase(diary)
@@ -37,6 +28,8 @@ class DiaryDetailViewModel @Inject constructor(
 
     /**
      * 写真保存
+     * @param context Context
+     * @param uri Uri
      */
     fun savePhotoToAppDir(context: Context, uri: Uri): File? {
 

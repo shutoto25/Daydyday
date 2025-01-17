@@ -6,18 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.domain.GetDiaryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.flatMapMerge
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.forEach
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -47,26 +37,25 @@ open class HomeViewModel @Inject constructor(
 
     /**
      * 日記リスト取得
+     * ＠param dateList 日付リスト
      */
     private fun fetchDiaryListData(dateList: List<String>) {
         viewModelScope.launch {
-            getDiaryUseCase(dateList)
-                .collect { diary ->
-                    updateDiary(diary)
-                }
+            getDiaryUseCase(dateList).collect { diary -> updateDiary(diary) }
         }
     }
 
     /**
-     * DBから取得した日記へ更新
+     * 日記リストデータを更新
+     * ＠param updateDiary 更新する日記データ
      */
-    private fun updateDiary(updateDiary: Diary?) {
+    fun updateDiary(updateDiary: Diary?) {
         if (updateDiary == null) return
 
         _diaryList.update { currentList ->
             currentList.map { diary ->
                 if (diary.date == updateDiary.date) {
-                    Log.d("TEST", "updateDiary() called with: update ${diary.date}")
+                    Log.d("TEST", "updateDiary() update ${updateDiary.date}:$updateDiary")
                     updateDiary
                 } else {
                     diary

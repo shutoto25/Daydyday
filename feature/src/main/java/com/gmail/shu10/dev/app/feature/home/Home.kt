@@ -72,6 +72,7 @@ fun HomeScreen(
             }
         }
     }
+    updateDiaryFromBackStack(navController, viewModel)
 
     HomeScreenContent(
         diaryList = diaryList,
@@ -204,6 +205,25 @@ fun DateGridItem(diary: Diary, onClickItem: () -> Unit) {
     ) {
         Text(text = convertDateFormat(diary.date), Modifier.padding(8.dp))
     }
+}
+
+/**
+ * 日記詳細画面から戻ってきた際に日記データを更新
+ * ＠param navController NavController
+ * ＠param viewModel HomeViewModel
+ */
+private fun updateDiaryFromBackStack(navController: NavController, viewModel: HomeViewModel) {
+    val updateDairyJson = navController.currentBackStackEntry
+        ?.savedStateHandle
+        ?.get<String>("updateDiary")
+
+    updateDairyJson?.let {
+        val updateDairy = Json.decodeFromString<Diary>(it)
+        viewModel.updateDiary(updateDairy)
+    }
+    navController.currentBackStackEntry
+        ?.savedStateHandle
+        ?.remove<String>("updateDiary")
 }
 
 @Preview(showBackground = true)

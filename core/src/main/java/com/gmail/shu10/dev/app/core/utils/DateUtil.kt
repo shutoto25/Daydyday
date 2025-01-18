@@ -25,3 +25,25 @@ fun getDayOfWeek(date: String): String {
     val parsedDate = LocalDate.parse(date, formatter)
     return parsedDate.dayOfWeek.toString()
 }
+
+/**
+ * 日付から月を取得
+ * @param date 日付（yyyy-MM-dd）
+ * @return 月
+ */
+fun getMonth(date: String): String {
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    val parsedDate = LocalDate.parse(date, formatter)
+    return parsedDate.month.toString()
+}
+
+/**
+ * 日付から日を取得
+ * @param date 日付（yyyy-MM-dd）
+ * @return 日
+ */
+fun getDay(date: String): String {
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    val parsedDate = LocalDate.parse(date, formatter)
+    return parsedDate.dayOfMonth.toString()
+}

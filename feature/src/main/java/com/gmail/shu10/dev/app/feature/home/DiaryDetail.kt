@@ -134,8 +134,7 @@ fun DiaryDetailScreen(
         DiarySaveButton(
             onSave = {
                 val saveData = Diary(
-                    id = diary.id,
-                    uuid = diary.uuid.ifEmpty { UUID.randomUUID().toString() },
+                    uuid = diary.uuid.ifEmpty { UUID.randomUUID().toString() /* 初回保存時 */ },
                     date = diary.date,
                     title = title,
                     content = content,

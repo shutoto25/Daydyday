@@ -8,7 +8,6 @@ import com.gmail.shu10.dev.app.domain.Diary
  */
 fun DiaryEntity.toDomain(): Diary {
     return Diary(
-        id = this.id,
         uuid = this.uuid,
         title = this.title,
         content = this.content,
@@ -25,7 +24,6 @@ fun DiaryEntity.toDomain(): Diary {
  */
 fun Diary.toEntity(): DiaryEntity {
     return DiaryEntity(
-        id = this.id ?: 0, // idがnullの場合は新規作成（0を指定してautoGenerateに任せる）
         uuid = this.uuid,
         title = this.title,
         content = this.content,

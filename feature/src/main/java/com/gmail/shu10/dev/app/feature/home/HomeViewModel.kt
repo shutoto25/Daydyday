@@ -1,6 +1,5 @@
 package com.gmail.shu10.dev.app.feature.home
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gmail.shu10.dev.app.domain.Diary
@@ -22,26 +21,25 @@ open class HomeViewModel @Inject constructor(
     private val getDiaryUseCase: GetDiaryUseCase
 ) : ViewModel() {
 
-    private val _diaryList = MutableStateFlow<List<Diary>>(emptyList())
+    private val _diaryList = MutableStateFlow(generateDateList())
     val diaryList: StateFlow<List<Diary>> = _diaryList
 
     init {
-        // 日付リスト生成
-        val dateList = generateDateList()
-        // 初期リストとして日付のデータのみ持ったDiaryを生成して設定
-        val initialList = dateList.map { Diary(date = it) }
-        _diaryList.value = initialList
-
-        fetchDiaryListData(dateList)
+        fetchAllDiaries()
     }
 
     /**
-     * 日記リスト取得
-     * ＠param dateList 日付リスト
+     * 全日記データ取得
      */
-    private fun fetchDiaryListData(dateList: List<String>) {
+    private fun fetchAllDiaries() {
         viewModelScope.launch {
-            getDiaryUseCase(dateList).collect { diary -> updateDiary(diary) }
+            getDiaryUseCase().collect { diaries ->
+                _diaryList.update { currentList ->
+                    currentList.map { diary ->
+                        diaries.find { it.date == diary.date } ?: diary
+                    }
+                }
+            }
         }
     }
 
@@ -49,17 +47,12 @@ open class HomeViewModel @Inject constructor(
      * 日記リストデータを更新
      * ＠param updateDiary 更新する日記データ
      */
-    fun updateDiary(updateDiary: Diary?) {
+    fun updateDiaryList(updateDiary: Diary?) {
         if (updateDiary == null) return
 
         _diaryList.update { currentList ->
             currentList.map { diary ->
-                if (diary.date == updateDiary.date) {
-                    Log.d("TEST", "updateDiary() update ${updateDiary.date}:$updateDiary")
-                    updateDiary
-                } else {
-                    diary
-                }
+                if (diary.date == updateDiary.date) updateDiary else diary
             }
         }
     }
@@ -67,17 +60,20 @@ open class HomeViewModel @Inject constructor(
     /**
      * 今日を起点に過去1年と未来1年の日付リストを生成
      */
-    private fun generateDateList(): List<String> {
+    private fun generateDateList(): List<Diary> {
         val today = LocalDate.now()
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
         // 過去1年分の日付を生成（365日）
-        val pastDates = (1..365).map { today.minusDays(it.toLong()).format(formatter) }.reversed()
+        val pastDates =
+            (1..365).map { today.minusDays(it.toLong()).format(formatter) }.reversed()
 
         // 未来1年分の日付を生成（365日）
         val futureDates = (1..365).map { today.plusDays(it.toLong()).format(formatter) }
 
         // 今日の日付を中央に配置してリストを統合
-        return pastDates + today.format(formatter) + futureDates
+        val dataListString = pastDates + today.format(formatter) + futureDates
+
+        return dataListString.map { date -> Diary(date = date) }
     }
 }

@@ -1,17 +1,19 @@
 package com.gmail.shu10.dev.app.data.database
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /**
  * 日記エンティティ
  */
-@Entity(tableName = "diaries")
+@Entity(
+    tableName = "diaries",
+    indices = [Index(value = ["date"], unique = true)]
+)
 class DiaryEntity(
-    /** ID（ローカルDB用ID）*/
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
     /** UUID(一意の識別子) */
-    val uuid: String,
+    @PrimaryKey val uuid: String,
     /** yyyy-MM-dd形式の日付（検索用）*/
     val date: String,
     /** タイトル */

@@ -219,7 +219,7 @@ private fun updateDiaryFromBackStack(navController: NavController, viewModel: Ho
 
     updateDairyJson?.let {
         val updateDairy = Json.decodeFromString<Diary>(it)
-        viewModel.updateDiary(updateDairy)
+        viewModel.updateDiaryList(updateDairy)
     }
     navController.currentBackStackEntry
         ?.savedStateHandle

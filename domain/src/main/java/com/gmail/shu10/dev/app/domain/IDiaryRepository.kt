@@ -4,5 +4,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface IDiaryRepository {
     suspend fun saveDiary(diary: Diary)
-    fun getDiaryByDate(date: String) : Flow<Diary?>
+    fun getAllDiaries(): Flow<List<Diary>>
+    fun getDiaryByDate(date: String) : Flow<Diary>
 }

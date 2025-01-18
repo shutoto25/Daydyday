@@ -7,8 +7,6 @@ import kotlinx.serialization.Serializable
  */
  @Serializable
 data class Diary(
-    /** ID（更新時にのみ使用）*/
-    val id: Long? = null,
     /** UUID(一意の識別子) */
     val uuid: String = "",
     /** yyyy-MM-dd形式の日付（検索用）*/

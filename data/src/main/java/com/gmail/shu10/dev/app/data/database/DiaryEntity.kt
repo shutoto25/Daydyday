@@ -24,6 +24,8 @@ class DiaryEntity(
     val photoPath: String?,
     /** 動画 */
     val videoPath: String?,
+    /** 1秒動画 */
+    val trimmedVideoPath: String?,
     /** 位置情報 */
     val location: String?,
     /** 同期済みフラグ */

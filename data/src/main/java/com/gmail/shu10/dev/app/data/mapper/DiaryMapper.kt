@@ -13,6 +13,7 @@ fun DiaryEntity.toDomain(): Diary {
         content = this.content,
         photoPath = this.photoPath,
         videoPath = this.videoPath,
+        trimmedVideoPath = this.trimmedVideoPath,
         location = this.location,
         date = this.date,
         isSynced = this.isSynced
@@ -29,6 +30,7 @@ fun Diary.toEntity(): DiaryEntity {
         content = this.content,
         photoPath = this.photoPath,
         videoPath = this.videoPath,
+        trimmedVideoPath = this.trimmedVideoPath,
         location = this.location,
         date = this.date,
         isSynced = this.isSynced

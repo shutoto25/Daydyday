@@ -19,6 +19,8 @@ data class Diary(
     val photoPath: String? = null,
     /** 動画 */
     val videoPath: String? = null,
+    /** 1秒動画 */
+    val trimmedVideoPath: String? = null,
     /** 位置情報 */
     val location: String? = null,
     /** 同期済みフラグ */

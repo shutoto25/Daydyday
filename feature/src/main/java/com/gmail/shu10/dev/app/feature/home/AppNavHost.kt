@@ -42,7 +42,11 @@ fun AppNavHost(intent: MutableState<Intent?>) {
               DiaryDetailScreen(navController, diary)
         }
         // 動画編集画面
-        composable(AppScreen.VideoEditor.route) { VideoEditorScreen(navController) }
+        composable(AppScreen.VideoEditor("{diaryJson}").route) { navBackStackEntry ->
+            val json = navBackStackEntry.arguments?.getString("diaryJson") ?: ""
+            val diary = Json.decodeFromString<Diary>(Uri.decode(json))
+            VideoEditorScreen(navController, diary)
+        }
     }
 }
 
@@ -52,7 +56,7 @@ fun AppNavHost(intent: MutableState<Intent?>) {
 sealed class AppScreen(val route: String) {
     data object Home : AppScreen("home")
     data class DiaryDetail(val diaryJson: String) : AppScreen("detail/{diaryJson}")
-    data object VideoEditor : AppScreen("videoEditor")
+    data class VideoEditor(val diaryJson: String) : AppScreen("videoEditor/{diaryJson}")
 }
 
 /**
@@ -65,6 +69,6 @@ fun AppScreen.createRoute(): String {
         // 日付詳細画面へ遷移
         is AppScreen.DiaryDetail -> "detail/${Uri.encode(diaryJson)}"
         // 動画編集画面へ遷移
-        is AppScreen.VideoEditor -> route
+        is AppScreen.VideoEditor -> "videoEditor/${Uri.encode(diaryJson)}"
     }
 }

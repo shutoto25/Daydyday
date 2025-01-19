@@ -30,15 +30,16 @@ class DiaryDetailViewModel @Inject constructor(
      * 写真保存
      * @param context Context
      * @param uri Uri
+     * @param date 日付
      */
-    fun savePhotoToAppDir(context: Context, uri: Uri): File? {
+    fun savePhotoToAppDir(context: Context, uri: Uri, date: String): File? {
 
         val inputStream = context.contentResolver.openInputStream(uri) ?: return null
 
         val appDir = File(context.filesDir, "images")
         if (!appDir.exists()) appDir.mkdirs()
 
-        val file = File(appDir, "selected_${System.currentTimeMillis()}.jpg")
+        val file = File(appDir, "selected_$date.jpg")
         inputStream.use { input ->
             file.outputStream().use { output ->
                 input.copyTo(output)
@@ -50,14 +51,14 @@ class DiaryDetailViewModel @Inject constructor(
     /**
      * 動画保存
      */
-    fun saveVideoToAppDir(context: Context, uri: Uri): File? {
+    fun saveVideoToAppDir(context: Context, uri: Uri, date: String): File? {
 
         val inputStream = context.contentResolver.openInputStream(uri) ?: return null
 
         val appDir = File(context.filesDir, "videos")
         if (!appDir.exists()) appDir.mkdirs()
 
-        val file = File(appDir, "selected_${System.currentTimeMillis()}.mp4")
+        val file = File(appDir, "selected_$date.mp4")
         inputStream.use { input ->
             file.outputStream().use { output ->
                 input.copyTo(output)

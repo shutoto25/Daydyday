@@ -1,10 +1,15 @@
 package com.gmail.shu10.dev.app.feature.home
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.media.MediaMetadataRetriever
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -38,6 +43,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -48,7 +54,6 @@ import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.gmail.shu10.dev.app.core.utils.convertDateFormat
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
@@ -211,14 +216,16 @@ fun DateGridItem(diary: Diary, onClickItem: () -> Unit) {
                 shape = RoundedCornerShape(4.dp)
             )
     ) {
-        if(diary.videoPath != null) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(diary.videoPath!!.toUri())
-                    .build(),
-                contentDescription = "dairy's video",
-                contentScale = ContentScale.Crop
-            )
+        if (diary.videoPath != null) {
+            val context = LocalContext.current
+            val thumbnail = remember { getVideoThumbnail(context, diary.videoPath!!.toUri()) }
+            thumbnail?.let {
+                Image(
+                    bitmap = it.asImageBitmap(),
+                    contentDescription = "Diary's video",
+                    contentScale = ContentScale.Crop,
+                )
+            }
         } else if (diary.photoPath != null) {
             AsyncImage(
                 model = diary.photoPath!!.toUri(),
@@ -231,6 +238,19 @@ fun DateGridItem(diary: Diary, onClickItem: () -> Unit) {
             Modifier.padding(8.dp),
             fontSize = 16.sp
         )
+    }
+}
+
+fun getVideoThumbnail(context: Context, videoUri: Uri): Bitmap? {
+    val retriever = MediaMetadataRetriever()
+    return try {
+        retriever.setDataSource(context, videoUri)
+        retriever.getFrameAtTime(0) // 1秒目のフレームを取得
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    } finally {
+        retriever.release()
     }
 }
 

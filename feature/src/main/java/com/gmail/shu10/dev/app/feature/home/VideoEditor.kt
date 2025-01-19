@@ -45,42 +45,71 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
+import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
+import com.gmail.shu10.dev.app.feature.utils.toContentUri
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import java.io.File
 
 /**
  * 動画編集画面
  * @param navHostController ナビゲーションコントローラー
+ * @param diary 日記データ
  */
 @Composable
 fun VideoEditorScreen(
     navHostController: NavHostController,
+    diary: Diary
 //    viewModel: DiaryDetailViewModel = hiltViewModel()
 ) {
     val viewModel: VideoEditorViewModel = hiltViewModel()
-    // 画面遷移元からの動画URI
-    val videoUriString =
-        navHostController.previousBackStackEntry?.savedStateHandle?.get<String>("selectedVideoUri")
-    val videoUri = videoUriString?.let { Uri.parse(it) }
 
     val context = LocalContext.current
     // 動画再生プレイヤー
     val exoPlayer = remember { ExoPlayer.Builder(context).build() }
     // サムネイルリスト
-    val thumbnails = remember { viewModel.extractThumbnails(context, videoUri) }
-
+    val thumbnails = remember { viewModel.extractThumbnails(context, diary.videoPath?.toUri()) }
+    // 動画再生位置
+    var position by remember { mutableLongStateOf(0L) }
     ViewEditScreenContent(
         context = context,
         viewModel = viewModel,
         exoPlayer = exoPlayer,
-        videoUri = videoUri,
-        thumbnails = thumbnails
+        videoUri = diary.videoPath?.toUri(),
+        thumbnails = thumbnails,
+        onTimeline = { startMs -> position = startMs },
+        position = position,
+        onPreview = { /* プレビュー */ },
+        onTrim = {
+            diary.videoPath?.toUri()?.let {
+                viewModel.trimVideo(
+                    context = context,
+                    inputUri = it,
+                    outputFile = viewModel.targetFile(context, diary.date),
+                    startMs = position,
+                    onSuccess = {
+                        // トリミング成功
+                        Log.d("TEST", "ViewEditScreenContent() called trim success")
+                        val saveData =
+                            diary.copy(trimmedVideoPath = viewModel.targetFile(context, diary.date).toContentUri(context).toString())
+                        val json = Json.encodeToString(saveData)
+                        navHostController.previousBackStackEntry?.savedStateHandle?.set("updateDiaryWithTrimmedVideo", json)
+                        navHostController.popBackStack()
+                    },
+                    onError = {
+                        // トリミング失敗
+                        Log.d("TEST", "ViewEditScreenContent() called trim error")
+                    }
+                )
+            }
+        }
     )
 }
 
@@ -93,10 +122,12 @@ fun ViewEditScreenContent(
     viewModel: VideoEditorViewModel,
     exoPlayer: ExoPlayer,
     videoUri: Uri?,
-    thumbnails: List<Bitmap>
+    thumbnails: List<Bitmap>,
+    onTimeline: (Long) -> Unit,
+    position: Long,
+    onPreview: () -> Unit,
+    onTrim: () -> Unit
 ) {
-    // 動画再生位置
-    var position by remember { mutableLongStateOf(0L) }
     Column {
         VideoPlayer(
             context = context,
@@ -104,27 +135,10 @@ fun ViewEditScreenContent(
             exoPlayer = exoPlayer,
             uri = videoUri
         )
-        ThumbnailTimeline(thumbnails = thumbnails) { startMs ->
-            position = startMs
-        }
+        ThumbnailTimeline(thumbnails = thumbnails) { startMs ->  onTimeline(startMs) }
         VideoControlButtons(
-            onPreview = {},
-            onTrim = {
-                viewModel.trimVideo(
-                    context = context,
-                    inputUri = videoUri!!,
-                    outputFile = File(context.cacheDir, "1ms.mp4"),
-                    startMs = position,
-                    onSuccess = {
-                        // トリミング成功
-                        Log.d("TEST", "ViewEditScreenContent() called trim success")
-                    },
-                    onError = {
-                        // トリミング失敗
-                        Log.d("TEST", "ViewEditScreenContent() called trim error")
-                    }
-                )
-            }
+            onPreview = { onPreview() },
+            onTrim = { onTrim() }
         )
     }
 }
@@ -277,7 +291,9 @@ fun VideoControlButtons(
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        Button(onClick = onPreview) { Text("Preview") }
+        Button(
+            onClick = onPreview
+        ) { Text("Preview") }
         Button(
             onClick = onTrim,
             colors = ButtonDefaults.buttonColors(containerColor = Color.Yellow)
@@ -293,7 +309,7 @@ fun VideoEditScreenPreview() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            VideoEditorScreen(rememberNavController())
+//            VideoEditorScreen(rememberNavController())
         }
     }
 }

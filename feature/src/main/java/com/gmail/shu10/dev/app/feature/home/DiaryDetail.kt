@@ -62,13 +62,21 @@ fun DiaryDetailScreen(
     diary: Diary,
     viewModel: DiaryDetailViewModel = hiltViewModel()
 ) {
-    // 状態管理
-    val title by remember { mutableStateOf(diary.title) }
-    var content by remember { mutableStateOf(diary.content) }
-    var photoUri by remember { mutableStateOf(diary.photoPath?.toUri()) }
-    val videoUri by remember { mutableStateOf(diary.videoPath?.toUri()) }
-
     val context = LocalContext.current
+    // 状態管理
+    var tempDiary by remember { mutableStateOf(diary) }
+
+    val updateDairyJson = navHostController.currentBackStackEntry
+        ?.savedStateHandle
+        ?.get<String>("updateDiaryWithTrimmedVideo")
+
+    updateDairyJson?.let {
+        tempDiary = Json.decodeFromString<Diary>(it)
+    }
+    navHostController.currentBackStackEntry
+        ?.savedStateHandle
+        ?.remove<String>("updateDiaryWithTrimmedVideo")
+
     // 画像/動画選択
     val phonePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -77,19 +85,19 @@ fun DiaryDetailScreen(
             val mimeType = context.contentResolver.getType(url)
 
             // TODO 画像が変わったときに古い画像を消さないとゴミデータがどんどん溜まっていく
+            // TODO 保存するタイミングが保存時じゃなくて選択時になっているの直さないと
             when {
                 mimeType?.startsWith("image") == true -> {
-                    val file = viewModel.savePhotoToAppDir(context, url)
-                    photoUri = file?.toContentUri(context)
+                    val file = viewModel.savePhotoToAppDir(context, url, diary.date)
+                    tempDiary = tempDiary.copy(photoPath = file?.toContentUri(context).toString())
                 }
 
                 mimeType?.startsWith("video") == true -> {
-                    navHostController.currentBackStackEntry?.savedStateHandle?.set(
-                        "selectedVideoUri", url.toString()
+                    val file = viewModel.saveVideoToAppDir(context, url, diary.date)
+                    tempDiary = tempDiary.copy(videoPath = file?.toContentUri(context).toString())
+                    navHostController.navigate(
+                        AppScreen.VideoEditor(Json.encodeToString(tempDiary)).createRoute()
                     )
-                    navHostController.navigate("videoEditor")
-//                    val file = saveVideoToAppDir(context, url)
-//                    videoUri = file?.toContentUri(context)
                 }
 
                 else -> {}
@@ -105,8 +113,7 @@ fun DiaryDetailScreen(
         DateTitle(date = diary.date)
         MediaContentArea(
             context = context,
-            videoUri = videoUri,
-            photoUri = photoUri,
+            diary = tempDiary,
             onClickAddPhotoOrVideo = {
                 phonePickerLauncher.launch(
                     PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
@@ -114,35 +121,20 @@ fun DiaryDetailScreen(
             },
             onClickAddLocation = { /* TODO: 位置情報設定画面へ遷移 */ }
         )
-//        DiaryTitleInput(
-//            title = title,
-//            onTitleChange = { title = it }
-//        )
-//        Spacer(modifier = Modifier.height(16.dp))
-//        MediaPreview(uri = photoUri)
-//        Spacer(modifier = Modifier.height(16.dp))
-//        VideoPlayer(context = context, uri = videoUri)
         Spacer(modifier = Modifier.height(16.dp))
         DiaryContentInput(
             modifier = Modifier,
-            content = content,
-            onContentChange = { content = it }
+            diary = tempDiary,
+            onContentChange = { tempDiary = tempDiary.copy(content = it) }
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         DiarySaveButton(
             onSave = {
-                val saveData = Diary(
-                    uuid = diary.uuid.ifEmpty { UUID.randomUUID().toString() /* 初回保存時 */ },
-                    date = diary.date,
-                    title = title,
-                    content = content,
-                    photoPath = photoUri?.toString(),
-                    videoPath = videoUri?.toString(),
-                    location = diary.location,
-                    isSynced = diary.isSynced
-                )
+                val saveData = tempDiary.copy(uuid = tempDiary.uuid.ifEmpty {
+                    UUID.randomUUID().toString() /* 初回保存時 */
+                })
                 viewModel.saveDiary(saveData)
                 val json = Json.encodeToString(saveData)
                 navHostController.previousBackStackEntry?.savedStateHandle?.set("updateDiary", json)
@@ -174,38 +166,27 @@ fun DateTitle(date: String) {
 }
 
 /**
- * タイトル入力欄
- */
-@Composable
-fun DiaryTitleInput(title: String, onTitleChange: (String) -> Unit) {
-    TextField(
-        value = title,
-        onValueChange = onTitleChange,
-        label = { Text("タイトル") },
-        modifier = Modifier.fillMaxWidth(),
-        maxLines = Int.MAX_VALUE,
-        singleLine = true
-    )
-}
-
-/**
  * メディア表示
  */
 @Composable
 fun MediaContentArea(
     context: Context,
-    photoUri: Uri?,
-    videoUri: Uri?,
+    diary: Diary,
     onClickAddPhotoOrVideo: () -> Unit,
     onClickAddLocation: () -> Unit
 ) {
     when {
-        photoUri != null -> {
-            MediaPreView({ PhotoImage(photoUri) }) { onClickAddLocation() }
+        diary.photoPath != null -> {
+            MediaPreView({ PhotoImage(diary.photoPath!!.toUri()) }) { onClickAddLocation() }
         }
 
-        videoUri != null -> {
-            MediaPreView({ VideoPlayer(context, videoUri) }) { onClickAddLocation() }
+        diary.trimmedVideoPath != null -> {
+            MediaPreView({
+                VideoPlayer(
+                    context,
+                    diary.trimmedVideoPath!!.toUri()
+                )
+            }) { onClickAddLocation() }
         }
 
         else -> {
@@ -297,7 +278,7 @@ fun VideoPlayer(context: Context, uri: Uri) {
         ExoPlayer.Builder(context).build().apply {
             setMediaItem(MediaItem.fromUri(uri))
             prepare()
-            playWhenReady = true
+            playWhenReady = false
         }
     }
     AndroidView(
@@ -317,11 +298,11 @@ fun VideoPlayer(context: Context, uri: Uri) {
 @Composable
 fun DiaryContentInput(
     modifier: Modifier,
-    content: String,
+    diary: Diary,
     onContentChange: (String) -> Unit
 ) {
     TextField(
-        value = content,
+        value = diary.content,
         onValueChange = onContentChange,
         label = { Text("内容") },
         modifier = modifier.fillMaxWidth(),

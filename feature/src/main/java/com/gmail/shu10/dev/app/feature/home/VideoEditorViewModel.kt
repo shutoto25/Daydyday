@@ -141,11 +141,21 @@ class VideoEditorViewModel : ViewModel() {
                     .build()
             ).build()
 
-//        // 出力ファイルの事前確認
-//        if (outputFile.exists()) {
-//            outputFile.delete()
-//        }
+        // 出力ファイルの事前確認
+        if (outputFile.exists()) {
+            outputFile.delete()
+        }
 
         transformer.start(mediaItem, outputFile.absolutePath)
+    }
+
+    /**
+     *
+     */
+    fun targetFile(context: Context, date: String) : File {
+        val appDir = File(context.filesDir, "videos/trim")
+        if (!appDir.exists()) appDir.mkdirs()
+        val targetFile = File(appDir, "trimmed_$date.mp4")
+        return targetFile
     }
 }

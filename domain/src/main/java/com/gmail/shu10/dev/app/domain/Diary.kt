@@ -14,7 +14,7 @@ data class Diary(
     /** タイトル */
     val title: String = "",
     /** 内容 */
-    val content: String = "",
+    var content: String = "",
     /** 写真 */
     val photoPath: String? = null,
     /** 動画 */

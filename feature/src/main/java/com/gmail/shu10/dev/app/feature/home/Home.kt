@@ -10,15 +10,19 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -28,13 +32,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -70,6 +81,7 @@ fun HomeScreen(
 ) {
     val viewModel: HomeViewModel = hiltViewModel()
     val coroutineScope = rememberCoroutineScope()
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val diaryList by viewModel.diaryList.collectAsState()
     // リスト初期位置は今日
     val gridState = rememberLazyGridState(initialFirstVisibleItemIndex = 365)
@@ -87,20 +99,41 @@ fun HomeScreen(
     }
     updateDiaryFromBackStack(navController, viewModel)
 
-    HomeScreenContent(
-        diaryList = diaryList,
-        gridState = gridState,
-        isFabVisible = isFabVisible,
-        fabIcon = fabIcon,
-        onFabClick = {
-            coroutineScope.launch {
-                gridState.animateScrollToItem(index = 365)
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = { DrawerContent(onClose = { coroutineScope.launch { drawerState.close() } }) }
+    ) {
+        HomeScreenContent(
+            diaryList = diaryList,
+            gridState = gridState,
+            isFabVisible = isFabVisible,
+            fabIcon = fabIcon,
+            onOpenDrawer = { coroutineScope.launch { drawerState.open() } },
+            onFabClick = {
+                coroutineScope.launch {
+                    gridState.animateScrollToItem(index = 365)
+                }
+            },
+            onDateClick = { diary ->
+                navController.navigate(
+                    AppScreen.DiaryDetail(Json.encodeToString(diary)).createRoute()
+                )
             }
-        },
-        onDateClick = { diary ->
-            navController.navigate(AppScreen.DiaryDetail(Json.encodeToString(diary)).createRoute())
-        }
+        )
+    }
+}
+
+@Composable
+fun DrawerContent(onClose: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxHeight()
+            .width(200.dp)
+            .background(MaterialTheme.colorScheme.background)
     )
+    {
+        Text("ドロワー")
+    }
 }
 
 /**
@@ -112,22 +145,34 @@ fun HomeScreen(
  * @param onFabClick FABクリック時の処理
  * @param onDateClick 日付クリック時の処理
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreenContent(
     diaryList: List<Diary>,
     gridState: LazyGridState,
     isFabVisible: Boolean,
     fabIcon: ImageVector,
+    onOpenDrawer: () -> Unit,
     onFabClick: () -> Unit,
     onDateClick: (Diary) -> Unit
 ) {
-    Scaffold(floatingActionButton = {
-        DateFloatingActionButton(
-            isFabVisible = isFabVisible,
-            icon = fabIcon,
-            onClick = onFabClick
-        )
-    },
+    Scaffold(
+        topBar = {
+            TopAppBar(title = { Text("HOME") },
+                navigationIcon = {
+                    IconButton(onClick = onOpenDrawer) {
+                        Icon(Icons.Default.Menu, contentDescription = "メニューを開く")
+                    }
+                }
+            )
+        },
+        floatingActionButton = {
+            DateFloatingActionButton(
+                isFabVisible = isFabVisible,
+                icon = fabIcon,
+                onClick = onFabClick
+            )
+        },
         floatingActionButtonPosition = FabPosition.Center,
         content = { innerPadding ->
             DateGrid(

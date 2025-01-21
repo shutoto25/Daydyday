@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,16 +32,18 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -49,7 +53,6 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -82,7 +85,7 @@ import kotlinx.serialization.json.Json
  */
 @Composable
 fun HomeScreen(
-    navController: NavController
+    navController: NavController,
 ) {
     val viewModel: HomeViewModel = hiltViewModel()
     val coroutineScope = rememberCoroutineScope()
@@ -106,7 +109,7 @@ fun HomeScreen(
 
     ModalNavigationDrawer(
         drawerState = drawerState,
-        drawerContent = { DrawerContent(onClose = { coroutineScope.launch { drawerState.close() } }) }
+        drawerContent = { DrawerContent() }
     ) {
         HomeScreenContent(
             diaryList = diaryList,
@@ -127,16 +130,45 @@ fun HomeScreen(
     }
 }
 
+/**
+ * ドロワー
+ */
 @Composable
-fun DrawerContent(onClose: () -> Unit) {
+fun DrawerContent() {
     Column(
         modifier = Modifier
             .fillMaxHeight()
-            .width(200.dp)
+            .width(250.dp)
             .background(MaterialTheme.colorScheme.background)
-    )
-    {
-        Text("ドロワー")
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.Center
+    ) {
+        DrawerContentItem("アカウント(大きめにエリアを取ってトップ位置に表示したい)", Icons.Default.Face, "アカウント")
+        DrawerContentItem("お知らせ", Icons.Default.Email, "お知らせ")
+        DrawerContentItem("通知", Icons.Default.Notifications, "通知設定")
+        DrawerContentItem("言語", Icons.Default.Settings, "言語設定")
+        DrawerContentItem("ヘルプ", Icons.Default.Star, "ヘルプ")
+        DrawerContentItem("このアプリについて", Icons.Default.Info, "アプリについて")
+    }
+}
+
+/**
+ * ドロワーアイテム
+ * @param text テキスト
+ * @param icon アイコン
+ * @param description 説明
+ */
+@Composable
+fun DrawerContentItem(text: String, icon: ImageVector, description: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { }
+            .padding(vertical = 16.dp)
+    ) {
+        Icon(imageVector = icon, contentDescription = description)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text = text)
     }
 }
 
@@ -156,7 +188,7 @@ fun HomeScreenContent(
     isFabVisible: Boolean,
     fabIcon: ImageVector,
     onFabClick: () -> Unit,
-    onDateClick: (Diary) -> Unit
+    onDateClick: (Diary) -> Unit,
 ) {
     Scaffold(
         bottomBar = { BottomNavigationBar() },
@@ -190,13 +222,10 @@ fun BottomNavigationBar() {
         modifier = Modifier.fillMaxWidth(),
         actions = {
             IconButton(onClick = {}) {
-                Icon(Icons.Default.Settings, contentDescription = "設定")
-            }
-            IconButton(onClick = {}) {
-                Icon(Icons.Default.Person, contentDescription = "アカウント")
-            }
-            IconButton(onClick = {}) {
                 Icon(Icons.Default.PlayArrow, contentDescription = "再生")
+            }
+            IconButton(onClick = {}) {
+                Icon(Icons.Default.Add, contentDescription = "追加")
             }
         }
     )
@@ -212,7 +241,7 @@ fun BottomNavigationBar() {
 fun DateFloatingActionButton(
     isFabVisible: Boolean,
     icon: ImageVector,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     AnimatedVisibility(
         visible = isFabVisible,
@@ -243,7 +272,7 @@ fun DateGrid(
     diaryList: List<Diary>,
     gridState: LazyGridState,
     onDateClick: (Diary) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     LazyVerticalGrid(
         state = gridState,
@@ -341,7 +370,8 @@ fun InfiniteDateListPreview() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            DateGridItem(Diary(date = "2025-01-01"), onClickItem = {})
+//            DateGridItem(Diary(date = "2025-01-01"), onClickItem = {})
+            DrawerContent()
         }
     }
 }

@@ -30,9 +30,14 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
@@ -108,7 +113,6 @@ fun HomeScreen(
             gridState = gridState,
             isFabVisible = isFabVisible,
             fabIcon = fabIcon,
-            onOpenDrawer = { coroutineScope.launch { drawerState.open() } },
             onFabClick = {
                 coroutineScope.launch {
                     gridState.animateScrollToItem(index = 365)
@@ -145,27 +149,17 @@ fun DrawerContent(onClose: () -> Unit) {
  * @param onFabClick FABクリック時の処理
  * @param onDateClick 日付クリック時の処理
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreenContent(
     diaryList: List<Diary>,
     gridState: LazyGridState,
     isFabVisible: Boolean,
     fabIcon: ImageVector,
-    onOpenDrawer: () -> Unit,
     onFabClick: () -> Unit,
     onDateClick: (Diary) -> Unit
 ) {
     Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("HOME") },
-                navigationIcon = {
-                    IconButton(onClick = onOpenDrawer) {
-                        Icon(Icons.Default.Menu, contentDescription = "メニューを開く")
-                    }
-                }
-            )
-        },
+        bottomBar = { BottomNavigationBar() },
         floatingActionButton = {
             DateFloatingActionButton(
                 isFabVisible = isFabVisible,
@@ -183,6 +177,27 @@ fun HomeScreenContent(
                     .fillMaxSize()
                     .padding(innerPadding)
             )
+        }
+    )
+}
+
+/**
+ * ボトムナビゲーションバー
+ */
+@Composable
+fun BottomNavigationBar() {
+    BottomAppBar(
+        modifier = Modifier.fillMaxWidth(),
+        actions = {
+            IconButton(onClick = {}) {
+                Icon(Icons.Default.Settings, contentDescription = "設定")
+            }
+            IconButton(onClick = {}) {
+                Icon(Icons.Default.Person, contentDescription = "アカウント")
+            }
+            IconButton(onClick = {}) {
+                Icon(Icons.Default.PlayArrow, contentDescription = "再生")
+            }
         }
     )
 }

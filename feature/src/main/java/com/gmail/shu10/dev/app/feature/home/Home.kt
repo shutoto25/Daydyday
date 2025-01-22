@@ -125,6 +125,9 @@ fun HomeScreen(
                 navController.navigate(
                     AppScreen.DiaryDetail(Json.encodeToString(diary)).createRoute()
                 )
+            },
+            onPlayClick = {
+                navController.navigate(AppScreen.PlayBackRoute.route)
             }
         )
     }
@@ -143,7 +146,11 @@ fun DrawerContent() {
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.Center
     ) {
-        DrawerContentItem("アカウント(大きめにエリアを取ってトップ位置に表示したい)", Icons.Default.Face, "アカウント")
+        DrawerContentItem(
+            "アカウント(大きめにエリアを取ってトップ位置に表示したい)",
+            Icons.Default.Face,
+            "アカウント"
+        )
         DrawerContentItem("お知らせ", Icons.Default.Email, "お知らせ")
         DrawerContentItem("通知", Icons.Default.Notifications, "通知設定")
         DrawerContentItem("言語", Icons.Default.Settings, "言語設定")
@@ -189,9 +196,10 @@ fun HomeScreenContent(
     fabIcon: ImageVector,
     onFabClick: () -> Unit,
     onDateClick: (Diary) -> Unit,
+    onPlayClick: () -> Unit,
 ) {
     Scaffold(
-        bottomBar = { BottomNavigationBar() },
+        bottomBar = { BottomNavigationBar(onPlayClick) },
         floatingActionButton = {
             DateFloatingActionButton(
                 isFabVisible = isFabVisible,
@@ -217,11 +225,11 @@ fun HomeScreenContent(
  * ボトムナビゲーションバー
  */
 @Composable
-fun BottomNavigationBar() {
+fun BottomNavigationBar(onPlayClick: () -> Unit) {
     BottomAppBar(
         modifier = Modifier.fillMaxWidth(),
         actions = {
-            IconButton(onClick = {}) {
+            IconButton(onClick = { onPlayClick() }) {
                 Icon(Icons.Default.PlayArrow, contentDescription = "再生")
             }
             IconButton(onClick = {}) {

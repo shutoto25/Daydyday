@@ -8,6 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -63,6 +64,7 @@ fun DiaryDetailScreen(
     viewModel: DiaryDetailViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+    var isLoading by remember { mutableStateOf(false) }
     // 状態管理
     var tempDiary by remember { mutableStateOf(diary) }
 
@@ -76,6 +78,12 @@ fun DiaryDetailScreen(
     navHostController.currentBackStackEntry
         ?.savedStateHandle
         ?.remove<String>("updateDiaryWithTrimmedVideo")
+
+    DisposableEffect(Unit) {
+        onDispose {
+            isLoading = false
+        }
+    }
 
     // 画像/動画選択
     val phonePickerLauncher = rememberLauncherForActivityResult(
@@ -93,6 +101,7 @@ fun DiaryDetailScreen(
                 }
 
                 mimeType?.startsWith("video") == true -> {
+                    isLoading = true
                     val file = viewModel.saveVideoToAppDir(context, url, diary.date)
                     tempDiary = tempDiary.copy(videoPath = file?.toContentUri(context).toString())
                     navHostController.navigate(
@@ -110,6 +119,20 @@ fun DiaryDetailScreen(
             .fillMaxSize()
             .padding(8.dp)
     ) {
+        // ローディングインジケーター
+//        if (isLoading) {
+//            Box(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .background(Color.Black.copy(alpha = 0.5f)), // 背景を半透明に
+//                contentAlignment = Alignment.Center
+//            ) {
+//                CircularProgressIndicator(
+//                    modifier = Modifier.width(64.dp),
+//                    color = MaterialTheme.colorScheme.secondary,
+//                    trackColor = MaterialTheme.colorScheme.surfaceVariant)
+//            }
+//        }
         DateTitle(date = diary.date)
         MediaContentArea(
             context = context,

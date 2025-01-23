@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.gms)
     alias(libs.plugins.dagger.hilt)
+    alias(libs.plugins.compose.compiler) apply false
     id("com.google.devtools.ksp") version "2.1.0-1.0.29" apply false // TODO ちゃんと動かん
     kotlin("android")
     kotlin("kapt")

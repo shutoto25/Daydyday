@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.dokka)
     alias(libs.plugins.dagger.hilt)
+    alias(libs.plugins.compose.compiler)
     kotlin("android")
     kotlin("kapt")
 }

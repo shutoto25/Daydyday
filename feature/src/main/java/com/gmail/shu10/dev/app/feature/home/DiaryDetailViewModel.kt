@@ -3,21 +3,27 @@ package com.gmail.shu10.dev.app.feature.home
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.media.MediaCodec
-import android.media.MediaCodecInfo
-import android.media.MediaFormat
-import android.media.MediaMuxer
 import android.net.Uri
+import android.util.Log
+import androidx.annotation.OptIn
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.MediaItem
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.transformer.Composition
+import androidx.media3.transformer.ExportException
+import androidx.media3.transformer.ExportResult
+import androidx.media3.transformer.Transformer
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.domain.SaveDiaryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.io.File
-import java.nio.ByteBuffer
 import javax.inject.Inject
 
+/**
+ * 日記詳細画面のViewModel
+ */
 @HiltViewModel
 class DiaryDetailViewModel @Inject constructor(
     private val saveDiaryUseCase: SaveDiaryUseCase,
@@ -52,7 +58,7 @@ class DiaryDetailViewModel @Inject constructor(
                 input.copyTo(output)
             }
         }
-        createVideoFromImage(BitmapFactory.decodeFile(file.path), targetFile(context, date))
+        createVideoFromSavedImage(context, BitmapFactory.decodeFile(file.path), targetFile(context, date))
         return file
     }
 
@@ -82,54 +88,41 @@ class DiaryDetailViewModel @Inject constructor(
         return targetFile
     }
 
-    private fun createVideoFromImage(
-        image: Bitmap,
-        outputFile: File,
-    ) {
-        // 動画の設定
-        val width = image.width
-        val height = image.height
-        val frameRate = 30 // 30 FPS
-        val durationSeconds = 1 // 1秒
-        val totalFrames = frameRate * durationSeconds // 30フレーム
+    @OptIn(UnstableApi::class)
+    fun createVideoFromSavedImage(context: Context, bitmap: Bitmap, outputFile: File) {
+        Log.d(
+            "TEST",
+            "createVideoFromSavedImage() called with: context = $context, bitmap = $bitmap, outputFile = $outputFile"
+        )
+        val tempMp4File = File(context.cacheDir, "temp_video.mp4")
+        val encoder = ImageToVideoEncoder(tempMp4File)
+        encoder.encodeBitmapToMp4(bitmap)
 
-        val muxer = MediaMuxer(outputFile.path, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
-        val format = MediaFormat.createVideoFormat("video/avc", width, height).apply {
-            setInteger(MediaFormat.KEY_BIT_RATE, 2_000_000) // ビットレート
-            setInteger(MediaFormat.KEY_FRAME_RATE, frameRate) // フレームレート
-            setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1) // Iフレーム間隔
-            setInteger(
-                MediaFormat.KEY_PROFILE,
-                MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline
-            ) // プロファイルレベル
-        }
-        val videoTrackIndex = muxer.addTrack(format)
-        muxer.start()
+        val mediaItem = MediaItem.Builder()
+            .setUri(Uri.fromFile(tempMp4File))
+            .build()
 
-        // フレームごとに画像をエンコード
-        val bufferInfo = MediaCodec.BufferInfo()
-        val timestampIncrement = 1_000_000L / frameRate // 1フレームごとのタイムスタンプ (マイクロ秒)
 
-        for (i in 0 until totalFrames) {
-            bufferInfo.presentationTimeUs = i * timestampIncrement
-            bufferInfo.flags = MediaCodec.BUFFER_FLAG_KEY_FRAME
+        // ❸ `Transformer` の設定（動画変換用）
+        val transformer = Transformer.Builder(context)
+            .addListener(object : Transformer.Listener {
+                override fun onCompleted(composition: Composition, exportResult: ExportResult) {
+                    Log.d("TEST", "onCompleted() exportResult = $exportResult")
+                    tempMp4File.delete()
+                }
 
-            // 画像をバイト配列に変換
-            val byteBuffer = imageToByteBuffer(image)
+                override fun onError(
+                    composition: Composition,
+                    exportResult: ExportResult,
+                    exportException: ExportException
+                ) {
+                    Log.d("TEST", "onError() exportException = ${exportException.message}")
+                    tempMp4File.delete()
+                }
+            })
+            .build()
 
-            // Muxer にフレームを書き込む
-            muxer.writeSampleData(videoTrackIndex, byteBuffer, bufferInfo)
-        }
-
-        muxer.stop()
-        muxer.release()
-
-    }
-
-    private fun imageToByteBuffer(image: Bitmap): ByteBuffer {
-        val buffer = ByteBuffer.allocate(image.byteCount)
-        image.copyPixelsToBuffer(buffer)
-        buffer.rewind() // 読み取り位置をリセット
-        return buffer
+        // ❹ 動画の変換処理を開始
+        transformer.start(mediaItem, outputFile.absolutePath) // `absolutePath` を使用
     }
 }

@@ -46,11 +46,11 @@ class ImageToVideoEncoder(
 
         // 3️⃣ OpenGL ES のセットアップ
         eglCore = EGLCore(inputSurface)
-        textureRenderer = TextureRenderer(width, height)
+        textureRenderer = TextureRenderer(width, height, bitmap)
 
         // 4️⃣ フレームを描画
         for (i in 0 until frameCount) {
-            textureRenderer.drawFrame(bitmap)
+            textureRenderer.drawFrame()
             eglCore.swapBuffers()
             drainEncoder(false)
         }

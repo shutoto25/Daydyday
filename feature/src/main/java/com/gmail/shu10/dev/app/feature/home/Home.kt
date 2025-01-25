@@ -82,6 +82,7 @@ import kotlinx.serialization.json.Json
 
 /**
  * ホーム画面(日付リスト)
+ * @param navController NavController
  */
 @Composable
 fun HomeScreen(

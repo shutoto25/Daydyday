@@ -153,9 +153,9 @@ class VideoEditorViewModel : ViewModel() {
      *
      */
     fun targetFile(context: Context, date: String) : File {
-        val appDir = File(context.filesDir, "videos/trim")
+        val appDir = File(context.filesDir, "videos/1sec")
         if (!appDir.exists()) appDir.mkdirs()
-        val targetFile = File(appDir, "trimmed_$date.mp4")
+        val targetFile = File(appDir, "$date.mp4")
         return targetFile
     }
 }

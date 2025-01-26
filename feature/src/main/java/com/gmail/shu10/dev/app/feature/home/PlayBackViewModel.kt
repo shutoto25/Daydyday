@@ -30,41 +30,36 @@ class PlayBackViewModel @Inject constructor() : ViewModel() {
             return
         }
 
-        try {
-            val mediaMuxer =
-                MediaMuxer(outputFile.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
-            val bufferInfo = MediaCodec.BufferInfo()
-            val buffer = ByteBuffer.allocate(1024 * 1024) // **バッファサイズを1MBに設定**
+        var mediaMuxer: MediaMuxer? = null
+        var videoTrackIndex = -1
+        var totalDurationUs = 0L // **累積時間を管理**
+        var isMuxerStarted = false
+        val bufferInfo = MediaCodec.BufferInfo()
+        val buffer = ByteBuffer.allocate(1024 * 1024) // **バッファサイズを1MBに設定**
 
-            var videoTrackIndex = -1
-            var totalDurationUs = 0L // **累積時間を管理**
-            val targetFrameRate = 30 // **QuickTime 互換のフレームレート**
+        try {
+            mediaMuxer = MediaMuxer(outputFile.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
 
             for (videoFile in videoFiles) {
                 val extractor = MediaExtractor()
                 extractor.setDataSource(context, Uri.fromFile(videoFile), null)
 
                 var videoTrack = -1
-                var durationUs = 0L
+                var videoDurationUs = 0L // **この動画の長さ**
+
                 for (i in 0 until extractor.trackCount) {
                     val format = extractor.getTrackFormat(i)
                     val mime = format.getString(MediaFormat.KEY_MIME)
                     if (mime?.startsWith("video/") == true) {
                         videoTrack = i
-                        durationUs = format.getLong(MediaFormat.KEY_DURATION)
+                        videoDurationUs = format.getLong(MediaFormat.KEY_DURATION) // **正確な動画時間を取得**
 
-                        // **QuickTime 互換の H.264 プロファイルを明示的に設定**
-                        format.setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline)
-                        format.setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel3)
-                        format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1)
-                        format.setInteger(MediaFormat.KEY_FRAME_RATE, targetFrameRate)
-
-                        // **QuickTime 互換の色空間を YUV420 に統一**
-                        format.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar)
+                        Log.d("VideoMerger", "Extracted format from ${videoFile.name}: $format")
 
                         if (videoTrackIndex == -1) {
                             videoTrackIndex = mediaMuxer.addTrack(format)
-                            mediaMuxer.start() // ✅ **最初のトラック追加時のみ start()**
+                            mediaMuxer.start()
+                            isMuxerStarted = true
                         }
                         break
                     }
@@ -85,27 +80,38 @@ class PlayBackViewModel @Inject constructor() : ViewModel() {
                         break
                     }
 
-                    // **QuickTime 互換のため presentationTimeUs を累積**
-                    bufferInfo.presentationTimeUs = totalDurationUs + extractor.sampleTime
-                    bufferInfo.flags = MediaCodec.BUFFER_FLAG_KEY_FRAME
+                    // **presentationTimeUs の適正化**
+                    bufferInfo.presentationTimeUs = extractor.sampleTime + totalDurationUs
+
+                    // **フラグを適切に変換**
+                    bufferInfo.flags = when {
+                        extractor.sampleFlags and MediaExtractor.SAMPLE_FLAG_SYNC != 0 -> MediaCodec.BUFFER_FLAG_KEY_FRAME
+                        extractor.sampleFlags and MediaExtractor.SAMPLE_FLAG_ENCRYPTED != 0 -> MediaCodec.BUFFER_FLAG_CODEC_CONFIG
+                        else -> 0
+                    }
 
                     mediaMuxer.writeSampleData(videoTrackIndex, buffer, bufferInfo)
 
                     extractor.advance()
                 }
 
-                // **累積時間を更新**
-                totalDurationUs += durationUs
+                // **次の動画の開始時間を適切に設定**
+                totalDurationUs += videoDurationUs
+
                 extractor.release()
             }
 
-            mediaMuxer.stop()
-            mediaMuxer.release()
+            if (isMuxerStarted) {
+                mediaMuxer.stop()
+            }
 
             Log.d("VideoMerger", "動画結合完了: ${outputFile.absolutePath}")
 
         } catch (e: Exception) {
             Log.e("VideoMerger", "動画結合中にエラー発生", e)
+
+        } finally {
+            mediaMuxer?.release()
         }
     }
 

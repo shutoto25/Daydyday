@@ -3,16 +3,19 @@ import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.media.MediaMuxer
+import android.util.Log
 import android.view.Surface
 import com.gmail.shu10.dev.app.feature.home.EGLCore
 import java.io.File
-import java.lang.RuntimeException
 
 class ImageToVideoEncoder(
     private val outputFile: File,
     private val bitmap: Bitmap,
     private val frameRate: Int = 30
 ) {
+    private val width = bitmap.width
+    private val height = bitmap.height
+
     private lateinit var mediaCodec: MediaCodec
     private lateinit var inputSurface: Surface
     private lateinit var mediaMuxer: MediaMuxer
@@ -25,14 +28,14 @@ class ImageToVideoEncoder(
         // **1️⃣ `MediaMuxer` の作成**
         mediaMuxer = MediaMuxer(outputFile.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
 
-        // **2️⃣ `MediaCodec` の設定**
-        val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, bitmap.width, bitmap.height)
+        // **2️⃣ `MediaFormat` の設定（動画の長さが0秒にならないようにする）**
+        val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, width, height)
         format.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
         format.setInteger(MediaFormat.KEY_BIT_RATE, 4000000)
-        format.setInteger(MediaFormat.KEY_FRAME_RATE, frameRate)
-        format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1)
+        format.setInteger(MediaFormat.KEY_FRAME_RATE, frameRate)  // **フレームレートを設定**
+        format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1)    // **Iフレームを適切に設定**
 
-        // **3️⃣ `MediaCodec` を設定**
+        // **3️⃣ `MediaCodec` の設定**
         mediaCodec = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
         mediaCodec.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
 
@@ -41,7 +44,7 @@ class ImageToVideoEncoder(
 
         // **4️⃣ OpenGL ES を使用して描画**
         val eglCore = EGLCore(inputSurface)
-        val textureRenderer = TextureRenderer( bitmap.width, bitmap.height, bitmap)
+        val textureRenderer = TextureRenderer(width, height, bitmap)
 
         for (i in 0 until frameCount) {
             textureRenderer.drawFrame()
@@ -49,13 +52,13 @@ class ImageToVideoEncoder(
             drainEncoder(false)
         }
 
-        // **5️⃣ 終了処理**
+        // **5️⃣ すべてのフレームをエンコードした後に `signalEndOfInputStream()` を呼ぶ**
         drainEncoder(true)
         mediaCodec.stop()
         mediaCodec.release()
         eglCore.release()
 
-        // **6️⃣ `MediaMuxer` を停止**
+        // **6️⃣ `MediaMuxer` を停止（これがないと再生時間が 0 秒になることがある）**
         if (isMuxerStarted) {
             mediaMuxer.stop()
             mediaMuxer.release()
@@ -64,6 +67,7 @@ class ImageToVideoEncoder(
 
     private fun drainEncoder(endOfStream: Boolean) {
         if (endOfStream) {
+            Log.d("TEST", "エンコード完了: signalEndOfInputStream() を呼ぶ")
             mediaCodec.signalEndOfInputStream()
         }
 

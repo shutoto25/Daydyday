@@ -1,4 +1,5 @@
 import android.graphics.Bitmap
+import android.graphics.Matrix
 import android.opengl.GLES20
 import android.opengl.GLUtils
 import java.nio.ByteBuffer
@@ -36,15 +37,12 @@ class TextureRenderer(private val width: Int, private val height: Int, bitmap: B
     private var textureId = 0
 
     init {
-        // **1️⃣ OpenGL の描画範囲を設定**
-        if (isPortrait) {
-            GLES20.glViewport(0, 0, height, width) // **縦長の場合、width, height を入れ替える**
-        } else {
-            GLES20.glViewport(0, 0, width, height)
-        }
+        GLES20.glViewport(0, 0, width, height)
         GLES20.glClearColor(0f, 0f, 0f, 1f)
 
-        val correctedBitmap = bitmap
+        // **1️⃣ 画像の回転を修正**
+        val correctedBitmap = if (isPortrait) bitmap else rotateBitmap(bitmap, 90f)
+
         val bitmapRatio = correctedBitmap.width.toFloat() / correctedBitmap.height
         val screenRatio = width.toFloat() / height
 
@@ -59,7 +57,7 @@ class TextureRenderer(private val width: Int, private val height: Int, bitmap: B
             scaleY = bitmapRatio / screenRatio
         }
 
-        // **2️⃣ 頂点データ**
+        // **2️⃣ 頂点データの設定**
         vertexData = floatArrayOf(
             -scaleX, -scaleY,  // 左下
             scaleX, -scaleY,   // 右下
@@ -67,13 +65,22 @@ class TextureRenderer(private val width: Int, private val height: Int, bitmap: B
             scaleX, scaleY     // 右上
         )
 
-        // **3️⃣ テクスチャ座標**
-        texCoordData = floatArrayOf(
-            0f, 1f,  // 左下
-            1f, 1f,  // 右下
-            0f, 0f,  // 左上
-            1f, 0f   // 右上
-        )
+        // **3️⃣ テクスチャ座標の修正（回転に応じて適用）**
+        texCoordData = if (isPortrait) {
+            floatArrayOf(
+                0f, 1f,  // 左下
+                1f, 1f,  // 右下
+                0f, 0f,  // 左上
+                1f, 0f   // 右上
+            )
+        } else {
+            floatArrayOf(
+                1f, 0f,  // 左下
+                0f, 0f,  // 右下
+                1f, 1f,  // 左上
+                0f, 1f   // 右上
+            )
+        }
 
         vertexBuffer = ByteBuffer.allocateDirect(vertexData.size * 4)
             .order(ByteOrder.nativeOrder())
@@ -153,5 +160,12 @@ class TextureRenderer(private val width: Int, private val height: Int, bitmap: B
         GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0)
 
         return textureIds[0]
+    }
+
+    // **画像を 90° 回転（横長の時のみ）**
+    private fun rotateBitmap(bitmap: Bitmap, degrees: Float): Bitmap {
+        val matrix = Matrix()
+        matrix.postRotate(degrees)
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
     }
 }

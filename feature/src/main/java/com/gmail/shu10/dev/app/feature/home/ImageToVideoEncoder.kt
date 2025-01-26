@@ -3,7 +3,6 @@ import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.media.MediaMuxer
-import android.util.Log
 import android.view.Surface
 import com.gmail.shu10.dev.app.feature.home.EGLCore
 import java.io.File
@@ -14,10 +13,6 @@ class ImageToVideoEncoder(
     private val bitmap: Bitmap,
     private val frameRate: Int = 30
 ) {
-    private val isPortrait = bitmap.height > bitmap.width // **画像の縦横比をチェック**
-    private val width = if (isPortrait) bitmap.height else bitmap.width
-    private val height = if (isPortrait) bitmap.width else bitmap.height
-
     private lateinit var mediaCodec: MediaCodec
     private lateinit var inputSurface: Surface
     private lateinit var mediaMuxer: MediaMuxer
@@ -31,7 +26,7 @@ class ImageToVideoEncoder(
         mediaMuxer = MediaMuxer(outputFile.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
 
         // **2️⃣ `MediaCodec` の設定**
-        val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, width, height)
+        val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, bitmap.width, bitmap.height)
         format.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
         format.setInteger(MediaFormat.KEY_BIT_RATE, 4000000)
         format.setInteger(MediaFormat.KEY_FRAME_RATE, frameRate)
@@ -46,7 +41,7 @@ class ImageToVideoEncoder(
 
         // **4️⃣ OpenGL ES を使用して描画**
         val eglCore = EGLCore(inputSurface)
-        val textureRenderer = TextureRenderer(width, height, bitmap)
+        val textureRenderer = TextureRenderer( bitmap.width, bitmap.height, bitmap)
 
         for (i in 0 until frameCount) {
             textureRenderer.drawFrame()

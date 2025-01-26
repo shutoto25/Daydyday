@@ -6,15 +6,8 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
-import androidx.annotation.OptIn
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.media3.common.MediaItem
-import androidx.media3.common.util.UnstableApi
-import androidx.media3.transformer.Composition
-import androidx.media3.transformer.ExportException
-import androidx.media3.transformer.ExportResult
-import androidx.media3.transformer.Transformer
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.domain.SaveDiaryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel

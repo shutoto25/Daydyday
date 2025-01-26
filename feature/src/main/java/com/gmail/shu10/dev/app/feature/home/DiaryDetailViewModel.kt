@@ -1,5 +1,6 @@
 package com.gmail.shu10.dev.app.feature.home
 
+import ImageToVideoEncoder
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -88,41 +89,26 @@ class DiaryDetailViewModel @Inject constructor(
         return targetFile
     }
 
-    @OptIn(UnstableApi::class)
-    fun createVideoFromSavedImage(context: Context, bitmap: Bitmap, outputFile: File) {
-        Log.d(
-            "TEST",
-            "createVideoFromSavedImage() called with: context = $context, bitmap = $bitmap, outputFile = $outputFile"
-        )
+    private fun createVideoFromSavedImage(context: Context, bitmap: Bitmap, outputFile: File) {
+        Log.d("TEST", "createVideoFromSavedImage() called with: context = $context, bitmap = $bitmap, outputFile = $outputFile")
+
+        // **一時的なMP4ファイルを作成**
         val tempMp4File = File(context.cacheDir, "temp_video.mp4")
-        val encoder = ImageToVideoEncoder(tempMp4File)
-        encoder.encodeBitmapToMp4(bitmap)
 
-        val mediaItem = MediaItem.Builder()
-            .setUri(Uri.fromFile(tempMp4File))
-            .build()
+        try {
+            // **ImageToVideoEncoder を使用して動画を生成**
+            val encoder = ImageToVideoEncoder(tempMp4File, bitmap)
+            encoder.encodeBitmapToMp4()
 
-
-        // ❸ `Transformer` の設定（動画変換用）
-        val transformer = Transformer.Builder(context)
-            .addListener(object : Transformer.Listener {
-                override fun onCompleted(composition: Composition, exportResult: ExportResult) {
-                    Log.d("TEST", "onCompleted() exportResult = $exportResult")
-                    tempMp4File.delete()
-                }
-
-                override fun onError(
-                    composition: Composition,
-                    exportResult: ExportResult,
-                    exportException: ExportException
-                ) {
-                    Log.d("TEST", "onError() exportException = ${exportException.message}")
-                    tempMp4File.delete()
-                }
-            })
-            .build()
-
-        // ❹ 動画の変換処理を開始
-        transformer.start(mediaItem, outputFile.absolutePath) // `absolutePath` を使用
+            // **エンコードが完了したら、ファイルを移動**
+            if (tempMp4File.exists()) {
+                tempMp4File.copyTo(outputFile, overwrite = true)
+                tempMp4File.delete()
+            } else {
+                Log.e("TEST", "エンコード失敗: tempMp4File が存在しない")
+            }
+        } catch (e: Exception) {
+            Log.e("TEST", "エンコード中にエラーが発生", e)
+        }
     }
 }

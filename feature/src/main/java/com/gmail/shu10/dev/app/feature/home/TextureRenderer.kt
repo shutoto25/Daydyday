@@ -1,6 +1,4 @@
 import android.graphics.Bitmap
-import android.graphics.Matrix
-import android.media.ExifInterface
 import android.opengl.GLES20
 import android.opengl.GLUtils
 import java.nio.ByteBuffer
@@ -8,6 +6,7 @@ import java.nio.ByteOrder
 import java.nio.FloatBuffer
 
 class TextureRenderer(private val width: Int, private val height: Int, bitmap: Bitmap) {
+    private val isPortrait = height > width
     private val vertexShaderCode =
         """
         attribute vec4 a_Position;
@@ -37,12 +36,15 @@ class TextureRenderer(private val width: Int, private val height: Int, bitmap: B
     private var textureId = 0
 
     init {
-        GLES20.glViewport(0, 0, width, height)
+        // **1️⃣ OpenGL の描画範囲を設定**
+        if (isPortrait) {
+            GLES20.glViewport(0, 0, height, width) // **縦長の場合、width, height を入れ替える**
+        } else {
+            GLES20.glViewport(0, 0, width, height)
+        }
         GLES20.glClearColor(0f, 0f, 0f, 1f)
 
-        // **1️⃣ Bitmap の回転を修正**
-        val correctedBitmap = getCorrectedBitmap(bitmap)
-
+        val correctedBitmap = bitmap
         val bitmapRatio = correctedBitmap.width.toFloat() / correctedBitmap.height
         val screenRatio = width.toFloat() / height
 
@@ -57,7 +59,7 @@ class TextureRenderer(private val width: Int, private val height: Int, bitmap: B
             scaleY = bitmapRatio / screenRatio
         }
 
-        // **2️⃣ 頂点データの設定**
+        // **2️⃣ 頂点データ**
         vertexData = floatArrayOf(
             -scaleX, -scaleY,  // 左下
             scaleX, -scaleY,   // 右下
@@ -65,7 +67,7 @@ class TextureRenderer(private val width: Int, private val height: Int, bitmap: B
             scaleX, scaleY     // 右上
         )
 
-        // **3️⃣ テクスチャ座標の設定 (向きを修正)**
+        // **3️⃣ テクスチャ座標**
         texCoordData = floatArrayOf(
             0f, 1f,  // 左下
             1f, 1f,  // 右下
@@ -102,12 +104,15 @@ class TextureRenderer(private val width: Int, private val height: Int, bitmap: B
 
         val positionHandle = GLES20.glGetAttribLocation(program, "a_Position")
         val texCoordHandle = GLES20.glGetAttribLocation(program, "a_TexCoord")
+        val textureHandle = GLES20.glGetUniformLocation(program, "u_Texture")
 
         GLES20.glEnableVertexAttribArray(positionHandle)
         GLES20.glVertexAttribPointer(positionHandle, 2, GLES20.GL_FLOAT, false, 0, vertexBuffer)
 
         GLES20.glEnableVertexAttribArray(texCoordHandle)
         GLES20.glVertexAttribPointer(texCoordHandle, 2, GLES20.GL_FLOAT, false, 0, texCoordBuffer)
+
+        GLES20.glUniform1i(textureHandle, 0)
 
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
 
@@ -148,11 +153,5 @@ class TextureRenderer(private val width: Int, private val height: Int, bitmap: B
         GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0)
 
         return textureIds[0]
-    }
-
-    private fun getCorrectedBitmap(bitmap: Bitmap): Bitmap {
-        val matrix = Matrix()
-        matrix.postRotate(90f) // **90度回転修正**
-        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
     }
 }

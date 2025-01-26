@@ -1,67 +1,66 @@
-package com.gmail.shu10.dev.app.feature.home
-
-import TextureRenderer
 import android.graphics.Bitmap
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.media.MediaMuxer
+import android.util.Log
 import android.view.Surface
+import com.gmail.shu10.dev.app.feature.home.EGLCore
 import java.io.File
 import java.lang.RuntimeException
 
 class ImageToVideoEncoder(
     private val outputFile: File,
-    private val width: Int = 1920,
-    private val height: Int = 1080,
+    private val bitmap: Bitmap,
     private val frameRate: Int = 30
 ) {
+    private val isPortrait = bitmap.height > bitmap.width // **画像の縦横比をチェック**
+    private val width = if (isPortrait) bitmap.height else bitmap.width
+    private val height = if (isPortrait) bitmap.width else bitmap.height
 
     private lateinit var mediaCodec: MediaCodec
     private lateinit var inputSurface: Surface
-    private lateinit var eglCore: EGLCore
-    private lateinit var textureRenderer: TextureRenderer
     private lateinit var mediaMuxer: MediaMuxer
     private var trackIndex = -1
     private var isMuxerStarted = false
 
-    fun encodeBitmapToMp4(bitmap: Bitmap, durationSeconds: Int = 1) {
+    fun encodeBitmapToMp4(durationSeconds: Int = 1) {
         val frameCount = frameRate * durationSeconds
 
-        // 1️⃣ `MediaMuxer` の作成
+        // **1️⃣ `MediaMuxer` の作成**
         mediaMuxer = MediaMuxer(outputFile.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
 
-        // 2️⃣ `MediaCodec` の設定
+        // **2️⃣ `MediaCodec` の設定**
         val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, width, height)
         format.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
         format.setInteger(MediaFormat.KEY_BIT_RATE, 4000000)
         format.setInteger(MediaFormat.KEY_FRAME_RATE, frameRate)
         format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1)
 
+        // **3️⃣ `MediaCodec` を設定**
         mediaCodec = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
         mediaCodec.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
 
         inputSurface = mediaCodec.createInputSurface()
         mediaCodec.start()
 
-        // 3️⃣ OpenGL ES のセットアップ
-        eglCore = EGLCore(inputSurface)
-        textureRenderer = TextureRenderer(width, height, bitmap)
+        // **4️⃣ OpenGL ES を使用して描画**
+        val eglCore = EGLCore(inputSurface)
+        val textureRenderer = TextureRenderer(width, height, bitmap)
 
-        // 4️⃣ フレームを描画
         for (i in 0 until frameCount) {
             textureRenderer.drawFrame()
             eglCore.swapBuffers()
             drainEncoder(false)
         }
 
-        // 5️⃣ 終了処理
+        // **5️⃣ 終了処理**
         drainEncoder(true)
         mediaCodec.stop()
         mediaCodec.release()
         eglCore.release()
 
-        // 6️⃣ `MediaMuxer` を停止
+        // **6️⃣ `MediaMuxer` を停止**
         if (isMuxerStarted) {
             mediaMuxer.stop()
             mediaMuxer.release()

@@ -8,6 +8,8 @@ import java.nio.FloatBuffer
 
 class TextureRenderer(private val width: Int, private val height: Int, bitmap: Bitmap) {
     private val isPortrait = height > width
+    private val isBitmapPortrait = bitmap.height > bitmap.width  // **画像が縦向きかどうかを判定**
+
     private val vertexShaderCode =
         """
         attribute vec4 a_Position;
@@ -37,11 +39,20 @@ class TextureRenderer(private val width: Int, private val height: Int, bitmap: B
     private var textureId = 0
 
     init {
-        GLES20.glViewport(0, 0, width, height)
+        // **1️⃣ OpenGL の描画範囲を設定**
+        if (isPortrait != isBitmapPortrait) {
+            GLES20.glViewport(0, 0, height, width) // **画像と動画の向きが異なる場合、入れ替える**
+        } else {
+            GLES20.glViewport(0, 0, width, height)
+        }
         GLES20.glClearColor(0f, 0f, 0f, 1f)
 
-        // **1️⃣ 画像の回転を修正**
-        val correctedBitmap = if (isPortrait) bitmap else rotateBitmap(bitmap, 90f)
+        // **2️⃣ 画像の回転を修正**
+        val correctedBitmap = if (isPortrait == isBitmapPortrait) {
+            bitmap  // **向きが合っていればそのまま**
+        } else {
+            rotateBitmap(bitmap, 90f)  // **向きが異なれば 90° 回転**
+        }
 
         val bitmapRatio = correctedBitmap.width.toFloat() / correctedBitmap.height
         val screenRatio = width.toFloat() / height
@@ -57,7 +68,7 @@ class TextureRenderer(private val width: Int, private val height: Int, bitmap: B
             scaleY = bitmapRatio / screenRatio
         }
 
-        // **2️⃣ 頂点データの設定**
+        // **3️⃣ 頂点データの設定**
         vertexData = floatArrayOf(
             -scaleX, -scaleY,  // 左下
             scaleX, -scaleY,   // 右下
@@ -65,22 +76,13 @@ class TextureRenderer(private val width: Int, private val height: Int, bitmap: B
             scaleX, scaleY     // 右上
         )
 
-        // **3️⃣ テクスチャ座標の修正（回転に応じて適用）**
-        texCoordData = if (isPortrait) {
-            floatArrayOf(
-                0f, 1f,  // 左下
-                1f, 1f,  // 右下
-                0f, 0f,  // 左上
-                1f, 0f   // 右上
-            )
-        } else {
-            floatArrayOf(
-                1f, 0f,  // 左下
-                0f, 0f,  // 右下
-                1f, 1f,  // 左上
-                0f, 1f   // 右上
-            )
-        }
+        // **4️⃣ テクスチャ座標の修正（回転に応じて適用）**
+        texCoordData = floatArrayOf(
+            0f, 1f,  // 左下
+            1f, 1f,  // 右下
+            0f, 0f,  // 左上
+            1f, 0f   // 右上
+        )
 
         vertexBuffer = ByteBuffer.allocateDirect(vertexData.size * 4)
             .order(ByteOrder.nativeOrder())
@@ -162,7 +164,7 @@ class TextureRenderer(private val width: Int, private val height: Int, bitmap: B
         return textureIds[0]
     }
 
-    // **画像を 90° 回転（横長の時のみ）**
+    // **画像の回転処理**
     private fun rotateBitmap(bitmap: Bitmap, degrees: Float): Bitmap {
         val matrix = Matrix()
         matrix.postRotate(degrees)

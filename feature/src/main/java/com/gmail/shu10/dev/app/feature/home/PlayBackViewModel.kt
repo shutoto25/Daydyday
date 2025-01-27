@@ -5,7 +5,10 @@ import android.media.*
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
 import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
@@ -16,6 +19,12 @@ import javax.inject.Inject
 class PlayBackViewModel @Inject constructor() : ViewModel() {
 
     fun mergeVideos(context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            mergeVideosInternal(context)
+        }
+    }
+
+    private fun mergeVideosInternal(context: Context): File? {
         val targetDir = File(context.filesDir, "videos/merge")
         if (!targetDir.exists()) targetDir.mkdirs()
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
@@ -27,39 +36,36 @@ class PlayBackViewModel @Inject constructor() : ViewModel() {
 
         if (videoFiles.isEmpty()) {
             Log.e("VideoMerger", "動画が見つかりませんでした")
-            return
+            return null
         }
 
-        var mediaMuxer: MediaMuxer? = null
-        var videoTrackIndex = -1
-        var totalDurationUs = 0L // **累積時間を管理**
-        var isMuxerStarted = false
-        val bufferInfo = MediaCodec.BufferInfo()
-        val buffer = ByteBuffer.allocate(1024 * 1024) // **バッファサイズを1MBに設定**
-
         try {
-            mediaMuxer = MediaMuxer(outputFile.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+            val mediaMuxer = MediaMuxer(outputFile.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+            val bufferInfo = MediaCodec.BufferInfo()
+            val buffer = ByteBuffer.allocate(1024 * 1024) // **バッファサイズを1MBに設定**
+
+            var videoTrackIndex = -1
+            var totalDurationUs = 0L
+            var isStarted = false
 
             for (videoFile in videoFiles) {
                 val extractor = MediaExtractor()
                 extractor.setDataSource(context, Uri.fromFile(videoFile), null)
 
                 var videoTrack = -1
-                var videoDurationUs = 0L // **この動画の長さ**
+                var videoDurationUs = 0L
 
                 for (i in 0 until extractor.trackCount) {
                     val format = extractor.getTrackFormat(i)
                     val mime = format.getString(MediaFormat.KEY_MIME)
-                    if (mime?.startsWith("video/") == true) {
+                    if (mime?.startsWith("video/avc") == true) { // **H.264 のみ処理対象**
                         videoTrack = i
-                        videoDurationUs = format.getLong(MediaFormat.KEY_DURATION) // **正確な動画時間を取得**
+                        videoDurationUs = format.getLong(MediaFormat.KEY_DURATION)
 
-                        Log.d("VideoMerger", "Extracted format from ${videoFile.name}: $format")
+                        Log.d("VideoMerger", "Processing: ${videoFile.name}, Duration: $videoDurationUs")
 
                         if (videoTrackIndex == -1) {
                             videoTrackIndex = mediaMuxer.addTrack(format)
-                            mediaMuxer.start()
-                            isMuxerStarted = true
                         }
                         break
                     }
@@ -73,6 +79,11 @@ class PlayBackViewModel @Inject constructor() : ViewModel() {
 
                 extractor.selectTrack(videoTrack)
 
+                if (!isStarted) {
+                    mediaMuxer.start()
+                    isStarted = true
+                }
+
                 while (true) {
                     bufferInfo.offset = 0
                     bufferInfo.size = extractor.readSampleData(buffer, 0)
@@ -80,43 +91,48 @@ class PlayBackViewModel @Inject constructor() : ViewModel() {
                         break
                     }
 
-                    // **presentationTimeUs の適正化**
-                    bufferInfo.presentationTimeUs = extractor.sampleTime + totalDurationUs
+                    // **⚠ 修正: ノイズが入る問題を防ぐ**
+                    val sampleTime = extractor.sampleTime
+                    if (sampleTime < 0) break
 
-                    // **フラグを適切に変換**
-                    bufferInfo.flags = when {
-                        extractor.sampleFlags and MediaExtractor.SAMPLE_FLAG_SYNC != 0 -> MediaCodec.BUFFER_FLAG_KEY_FRAME
-                        extractor.sampleFlags and MediaExtractor.SAMPLE_FLAG_ENCRYPTED != 0 -> MediaCodec.BUFFER_FLAG_CODEC_CONFIG
-                        else -> 0
-                    }
+                    bufferInfo.presentationTimeUs = totalDurationUs + sampleTime
+                    bufferInfo.flags = convertSampleFlags(extractor.sampleFlags)
 
                     mediaMuxer.writeSampleData(videoTrackIndex, buffer, bufferInfo)
-
                     extractor.advance()
                 }
 
-                // **次の動画の開始時間を適切に設定**
-                totalDurationUs += videoDurationUs
-
+                totalDurationUs += videoDurationUs // **累積時間を更新**
                 extractor.release()
             }
 
-            if (isMuxerStarted) {
+            if (isStarted) {
                 mediaMuxer.stop()
             }
-
+            mediaMuxer.release()
             Log.d("VideoMerger", "動画結合完了: ${outputFile.absolutePath}")
+
+            return outputFile
 
         } catch (e: Exception) {
             Log.e("VideoMerger", "動画結合中にエラー発生", e)
-
-        } finally {
-            mediaMuxer?.release()
+            return null
         }
     }
 
     private fun get1secVideoFiles(context: Context): List<File> {
         val videoDir = File(context.filesDir, "videos/1sec")
         return videoDir.listFiles()?.filter { it.extension == "mp4" } ?: emptyList()
+    }
+
+    /**
+     * `MediaExtractor.sampleFlags` を `MediaCodec.BufferInfo.flags` に変換
+     */
+    private fun convertSampleFlags(sampleFlags: Int): Int {
+        var bufferFlags = 0
+        if (sampleFlags and MediaExtractor.SAMPLE_FLAG_SYNC != 0) {
+            bufferFlags = bufferFlags or MediaCodec.BUFFER_FLAG_KEY_FRAME
+        }
+        return bufferFlags
     }
 }

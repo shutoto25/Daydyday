@@ -37,6 +37,7 @@ class PlayBackViewModel @Inject constructor() : ViewModel() {
         if (videoFiles.isEmpty()) {
             Log.e("VideoMerger", "動画が見つかりませんでした")
             return null
+        // ．，：：：：：：：：：：：：：：：：：：：：：：」＿＿＿＿＿＿＿＿＿＿「lっっっっっっっっっっっっっっk」＠
         }
 
         try {

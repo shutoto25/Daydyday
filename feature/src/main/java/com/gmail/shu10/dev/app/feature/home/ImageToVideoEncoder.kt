@@ -1,3 +1,4 @@
+import android.content.Context
 import android.graphics.Bitmap
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
@@ -5,14 +6,24 @@ import android.media.MediaFormat
 import android.media.MediaMuxer
 import android.util.Log
 import android.view.Surface
+import androidx.annotation.OptIn
+import androidx.media3.common.*
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.muxer.Mp4Muxer
+import androidx.media3.transformer.*
 import com.gmail.shu10.dev.app.feature.home.EGLCore
 import java.io.File
 
 class ImageToVideoEncoder(
     private val outputFile: File,
     private val bitmap: Bitmap,
-    private val frameRate: Int = 30
 ) {
+    companion object {
+        private const val DURATION_SEC = 1 // 1秒間
+        private const val FRAME_RATE = 30  // 30fps
+    }
+
+    private val frameCount = DURATION_SEC * FRAME_RATE
     private val width = bitmap.width
     private val height = bitmap.height
 
@@ -22,17 +33,45 @@ class ImageToVideoEncoder(
     private var trackIndex = -1
     private var isMuxerStarted = false
 
-    fun encodeBitmapToMp4(durationSeconds: Int = 1) {
-        val frameCount = frameRate * durationSeconds
+    @OptIn(UnstableApi::class)
+//    fun media3(context: Context) {
+//
+//
+//        val transformerListener: Transformer.Listener =
+//            object : Transformer.Listener {
+//                override fun onCompleted(composition: Composition, result: ExportResult) {
+//                }
+//
+//                override fun onError(
+//                    composition: Composition, result: ExportResult,
+//                    exception: ExportException,
+//                ) {
+//                }
+//            }
+//        val transformer = Transformer.Builder(context)
+//            .setVideoMimeType(MimeTypes.VIDEO_H264)
+//            .addListener(transformerListener)
+//            .setMuxerFactory(Mp4Muxer.Builder())
+//            .build()
+//
+//    }
+
+    fun encodeBitmapToMp4() {
 
         // **1️⃣ `MediaMuxer` の作成**
-        mediaMuxer = MediaMuxer(outputFile.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+        mediaMuxer = MediaMuxer(
+            outputFile.absolutePath,
+            MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4
+        ) // ファイルフォーマット
 
         // **2️⃣ `MediaFormat` の設定（動画の長さが0秒にならないようにする）**
         val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, width, height)
-        format.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
+        format.setInteger(
+            MediaFormat.KEY_COLOR_FORMAT,
+            MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface
+        )
         format.setInteger(MediaFormat.KEY_BIT_RATE, 4000000)
-        format.setInteger(MediaFormat.KEY_FRAME_RATE, frameRate)  // **フレームレートを設定**
+        format.setInteger(MediaFormat.KEY_FRAME_RATE, DURATION_SEC)  // **フレームレートを設定**
         format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1)    // **Iフレームを適切に設定**
 
         // **3️⃣ `MediaCodec` の設定**

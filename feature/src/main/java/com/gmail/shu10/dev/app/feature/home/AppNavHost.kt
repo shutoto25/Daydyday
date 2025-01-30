@@ -36,7 +36,7 @@ fun AppNavHost(intent: MutableState<Intent?>) {
         startDestination = AppScreen.Home.route
     ) {
         // ホーム画面
-        composable(AppScreen.Home.route) { HomeScreen(navController) }
+        composable(AppScreen.Home.route) { HomeRoute(navController) }
         // 日付詳細画面
         composable(AppScreen.DiaryDetail("{diaryJson}").route) { navBackStackEntry ->
             DiaryDetailScreen(navController, getDiaryFromNavBackStackEntry(navBackStackEntry))

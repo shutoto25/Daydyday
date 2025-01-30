@@ -85,7 +85,7 @@ import kotlinx.serialization.json.Json
  * @param navController NavController
  */
 @Composable
-fun HomeScreen(
+fun HomeRoute(
     navController: NavController,
 ) {
     val viewModel: HomeViewModel = hiltViewModel()

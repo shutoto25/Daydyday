@@ -1,5 +1,6 @@
 package com.gmail.shu10.dev.app.feature.home
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gmail.shu10.dev.app.domain.Diary
@@ -7,6 +8,7 @@ import com.gmail.shu10.dev.app.domain.GetDiaryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -18,8 +20,11 @@ import javax.inject.Inject
  */
 @HiltViewModel
 open class HomeViewModel @Inject constructor(
-    private val getDiaryUseCase: GetDiaryUseCase
+    private val getDiaryUseCase: GetDiaryUseCase,
 ) : ViewModel() {
+
+//    private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
+//    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     private val _diaryList = MutableStateFlow(generateDateList())
     val diaryList: StateFlow<List<Diary>> = _diaryList
@@ -76,4 +81,16 @@ open class HomeViewModel @Inject constructor(
 
         return dataListString.map { date -> Diary(date = date) }
     }
+}
+
+sealed class HomeUiState {
+    object Loading : HomeUiState()
+
+    data class Success(
+        val diaryList: List<Diary>,
+        val isFabVisible: Boolean,
+        val fabIcon: ImageVector,
+    ) : HomeUiState()
+
+    data class Error(val message: String) : HomeUiState()
 }

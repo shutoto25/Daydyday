@@ -110,17 +110,24 @@ class GLRenderer(private val width: Int, private val height: Int) {
     }
 
     /**
-     * Bitmap をテクスチャに転送し、四角形へ描画する
+     * Bitmap をテクスチャに転送し、回転角度 (rotationDegrees) を適用して四角形に描画する。
      */
-    fun render(bitmap: Bitmap) {
+    fun render(bitmap: Bitmap, rotationDegrees: Float) {
         GLES20.glClearColor(0f, 0f, 0f, 0f)
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
-
         GLES20.glUseProgram(program)
 
         // MVP行列は単位行列（必要に応じて反転や回転を入れる）
         val mvpMatrix = FloatArray(16)
         Matrix.setIdentityM(mvpMatrix, 0)
+
+        // 補正として Y 軸の反転を適用
+        Matrix.scaleM(mvpMatrix, 0, 1f, -1f, 1f)
+
+        // 回転があれば適用（Z軸回りの回転）
+        if (rotationDegrees != 0f) {
+            Matrix.rotateM(mvpMatrix, 0, rotationDegrees, 0f, 0f, 1f)
+        }
         GLES20.glUniformMatrix4fv(uMVPMatrixHandle, 1, false, mvpMatrix, 0)
 
         // テクスチャのバインド＆Bitmap転送
@@ -139,8 +146,7 @@ class GLRenderer(private val width: Int, private val height: Int) {
         GLES20.glEnableVertexAttribArray(aTexCoordHandle)
         GLES20.glVertexAttribPointer(aTexCoordHandle, 2, GLES20.GL_FLOAT, false, 5 * 4, vertexBuffer)
 
-        // インデックスバッファを用いて描画
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES, indexData.size, GLES20.GL_UNSIGNED_SHORT, indexBuffer)
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES, indexBuffer.capacity(), GLES20.GL_UNSIGNED_SHORT, indexBuffer)
 
         // 後片付け
         GLES20.glDisableVertexAttribArray(aPositionHandle)

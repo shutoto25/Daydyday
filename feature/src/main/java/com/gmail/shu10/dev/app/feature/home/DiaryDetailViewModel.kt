@@ -1,6 +1,5 @@
 package com.gmail.shu10.dev.app.feature.home
 
-import ImageToVideoEncoder
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -83,12 +82,13 @@ class DiaryDetailViewModel @Inject constructor(
     }
 
     // ※ Activity や Service 内で呼び出す例
-    private fun createStillImageVideo(bitmap: Bitmap, outputFile: File) {
+    private fun createStillImageVideo(bitmap: Bitmap, outputFile: File, rotationDegrees: Float = 0f) {
 
         // 3. エンコード実行（例：1280x720, 30fps）
         val encoder = ImageToVideoEncoder(outputFile.absolutePath, bitmap.width, bitmap.height
             , frameRate = 30)
-        encoder.encodeStillImage(bitmap)
+        encoder.encodeStillImage(bitmap, rotationDegrees)
+
 
         Log.d("StillImageVideo", "動画生成完了: ${outputFile.absolutePath}")
     }

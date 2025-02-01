@@ -1,19 +1,11 @@
-import android.content.Context
+package com.gmail.shu10.dev.app.feature.home
+
 import android.graphics.Bitmap
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.media.MediaMuxer
-import android.util.Log
 import android.view.Surface
-import androidx.annotation.OptIn
-import androidx.media3.common.*
-import androidx.media3.common.util.UnstableApi
-import androidx.media3.muxer.Mp4Muxer
-import androidx.media3.transformer.*
-import com.gmail.shu10.dev.app.feature.home.EGLHelper
-import com.gmail.shu10.dev.app.feature.home.GLRenderer
-import java.io.File
 
 class ImageToVideoEncoder(
     private val outputFilePath: String,
@@ -66,9 +58,10 @@ class ImageToVideoEncoder(
     }
 
     /**
-     * エンコードループ：1秒間分（frameRateフレーム）同じBitmapをレンダリングして動画を作成
+     * Bitmap を元に1秒間の静止画動画を作成する。
+     * rotationDegrees により画像の回転情報を適用できる。
      */
-    fun encodeStillImage(bitmap: Bitmap) {
+    fun encodeStillImage(bitmap: Bitmap, rotationDegrees: Float) {
         prepareEncoder()
 
         // 1秒間のフレーム間隔（マイクロ秒）
@@ -77,10 +70,9 @@ class ImageToVideoEncoder(
 
         // ループ：各フレームごとに同じ画像を描画してエンコード
         for (i in 0 until frameRate) {
-            // OpenGLでBitmapをレンダリング
-            glRenderer.render(bitmap)
-            // フレームタイムスタンプの設定（単位：ナノ秒）
-            eglHelper.swapBuffers(presentationTimeUs * 1000)  // us -> ns
+            // 回転情報を適用してレンダリング
+            glRenderer.render(bitmap, rotationDegrees)
+            eglHelper.swapBuffers(presentationTimeUs * 1000)  // マイクロ秒→ナノ秒
 
             // エンコーダから出力をドレイン
             drainEncoder(endOfStream = false)
@@ -132,9 +124,7 @@ class ImageToVideoEncoder(
                 muxer.start()
                 muxerStarted = true
             } else if (outputBufferId == MediaCodec.INFO_TRY_AGAIN_LATER) {
-                if (!endOfStream) {
-                    break
-                }
+                if (!endOfStream) break
             }
         }
     }
@@ -143,23 +133,9 @@ class ImageToVideoEncoder(
      * エンコーダ、muxer、EGLのリソース解放
      */
     private fun releaseResources() {
-        try {
-            encoder.stop()
-            encoder.release()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        try {
-            muxer.stop()
-            muxer.release()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        try {
-            eglHelper.release()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        try { encoder.stop(); encoder.release() } catch (e: Exception) { e.printStackTrace() }
+        try { muxer.stop(); muxer.release() } catch (e: Exception) { e.printStackTrace() }
+        try { eglHelper.release() } catch (e: Exception) { e.printStackTrace() }
         inputSurface.release()
     }
 }

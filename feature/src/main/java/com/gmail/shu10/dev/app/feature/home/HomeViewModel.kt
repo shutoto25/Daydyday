@@ -1,5 +1,8 @@
 package com.gmail.shu10.dev.app.feature.home
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -23,8 +26,8 @@ open class HomeViewModel @Inject constructor(
     private val getDiaryUseCase: GetDiaryUseCase,
 ) : ViewModel() {
 
-//    private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
-//    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
+    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     private val _diaryList = MutableStateFlow(generateDateList())
     val diaryList: StateFlow<List<Diary>> = _diaryList
@@ -37,14 +40,21 @@ open class HomeViewModel @Inject constructor(
      * 全日記データ取得
      */
     private fun fetchAllDiaries() {
-        viewModelScope.launch {
-            getDiaryUseCase().collect { diaries ->
-                _diaryList.update { currentList ->
-                    currentList.map { diary ->
-                        diaries.find { it.date == diary.date } ?: diary
+        try {
+            viewModelScope.launch {
+                getDiaryUseCase().collect { diaries ->
+                    val allDiaries = generateDateList().map { dateDiary ->
+                        diaries.find { it.date == dateDiary.date } ?: dateDiary
                     }
+                    _uiState.value = HomeUiState.Success(
+                        diaryList = allDiaries,
+                        isFabVisible = false,
+                        fabIcon = Icons.Default.KeyboardArrowDown,
+                    )
                 }
             }
+        } catch (e: Exception) {
+            _uiState.value = HomeUiState.Error("エラーが発生しました")
         }
     }
 
@@ -55,9 +65,28 @@ open class HomeViewModel @Inject constructor(
     fun updateDiaryList(updateDiary: Diary?) {
         if (updateDiary == null) return
 
-        _diaryList.update { currentList ->
-            currentList.map { diary ->
-                if (diary.date == updateDiary.date) updateDiary else diary
+        _uiState.update { currentState ->
+            if (currentState is HomeUiState.Success) {
+                val updatedDiaryList = currentState.diaryList.map {
+                    if (it.date == updateDiary.date) updateDiary else it
+                }
+                currentState.copy(diaryList = updatedDiaryList)
+            } else {
+                currentState
+            }
+        }
+    }
+
+    fun updateFabState(gridPosition: Int) {
+        _uiState.update { currentState ->
+            if (currentState is HomeUiState.Success) {
+                val isFabVisible = gridPosition !in 360..365
+                val newFabIcon =
+                    if (gridPosition <= 365) Icons.Default.KeyboardArrowDown
+                    else Icons.Default.KeyboardArrowUp
+                currentState.copy(isFabVisible = isFabVisible, fabIcon = newFabIcon)
+            } else {
+                currentState
             }
         }
     }

@@ -36,13 +36,12 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
@@ -55,11 +54,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -89,48 +90,48 @@ fun HomeRoute(
     navController: NavController,
 ) {
     val viewModel: HomeViewModel = hiltViewModel()
+    val uiState by viewModel.uiState.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val diaryList by viewModel.diaryList.collectAsState()
     // リスト初期位置は今日
     val gridState = rememberLazyGridState(initialFirstVisibleItemIndex = 365)
-    // FAB表示フラグ（今日に近い場合はFABを表示しない）
-    val isFabVisible by remember { derivedStateOf { gridState.firstVisibleItemIndex !in 360..365 } }
-    // FABアイコン（今日を基準に過去は下向きアイコン、未来は上向きアイコンを設定）
-    val fabIcon by remember {
-        derivedStateOf {
-            when {
-                gridState.firstVisibleItemIndex <= 365 -> Icons.Default.KeyboardArrowDown
-                gridState.firstVisibleItemIndex > 365 -> Icons.Default.KeyboardArrowUp
-                else -> Icons.Default.KeyboardArrowDown // ならない想定なのでデフォルト下向きアイコン設定
-            }
-        }
+
+    LaunchedEffect(remember { derivedStateOf { gridState.firstVisibleItemIndex } }) {
+        viewModel.updateFabState(gridState.firstVisibleItemIndex)
     }
+
     updateDiaryFromBackStack(navController, viewModel)
 
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = { DrawerContent() }
     ) {
-        HomeScreenContent(
-            diaryList = diaryList,
-            gridState = gridState,
-            isFabVisible = isFabVisible,
-            fabIcon = fabIcon,
-            onFabClick = {
-                coroutineScope.launch {
-                    gridState.animateScrollToItem(index = 365)
-                }
-            },
-            onDateClick = { diary ->
-                navController.navigate(
-                    AppScreen.DiaryDetail(Json.encodeToString(diary)).createRoute()
+        when(uiState) {
+            is HomeUiState.Loading -> LoadingScreen()
+            is HomeUiState.Error -> ErrorScreen((uiState as HomeUiState.Error).message)
+            is HomeUiState.Success -> {
+                val successState = uiState as HomeUiState.Success
+                HomeScreen(
+                    diaryList = successState.diaryList,
+                    gridState = gridState,
+                    isFabVisible = successState.isFabVisible,
+                    fabIcon = successState.fabIcon,
+                    onFabClick = {
+                        coroutineScope.launch {
+                            gridState.animateScrollToItem(index = 365)
+                        }
+                    },
+                    onDateClick = { diary ->
+                        navController.navigate(
+                            AppScreen.DiaryDetail(Json.encodeToString(diary)).createRoute()
+                        )
+                    },
+                    onPlayClick = {
+                        navController.navigate(AppScreen.PlayBackRoute.route)
+                    }
                 )
-            },
-            onPlayClick = {
-                navController.navigate(AppScreen.PlayBackRoute.route)
             }
-        )
+        }
     }
 }
 
@@ -180,6 +181,23 @@ fun DrawerContentItem(text: String, icon: ImageVector, description: String) {
     }
 }
 
+@Composable
+fun LoadingScreen() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+fun ErrorScreen(message: String) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(text = "エラーが発生しました", color = Color.Red)
+            Text(text = message)
+        }
+    }
+}
+
 /**
  * ホーム画面コンテンツ
  * @param diaryList 日記リスト
@@ -190,7 +208,7 @@ fun DrawerContentItem(text: String, icon: ImageVector, description: String) {
  * @param onDateClick 日付クリック時の処理
  */
 @Composable
-fun HomeScreenContent(
+fun HomeScreen(
     diaryList: List<Diary>,
     gridState: LazyGridState,
     isFabVisible: Boolean,

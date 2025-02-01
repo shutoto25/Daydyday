@@ -34,8 +34,10 @@ class ImageToVideoEncoder(
      * エンコーダ、MediaMuxer、EGL/GLの初期化を行う
      */
     private fun prepareEncoder() {
+        // Bitmap の幅・高さを補正（偶数にする例）
+        val (adjustWidth, adjustHeight) = adjustResolution(width, height)
         // MediaFormatの作成
-        val format = MediaFormat.createVideoFormat(mimeType, width, height).apply {
+        val format = MediaFormat.createVideoFormat(mimeType, adjustWidth, adjustHeight).apply {
             setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
             setInteger(MediaFormat.KEY_BIT_RATE, bitRate)
             setInteger(MediaFormat.KEY_FRAME_RATE, frameRate)
@@ -53,8 +55,15 @@ class ImageToVideoEncoder(
         muxer = MediaMuxer(outputFilePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
 
         // EGL/GLの初期化（MediaCodecの入力Surfaceを使う）
-        eglHelper = EGLHelper(inputSurface, width, height)
-        glRenderer = GLRenderer(width, height)
+        eglHelper = EGLHelper(inputSurface, adjustWidth, adjustHeight)
+        glRenderer = GLRenderer(adjustWidth, adjustHeight)
+    }
+
+    private fun adjustResolution(width: Int, height: Int): Pair<Int, Int> {
+        // 多くの場合、幅と高さは偶数でなければならないので、奇数なら1加算（または減算）する
+        val adjustedWidth = if (width % 2 != 0) width + 1 else width
+        val adjustedHeight = if (height % 2 != 0) height + 1 else height
+        return Pair(adjustedWidth, adjustedHeight)
     }
 
     /**

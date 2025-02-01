@@ -2,7 +2,6 @@ package com.gmail.shu10.dev.app.feature.home
 
 import android.content.Context
 import android.media.*
-import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,8 +10,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
 import java.nio.ByteBuffer
-import java.text.SimpleDateFormat
-import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
@@ -20,120 +17,143 @@ class PlayBackViewModel @Inject constructor() : ViewModel() {
 
     fun mergeVideos(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
-            mergeVideosInternal(context)
+            concatenateVideos(context)
         }
     }
 
-    private fun mergeVideosInternal(context: Context): File? {
-        val targetDir = File(context.filesDir, "videos/merge")
-        if (!targetDir.exists()) targetDir.mkdirs()
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val todayDate = dateFormat.format(Date())
-        val outputFile = File(targetDir, "merge-$todayDate.mp4")
+    /**
+     * 指定ディレクトリ内の mp4 ファイルを日付順（ここではファイル名順）に連結し、
+     * ひとつの動画ファイルとして出力する。
+     *
+     * @param context アプリケーションコンテキスト
+     */
+    private fun concatenateVideos(context: Context) {
+        // 入力ディレクトリ
+        val videoDir = File(context.filesDir, "videos/1sec")
+        val videoFiles = videoDir.listFiles { file ->
+            file.extension.equals("mp4", ignoreCase = true)
+        }?.sortedBy { it.name }  // 日付名（ファイル名）順にソート
+            ?: run {
+                Log.e("VideoConcat", "動画ファイルが見つかりません")
+                return
+            }
 
-        val videoFiles = get1secVideoFiles(context)
-            .sortedBy { it.nameWithoutExtension } // **日付順に並べる**
-
-        if (videoFiles.isEmpty()) {
-            Log.e("VideoMerger", "動画が見つかりませんでした")
-            return null
-        // ．，：：：：：：：：：：：：：：：：：：：：：：」＿＿＿＿＿＿＿＿＿＿「lっっっっっっっっっっっっっっk」＠
-        }
+        // 出力先ファイル
+        val outputFile = File(context.filesDir, "videos/merged.mp4")
+        if (outputFile.exists()) { outputFile.delete() }
 
         try {
-            val mediaMuxer = MediaMuxer(outputFile.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+            // MediaMuxer の初期化（出力形式は MPEG_4）
+            val muxer = MediaMuxer(outputFile.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+
+            // 各動画ファイルのトラック情報は同一である前提
+            var muxerTrackIndex = -1
+            var muxerStarted = false
+            // 各ファイルのタイムスタンプを連結するためのオフセット（マイクロ秒単位）
+            var timeOffsetUs: Long = 0
+
+            // バッファ（サンプルデータ格納用）
+            val bufferSize = 1024 * 1024  // 1MB ほど（動画によっては大きくする必要がある場合も）
+            val buffer = ByteBuffer.allocate(bufferSize)
             val bufferInfo = MediaCodec.BufferInfo()
-            val buffer = ByteBuffer.allocate(1024 * 1024) // **バッファサイズを1MBに設定**
 
-            var videoTrackIndex = -1
-            var totalDurationUs = 0L
-            var isStarted = false
-
+            // 各動画ファイルについて
             for (videoFile in videoFiles) {
+                Log.d("VideoConcat", "処理開始: ${videoFile.absolutePath}")
                 val extractor = MediaExtractor()
-                extractor.setDataSource(context, Uri.fromFile(videoFile), null)
+                extractor.setDataSource(videoFile.absolutePath)
 
-                var videoTrack = -1
-                var videoDurationUs = 0L
-
+                // 対象となる動画トラックを探す（動画のみを対象）
+                var videoTrackIndex = -1
                 for (i in 0 until extractor.trackCount) {
                     val format = extractor.getTrackFormat(i)
                     val mime = format.getString(MediaFormat.KEY_MIME)
-                    if (mime?.startsWith("video/avc") == true) { // **H.264 のみ処理対象**
-                        videoTrack = i
-                        videoDurationUs = format.getLong(MediaFormat.KEY_DURATION)
-
-                        Log.d("VideoMerger", "Processing: ${videoFile.name}, Duration: $videoDurationUs")
-
-                        if (videoTrackIndex == -1) {
-                            videoTrackIndex = mediaMuxer.addTrack(format)
-                        }
+                    if (mime != null && mime.startsWith("video/")) {
+                        videoTrackIndex = i
                         break
                     }
                 }
-
-                if (videoTrack == -1) {
-                    Log.e("VideoMerger", "動画トラックが見つかりません: ${videoFile.name}")
+                if (videoTrackIndex < 0) {
+                    Log.e("VideoConcat", "動画トラックが見つかりません: ${videoFile.name}")
                     extractor.release()
                     continue
                 }
 
-                extractor.selectTrack(videoTrack)
+                extractor.selectTrack(videoTrackIndex)
+                val trackFormat = extractor.getTrackFormat(videoTrackIndex)
 
-                if (!isStarted) {
-                    mediaMuxer.start()
-                    isStarted = true
+                // 最初のファイルの場合は muxer にトラックを追加して開始する
+                if (!muxerStarted) {
+                    muxerTrackIndex = muxer.addTrack(trackFormat)
+                    muxer.start()
+                    muxerStarted = true
                 }
 
+                // 各ファイル内で最後の有効なサンプルタイムを記録するための変数
+                var lastSampleTimeUs = 0L
+
+                // 動画ファイル内のサンプルを読み出し、muxer に書き込む
                 while (true) {
                     bufferInfo.offset = 0
                     bufferInfo.size = extractor.readSampleData(buffer, 0)
                     if (bufferInfo.size < 0) {
+                        // ファイル終端
                         break
                     }
-
-                    // **⚠ 修正: ノイズが入る問題を防ぐ**
                     val sampleTime = extractor.sampleTime
-                    if (sampleTime < 0) break
+                    // 記録更新
+                    lastSampleTimeUs = sampleTime
 
-                    bufferInfo.presentationTimeUs = totalDurationUs + sampleTime
-                    bufferInfo.flags = convertSampleFlags(extractor.sampleFlags)
+                    // 各ファイルのタイムスタンプにオフセットを追加
+                    bufferInfo.presentationTimeUs = sampleTime + timeOffsetUs
 
-                    mediaMuxer.writeSampleData(videoTrackIndex, buffer, bufferInfo)
+                    // extractor.sampleFlags から MediaCodec 用のフラグに変換する
+                    val codecFlags = mapExtractorFlagsToCodecFlags(extractor.sampleFlags)
+                    bufferInfo.flags = codecFlags
+
+                    muxer.writeSampleData(muxerTrackIndex, buffer, bufferInfo)
                     extractor.advance()
                 }
 
-                totalDurationUs += videoDurationUs // **累積時間を更新**
+                // 次のファイル用のオフセット更新
+                val fileDurationUs = if (trackFormat.containsKey(MediaFormat.KEY_DURATION)) {
+                    trackFormat.getLong(MediaFormat.KEY_DURATION)
+                } else {
+                    lastSampleTimeUs
+                }
+                timeOffsetUs += fileDurationUs
+
                 extractor.release()
+                Log.d("VideoConcat", "処理完了: ${videoFile.name}")
             }
 
-            if (isStarted) {
-                mediaMuxer.stop()
-            }
-            mediaMuxer.release()
-            Log.d("VideoMerger", "動画結合完了: ${outputFile.absolutePath}")
+            // 終了処理
+            muxer.stop()
+            muxer.release()
 
-            return outputFile
+            Log.d("VideoConcat", "連結完了: ${outputFile.absolutePath}")
 
         } catch (e: Exception) {
-            Log.e("VideoMerger", "動画結合中にエラー発生", e)
-            return null
+            Log.e("VideoConcat", "動画連結中にエラー発生", e)
         }
     }
+        // ．，：：：：：：：：：：：：：：：：：：：：：：」＿＿＿＿＿＿＿＿＿＿「lっっっっっっっっっっっっっっk」＠
 
-    private fun get1secVideoFiles(context: Context): List<File> {
-        val videoDir = File(context.filesDir, "videos/1sec")
-        return videoDir.listFiles()?.filter { it.extension == "mp4" } ?: emptyList()
-    }
+    // extractor.sampleFlags から MediaCodec 用のフラグに変換するヘルパー関数
+    private fun mapExtractorFlagsToCodecFlags(extractorFlags: Int): Int {
+        var codecFlags = 0
 
-    /**
-     * `MediaExtractor.sampleFlags` を `MediaCodec.BufferInfo.flags` に変換
-     */
-    private fun convertSampleFlags(sampleFlags: Int): Int {
-        var bufferFlags = 0
-        if (sampleFlags and MediaExtractor.SAMPLE_FLAG_SYNC != 0) {
-            bufferFlags = bufferFlags or MediaCodec.BUFFER_FLAG_KEY_FRAME
+        // SAMPLE_FLAG_SYNC が立っていれば、キーフレームとして扱う
+        if ((extractorFlags and MediaExtractor.SAMPLE_FLAG_SYNC) != 0) {
+            codecFlags = codecFlags or MediaCodec.BUFFER_FLAG_KEY_FRAME
         }
-        return bufferFlags
+        // SAMPLE_FLAG_PARTIAL_FRAME が立っていれば、部分フレームフラグを設定する
+        if ((extractorFlags and MediaExtractor.SAMPLE_FLAG_PARTIAL_FRAME) != 0) {
+            codecFlags = codecFlags or MediaCodec.BUFFER_FLAG_PARTIAL_FRAME
+        }
+        // ※ SAMPLE_FLAG_ENCRYPTED については、用途に合わせた対応が必要です
+        // ここでは特にマッピングしない例とします。
+
+        return codecFlags
     }
 }

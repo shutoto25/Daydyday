@@ -52,7 +52,7 @@ class DiaryDetailViewModel @Inject constructor(
                 input.copyTo(output)
             }
         }
-        createVideoFromSavedImage(context, BitmapFactory.decodeFile(file.path), targetFile(context, date))
+        createStillImageVideo(BitmapFactory.decodeFile(file.path), targetFile(context, date))
         return file
     }
 
@@ -82,26 +82,14 @@ class DiaryDetailViewModel @Inject constructor(
         return targetFile
     }
 
-    private fun createVideoFromSavedImage(context: Context, bitmap: Bitmap, outputFile: File) {
-        Log.d("TEST", "createVideoFromSavedImage() called with: context = $context, bitmap = $bitmap, outputFile = $outputFile")
+    // ※ Activity や Service 内で呼び出す例
+    private fun createStillImageVideo(bitmap: Bitmap, outputFile: File) {
 
-        // **一時的なMP4ファイルを作成**
-        val tempMp4File = File(context.cacheDir, "temp_video.mp4")
+        // 3. エンコード実行（例：1280x720, 30fps）
+        val encoder = ImageToVideoEncoder(outputFile.absolutePath, bitmap.width, bitmap.height
+            , frameRate = 30)
+        encoder.encodeStillImage(bitmap)
 
-        try {
-            // **ImageToVideoEncoder を使用して動画を生成**
-            val encoder = ImageToVideoEncoder(tempMp4File, bitmap)
-            encoder.encodeBitmapToMp4()
-
-            // **エンコードが完了したら、ファイルを移動**
-            if (tempMp4File.exists()) {
-                tempMp4File.copyTo(outputFile, overwrite = true)
-                tempMp4File.delete()
-            } else {
-                Log.e("TEST", "エンコード失敗: tempMp4File が存在しない")
-            }
-        } catch (e: Exception) {
-            Log.e("TEST", "エンコード中にエラーが発生", e)
-        }
+        Log.d("StillImageVideo", "動画生成完了: ${outputFile.absolutePath}")
     }
 }

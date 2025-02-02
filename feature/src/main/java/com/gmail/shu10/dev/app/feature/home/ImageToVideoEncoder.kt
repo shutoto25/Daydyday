@@ -67,21 +67,18 @@ class ImageToVideoEncoder(
     fun encodeStillImage(bitmap: Bitmap, rotationDegrees: Float) {
         prepareEncoder()
 
-        // 1秒間のフレーム間隔（マイクロ秒）
+        // ここでは、1秒を frameRate 個の間隔で分割するので、生成フレーム数 = frameRate + 1
+        val totalFrames = frameRate + 1
+        // 各フレームの間隔（μs）＝ 1,000,000 / frameRate
         val frameIntervalUs = 1_000_000L / frameRate
-        var presentationTimeUs = 0L
-
-        // ループ：各フレームごとに同じ画像を描画してエンコード
-        for (i in 0 until frameRate) {
-            // GLRenderer で、入力Bitmapを1920×1920内にレターボックス配置して描画する
+        // ループで全 totalFrames 枚のフレームを生成する
+        for (i in 0 until totalFrames) {
+            val currentTimeUs = i * frameIntervalUs
             glRenderer.render(bitmap, rotationDegrees)
-            eglHelper.swapBuffers(presentationTimeUs * 1000)  // マイクロ秒→ナノ秒に変換
+            // swapBuffers に渡す単位はナノ秒
+            eglHelper.swapBuffers(currentTimeUs * 1000)
             drainEncoder(endOfStream = false)
-
-            presentationTimeUs += frameIntervalUs
         }
-
-        // EOS送信してエンコード完了を待つ
         drainEncoder(endOfStream = true)
         releaseResources()
     }

@@ -4,6 +4,7 @@ import android.opengl.EGL14
 import android.opengl.EGLConfig
 import android.opengl.EGLContext
 import android.opengl.EGLDisplay
+import android.opengl.EGLExt
 import android.opengl.EGLSurface
 import android.view.Surface
 
@@ -45,10 +46,11 @@ class EGLHelper(private val surface: Surface, private val width: Int, private va
 
     /**
      * 描画後に PresentationTime（ナノ秒単位）を設定し、バッファをスワップする。
-     * ※ EGLExt.eglPresentationTimeANDROID() を使用する場合は、適宜コメント解除してください。
+     * この呼び出しにより、各フレームに正しいタイムスタンプが付与され、最終的な動画の再生時間が正しくなります。
      */
     fun swapBuffers(presentationTimeNs: Long) {
-        // EGLExt.eglPresentationTimeANDROID(eglDisplay, eglSurface, presentationTimeNs) // 必要なら使用
+        // EGLExt.eglPresentationTimeANDROID() を使ってプレゼンテーションタイムを設定
+        EGLExt.eglPresentationTimeANDROID(eglDisplay, eglSurface, presentationTimeNs)
         EGL14.eglSwapBuffers(eglDisplay, eglSurface)
     }
 

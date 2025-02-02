@@ -83,13 +83,9 @@ class DiaryDetailViewModel @Inject constructor(
 
     // ※ Activity や Service 内で呼び出す例
     private fun createStillImageVideo(bitmap: Bitmap, outputFile: File, rotationDegrees: Float = 0f) {
-
-        // 3. エンコード実行（例：1280x720, 30fps）
-        val encoder = ImageToVideoEncoder(outputFile.absolutePath, bitmap.width, bitmap.height
-            , frameRate = 30)
+        // 固定出力解像度 1920×1920 を使用するため、ここでは直接 1920,1920 を指定する
+        val encoder = ImageToVideoEncoder(outputFile.absolutePath, 1920, 1920, frameRate = 30)
         encoder.encodeStillImage(bitmap, rotationDegrees)
-
-
         Log.d("StillImageVideo", "動画生成完了: ${outputFile.absolutePath}")
     }
 }

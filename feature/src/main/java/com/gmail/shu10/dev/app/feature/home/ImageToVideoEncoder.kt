@@ -1,14 +1,18 @@
 package com.gmail.shu10.dev.app.feature.home
 
 import android.graphics.Bitmap
-import android.media.MediaCodec
-import android.media.MediaCodecInfo
-import android.media.MediaFormat
-import android.media.MediaMuxer
+import android.media.*
 import android.view.Surface
+import java.nio.ByteBuffer
 
+/**
+ * ImageToVideoEncoder は、固定出力解像度1920×1920で、
+ * 入力Bitmapをアスペクト比を維持した状態でレターボックス配置（余白は黒）し、
+ * 1秒間（例：30fpsなら30フレーム）の静止画動画を生成する。
+ */
 class ImageToVideoEncoder(
     private val outputFilePath: String,
+    // 呼び出し側では入力画像サイズが渡されるが、出力は固定（1920×1920）とする
     private val width: Int,
     private val height: Int,
     private val frameRate: Int = 30,
@@ -34,10 +38,7 @@ class ImageToVideoEncoder(
      * エンコーダ、MediaMuxer、EGL/GLの初期化を行う
      */
     private fun prepareEncoder() {
-        // Bitmap の幅・高さを補正（偶数にする例）
-        val (adjustWidth, adjustHeight) = adjustResolution(width, height)
-        // MediaFormatの作成
-        val format = MediaFormat.createVideoFormat(mimeType, adjustWidth, adjustHeight).apply {
+        val format = MediaFormat.createVideoFormat(mimeType, width, height).apply {
             setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
             setInteger(MediaFormat.KEY_BIT_RATE, bitRate)
             setInteger(MediaFormat.KEY_FRAME_RATE, frameRate)
@@ -54,21 +55,14 @@ class ImageToVideoEncoder(
         // MediaMuxerの初期化
         muxer = MediaMuxer(outputFilePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
 
-        // EGL/GLの初期化（MediaCodecの入力Surfaceを使う）
-        eglHelper = EGLHelper(inputSurface, adjustWidth, adjustHeight)
-        glRenderer = GLRenderer(adjustWidth, adjustHeight)
-    }
-
-    private fun adjustResolution(width: Int, height: Int): Pair<Int, Int> {
-        // 多くの場合、幅と高さは偶数でなければならないので、奇数なら1加算（または減算）する
-        val adjustedWidth = if (width % 2 != 0) width + 1 else width
-        val adjustedHeight = if (height % 2 != 0) height + 1 else height
-        return Pair(adjustedWidth, adjustedHeight)
+        // 固定サイズで初期化（1920×1920）
+        eglHelper = EGLHelper(inputSurface, width, height)
+        glRenderer = GLRenderer(width, height)
     }
 
     /**
-     * Bitmap を元に1秒間の静止画動画を作成する。
-     * rotationDegrees により画像の回転情報を適用できる。
+     * Bitmap を元に1秒間（frameRate枚分）の静止画動画を生成する。
+     * rotationDegrees により、画像の回転（必要なら画像中心を軸に回転）を適用する。
      */
     fun encodeStillImage(bitmap: Bitmap, rotationDegrees: Float) {
         prepareEncoder()
@@ -79,11 +73,9 @@ class ImageToVideoEncoder(
 
         // ループ：各フレームごとに同じ画像を描画してエンコード
         for (i in 0 until frameRate) {
-            // 回転情報を適用してレンダリング
+            // GLRenderer で、入力Bitmapを1920×1920内にレターボックス配置して描画する
             glRenderer.render(bitmap, rotationDegrees)
-            eglHelper.swapBuffers(presentationTimeUs * 1000)  // マイクロ秒→ナノ秒
-
-            // エンコーダから出力をドレイン
+            eglHelper.swapBuffers(presentationTimeUs * 1000)  // マイクロ秒→ナノ秒に変換
             drainEncoder(endOfStream = false)
 
             presentationTimeUs += frameIntervalUs
@@ -121,11 +113,7 @@ class ImageToVideoEncoder(
                     muxer.writeSampleData(trackIndex, encodedData, bufferInfo)
                 }
                 encoder.releaseOutputBuffer(outputBufferId, false)
-
-                // EOSが検出された場合はループを抜ける
-                if (bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) {
-                    break
-                }
+                if (bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) break
             } else if (outputBufferId == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                 // 出力フォーマットが変更された場合
                 val newFormat = encoder.outputFormat
@@ -139,7 +127,7 @@ class ImageToVideoEncoder(
     }
 
     /**
-     * エンコーダ、muxer、EGLのリソース解放
+     * エンコーダ、MediaMuxer、EGL の各リソースを解放する。
      */
     private fun releaseResources() {
         try { encoder.stop(); encoder.release() } catch (e: Exception) { e.printStackTrace() }

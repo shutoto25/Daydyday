@@ -57,6 +57,10 @@ class PlayBackViewModel @Inject constructor() : ViewModel() {
             val buffer = ByteBuffer.allocate(bufferSize)
             val bufferInfo = MediaCodec.BufferInfo()
 
+            // 1秒間に相当するフレーム数（例：30fpsなら30フレーム）
+            val framesPerSecond = 30
+            val defaultDurationUs = 1_000_000L // 1秒（マイクロ秒）
+
             // 各動画ファイルについて
             for (videoFile in videoFiles) {
                 Log.d("VideoConcat", "処理開始: ${videoFile.absolutePath}")
@@ -89,7 +93,7 @@ class PlayBackViewModel @Inject constructor() : ViewModel() {
                     muxerStarted = true
                 }
 
-                // 各ファイル内で最後の有効なサンプルタイムを記録するための変数
+                // ファイル内の最後のサンプルタイムを記録する変数
                 var lastSampleTimeUs = 0L
 
                 // 動画ファイル内のサンプルを読み出し、muxer に書き込む
@@ -101,10 +105,9 @@ class PlayBackViewModel @Inject constructor() : ViewModel() {
                         break
                     }
                     val sampleTime = extractor.sampleTime
-                    // 記録更新
-                    lastSampleTimeUs = sampleTime
+                    lastSampleTimeUs = sampleTime  // 最後の有効なサンプルタイムを記録
 
-                    // 各ファイルのタイムスタンプにオフセットを追加
+                    // presentationTimeUs にオフセットを加算
                     bufferInfo.presentationTimeUs = sampleTime + timeOffsetUs
 
                     // extractor.sampleFlags から MediaCodec 用のフラグに変換する
@@ -115,11 +118,12 @@ class PlayBackViewModel @Inject constructor() : ViewModel() {
                     extractor.advance()
                 }
 
-                // 次のファイル用のオフセット更新
+                // ファイル終了後のオフセット更新
+                // もし lastSampleTimeUs が 0（＝サンプルタイムが取得できなかった場合）は、デフォルトで 1,000,000 マイクロ秒（1秒）とする
                 val fileDurationUs = if (trackFormat.containsKey(MediaFormat.KEY_DURATION)) {
                     trackFormat.getLong(MediaFormat.KEY_DURATION)
                 } else {
-                    lastSampleTimeUs
+                    if (lastSampleTimeUs > 0) lastSampleTimeUs else 1_000_000L
                 }
                 timeOffsetUs += fileDurationUs
 

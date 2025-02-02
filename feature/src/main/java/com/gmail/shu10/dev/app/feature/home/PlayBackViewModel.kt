@@ -2,7 +2,11 @@ package com.gmail.shu10.dev.app.feature.home
 
 import android.content.Context
 import android.media.*
+import android.net.Uri
 import android.util.Log
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,9 +19,24 @@ import javax.inject.Inject
 @HiltViewModel
 class PlayBackViewModel @Inject constructor() : ViewModel() {
 
+    // 結合後の動画 URI を保持する状態
+    private val _mergedVideoUri = mutableStateOf<Uri?>(null)
+    val mergedVideoUri: State<Uri?> get() = _mergedVideoUri
+
     fun mergeVideos(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
-            concatenateVideos(context)
+            try {
+                concatenateVideos(context)
+                val outputFile = File(context.filesDir, "videos/merged.mp4")
+                if (outputFile.exists()) {
+                    _mergedVideoUri.value = outputFile.toUri()
+                    Log.d("VideoMerge", "動画連結完了: ${outputFile.absolutePath}")
+                } else {
+                    Log.e("VideoMerge", "出力ファイルが存在しません")
+                }
+            } catch (e: Exception) {
+                Log.e("VideoMerge", "動画連結中にエラー発生", e)
+            }
         }
     }
 
@@ -40,11 +59,14 @@ class PlayBackViewModel @Inject constructor() : ViewModel() {
 
         // 出力先ファイル
         val outputFile = File(context.filesDir, "videos/merged.mp4")
-        if (outputFile.exists()) { outputFile.delete() }
+        if (outputFile.exists()) {
+            outputFile.delete()
+        }
 
         try {
             // MediaMuxer の初期化（出力形式は MPEG_4）
-            val muxer = MediaMuxer(outputFile.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+            val muxer =
+                MediaMuxer(outputFile.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
 
             // 各動画ファイルのトラック情報は同一である前提
             var muxerTrackIndex = -1
@@ -141,7 +163,7 @@ class PlayBackViewModel @Inject constructor() : ViewModel() {
             Log.e("VideoConcat", "動画連結中にエラー発生", e)
         }
     }
-        // ．，：：：：：：：：：：：：：：：：：：：：：：」＿＿＿＿＿＿＿＿＿＿「lっっっっっっっっっっっっっっk」＠
+    // ．，：：：：：：：：：：：：：：：：：：：：：：」＿＿＿＿＿＿＿＿＿＿「lっっっっっっっっっっっっっっk」＠
 
     // extractor.sampleFlags から MediaCodec 用のフラグに変換するヘルパー関数
     private fun mapExtractorFlagsToCodecFlags(extractorFlags: Int): Int {

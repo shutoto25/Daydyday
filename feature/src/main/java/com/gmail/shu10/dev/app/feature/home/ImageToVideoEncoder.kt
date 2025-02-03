@@ -67,16 +67,17 @@ class ImageToVideoEncoder(
     fun encodeStillImage(bitmap: Bitmap, rotationDegrees: Float) {
         prepareEncoder()
 
-        // ここでは、1秒を frameRate 個の間隔で分割するので、生成フレーム数 = frameRate + 1
         val totalFrames = frameRate + 1
-        // 各フレームの間隔（μs）＝ 1,000,000 / frameRate
-        val frameIntervalUs = 1_000_000L / frameRate
         // ループで全 totalFrames 枚のフレームを生成する
         for (i in 0 until totalFrames) {
-            val currentTimeUs = i * frameIntervalUs
+            val presentationTimeUs = if (i == totalFrames - 1) {
+                1_000_000L  // 最終フレームは正確に1秒
+            } else {
+                i * 1_000_000L / (totalFrames - 1)
+            }
             glRenderer.render(bitmap, rotationDegrees)
             // swapBuffers に渡す単位はナノ秒
-            eglHelper.swapBuffers(currentTimeUs * 1000)
+            eglHelper.swapBuffers(presentationTimeUs * 1000) // マイクロ秒→ナノ秒
             drainEncoder(endOfStream = false)
         }
         drainEncoder(endOfStream = true)

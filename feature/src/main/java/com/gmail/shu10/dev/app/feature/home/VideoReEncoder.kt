@@ -7,15 +7,14 @@ import android.media.MediaCodecInfo
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMuxer
+import android.net.Uri
 import android.opengl.GLES11Ext
 import android.opengl.GLES20
 import android.view.Surface
-import androidx.core.net.toUri
-import com.gmail.shu10.dev.app.feature.utils.toContentUri
 import java.io.File
 class VideoReEncoder(
     private val context: Context,
-    private val inputFile: File,
+    private val inputUri: Uri,
     private val outputFile: File,
     private val targetWidth: Int = 1920,
     private val targetHeight: Int = 1920,
@@ -44,8 +43,7 @@ class VideoReEncoder(
     fun transcode() {
         // 1. Extractor を初期化して、動画トラックを選択
         extractor = MediaExtractor()
-        // TODO createHttpServiceBinderIfNecessaryでnullが返されてexceptionが発生する
-        extractor.setDataSource(context, inputFile.absolutePath.toUri(), null)
+        extractor.setDataSource(context, inputUri, null)
         var videoTrackIndex = -1
         for (i in 0 until extractor.trackCount) {
             val format = extractor.getTrackFormat(i)
@@ -56,7 +54,7 @@ class VideoReEncoder(
             }
         }
         if (videoTrackIndex < 0) {
-            throw RuntimeException("No video track found in ${inputFile.absolutePath}")
+            throw RuntimeException("No video track found in $inputUri")
         }
         extractor.selectTrack(videoTrackIndex)
         val inputFormat = extractor.getTrackFormat(videoTrackIndex)

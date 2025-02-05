@@ -66,7 +66,7 @@ import java.io.File
 @Composable
 fun VideoEditorScreen(
     navHostController: NavHostController,
-    diary: Diary
+    diary: Diary,
 //    viewModel: DiaryDetailViewModel = hiltViewModel()
 ) {
     val viewModel: VideoEditorViewModel = hiltViewModel()
@@ -89,11 +89,29 @@ fun VideoEditorScreen(
         onPreview = { /* プレビュー */ },
         onTrim = {
             diary.videoPath?.toUri()?.let {
-                viewModel.trimVideo(
-                    context = context,
-                    inputUri = it,
-                    outputFile = viewModel.targetFile(context, diary.date),
-                    startMs = position,
+//                viewModel.trimVideo(
+//                    context = context,
+//                    inputUri = it,
+//                    outputFile = viewModel.targetFile(context, diary.date),
+//                    startMs = position,
+//                    onSuccess = {
+//                        // トリミング成功
+//                        Log.d("TEST", "ViewEditScreenContent() called trim success")
+//                        val saveData =
+//                            diary.copy(trimmedVideoPath = viewModel.targetFile(context, diary.date).toContentUri(context).toString())
+//                        val json = Json.encodeToString(saveData)
+//                        navHostController.previousBackStackEntry?.savedStateHandle?.set("updateDiaryWithTrimmedVideo", json)
+//                        navHostController.popBackStack()
+//                    },
+//                    onError = {
+//                        // トリミング失敗
+//                        Log.d("TEST", "ViewEditScreenContent() called trim error")
+//                    }
+//                )
+                viewModel.startReEncoding(
+                    context,
+                    it,
+                    viewModel.targetFile(context, diary.date),
                     onSuccess = {
                         // トリミング成功
                         Log.d("TEST", "ViewEditScreenContent() called trim success")
@@ -126,7 +144,7 @@ fun ViewEditScreenContent(
     onTimeline: (Long) -> Unit,
     position: Long,
     onPreview: () -> Unit,
-    onTrim: () -> Unit
+    onTrim: () -> Unit,
 ) {
     Column {
         VideoPlayer(
@@ -135,7 +153,7 @@ fun ViewEditScreenContent(
             exoPlayer = exoPlayer,
             uri = videoUri
         )
-        ThumbnailTimeline(thumbnails = thumbnails) { startMs ->  onTimeline(startMs) }
+        ThumbnailTimeline(thumbnails = thumbnails) { startMs -> onTimeline(startMs) }
         VideoControlButtons(
             onPreview = { onPreview() },
             onTrim = { onTrim() }
@@ -154,7 +172,7 @@ fun VideoPlayer(
     context: Context,
     startPositionMs: Long,
     exoPlayer: ExoPlayer,
-    uri: Uri?
+    uri: Uri?,
 ) {
     uri?.let {
         DisposableEffect(Unit) {
@@ -186,7 +204,7 @@ fun VideoPlayer(
 @Composable
 fun ThumbnailTimeline(
     thumbnails: List<Bitmap>,
-    onTrimRangeChanged: (startMs: Long) -> Unit
+    onTrimRangeChanged: (startMs: Long) -> Unit,
 ) {
     var offset by remember { mutableStateOf(0.dp) }
     val listState = rememberLazyListState()
@@ -283,7 +301,7 @@ fun calculateTrimWidth(thumbnail: Bitmap, targetHeight: Dp): Dp {
 @Composable
 fun VideoControlButtons(
     onPreview: () -> Unit,
-    onTrim: () -> Unit
+    onTrim: () -> Unit,
 ) {
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,

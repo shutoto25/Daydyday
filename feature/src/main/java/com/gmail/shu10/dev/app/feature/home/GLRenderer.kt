@@ -1,6 +1,7 @@
 package com.gmail.shu10.dev.app.feature.home
 
 import android.graphics.Bitmap
+import android.opengl.GLES11Ext
 import android.opengl.GLES20
 import android.opengl.GLUtils
 import android.opengl.Matrix
@@ -57,6 +58,7 @@ class GLRenderer(private val width: Int, private val height: Int) {
 
     // 投影行列（オーソグラフィック）
     private val projectionMatrix = FloatArray(16)
+
     // テクスチャハンドル
     var textureId: Int = -1
 
@@ -120,10 +122,14 @@ class GLRenderer(private val width: Int, private val height: Int) {
         val offsetY = (height - scaledHeight) / 2f
 
         // 以下、描画矩形の各頂点座標（ピクセル単位: 0〜targetSize）を計算
-        var blX = offsetX; var blY = offsetY                   // bottom-left
-        var brX = offsetX + scaledWidth; var brY = offsetY       // bottom-right
-        var tlX = offsetX; var tlY = offsetY + scaledHeight      // top-left
-        var trX = offsetX + scaledWidth; var trY = offsetY + scaledHeight // top-right
+        var blX = offsetX;
+        var blY = offsetY                   // bottom-left
+        var brX = offsetX + scaledWidth;
+        var brY = offsetY       // bottom-right
+        var tlX = offsetX;
+        var tlY = offsetY + scaledHeight      // top-left
+        var trX = offsetX + scaledWidth;
+        var trY = offsetY + scaledHeight // top-right
 
         // 必要なら回転を適用（画像の中心を軸に回転）
         if (rotationDegrees != 0f) {
@@ -139,6 +145,7 @@ class GLRenderer(private val width: Int, private val height: Int) {
                 val ry = dx * sin + dy * cos + centerY
                 return Pair(rx, ry)
             }
+
             val bl = rotatePoint(blX, blY)
             val br = rotatePoint(brX, brY)
             val tl = rotatePoint(tlX, tlY)
@@ -172,13 +179,87 @@ class GLRenderer(private val width: Int, private val height: Int) {
         // 頂点属性の設定および描画
         vertexBuffer.position(0)
         GLES20.glEnableVertexAttribArray(aPositionHandle)
-        GLES20.glVertexAttribPointer(aPositionHandle, 3, GLES20.GL_FLOAT, false, 5 * 4, vertexBuffer)
+        GLES20.glVertexAttribPointer(
+            aPositionHandle,
+            3,
+            GLES20.GL_FLOAT,
+            false,
+            5 * 4,
+            vertexBuffer
+        )
         vertexBuffer.position(3)
         GLES20.glEnableVertexAttribArray(aTexCoordHandle)
-        GLES20.glVertexAttribPointer(aTexCoordHandle, 2, GLES20.GL_FLOAT, false, 5 * 4, vertexBuffer)
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES, indexData.size, GLES20.GL_UNSIGNED_SHORT, indexBuffer)
+        GLES20.glVertexAttribPointer(
+            aTexCoordHandle,
+            2,
+            GLES20.GL_FLOAT,
+            false,
+            5 * 4,
+            vertexBuffer
+        )
+        GLES20.glDrawElements(
+            GLES20.GL_TRIANGLES,
+            indexData.size,
+            GLES20.GL_UNSIGNED_SHORT,
+            indexBuffer
+        )
         GLES20.glDisableVertexAttribArray(aPositionHandle)
         GLES20.glDisableVertexAttribArray(aTexCoordHandle)
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
+    }
+
+    fun renderFrameFromDecoder(
+        decoderTextureId: Int,
+        transformMatrix: FloatArray,
+        targetSize: Int,
+    ) {
+        // ① 背景を黒でクリア
+        GLES20.glClearColor(0f, 0f, 0f, 1f)
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
+        GLES20.glUseProgram(program)
+        GLES20.glViewport(0, 0, targetSize, targetSize)
+
+        // ② MVP 行列の生成は、ここでは単純に既存の projectionMatrix と transformMatrix を合成する例です。
+        val mvpMatrix = FloatArray(16)
+        // ここでは、transformMatrix は decoderSurfaceTexture から取得した変換行列
+        // 合成方法は実装次第ですが、ここでは単純に projectionMatrix * transformMatrix としています。
+        Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, transformMatrix, 0)
+        GLES20.glUniformMatrix4fv(uMVPMatrixHandle, 1, false, mvpMatrix, 0)
+
+        // ③ decoderTextureId は GL_TEXTURE_EXTERNAL_OES ターゲットにバインド
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
+        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, decoderTextureId)
+        // ※ フラグメントシェーダーも samplerExternalOES を使う必要があります。
+
+        // ④ 頂点属性の設定と描画
+        vertexBuffer.position(0)
+        GLES20.glEnableVertexAttribArray(aPositionHandle)
+        GLES20.glVertexAttribPointer(
+            aPositionHandle,
+            3,
+            GLES20.GL_FLOAT,
+            false,
+            5 * 4,
+            vertexBuffer
+        )
+        vertexBuffer.position(3)
+        GLES20.glEnableVertexAttribArray(aTexCoordHandle)
+        GLES20.glVertexAttribPointer(
+            aTexCoordHandle,
+            2,
+            GLES20.GL_FLOAT,
+            false,
+            5 * 4,
+            vertexBuffer
+        )
+        GLES20.glDrawElements(
+            GLES20.GL_TRIANGLES,
+            indexData.size,
+            GLES20.GL_UNSIGNED_SHORT,
+            indexBuffer
+        )
+        GLES20.glDisableVertexAttribArray(aPositionHandle)
+        GLES20.glDisableVertexAttribArray(aTexCoordHandle)
+        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, 0)
     }
 }

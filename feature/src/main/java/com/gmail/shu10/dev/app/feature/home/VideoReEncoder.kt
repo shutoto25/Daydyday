@@ -11,6 +11,7 @@ import android.opengl.GLES11Ext
 import android.opengl.GLES20
 import android.view.Surface
 import androidx.core.net.toUri
+import com.gmail.shu10.dev.app.feature.utils.toContentUri
 import java.io.File
 class VideoReEncoder(
     private val context: Context,
@@ -43,6 +44,7 @@ class VideoReEncoder(
     fun transcode() {
         // 1. Extractor を初期化して、動画トラックを選択
         extractor = MediaExtractor()
+        // TODO createHttpServiceBinderIfNecessaryでnullが返されてexceptionが発生する
         extractor.setDataSource(context, inputFile.absolutePath.toUri(), null)
         var videoTrackIndex = -1
         for (i in 0 until extractor.trackCount) {

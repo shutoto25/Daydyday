@@ -112,6 +112,7 @@ fun VideoEditorScreen(
                     context,
                     it,
                     viewModel.targetFile(context, diary.date),
+                    position,
                     onSuccess = {
                         // トリミング成功
                         Log.d("TEST", "ViewEditScreenContent() called trim success")

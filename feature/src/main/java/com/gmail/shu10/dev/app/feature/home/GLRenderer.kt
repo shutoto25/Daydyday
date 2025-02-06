@@ -229,7 +229,6 @@ class GLRenderer(private val width: Int, private val height: Int) {
         // ③ decoderTextureId は GL_TEXTURE_EXTERNAL_OES ターゲットにバインド
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, decoderTextureId)
-        // ※ フラグメントシェーダーも samplerExternalOES を使う必要があります。
 
         // ④ 頂点属性の設定と描画
         vertexBuffer.position(0)

@@ -12,6 +12,7 @@ import android.opengl.GLES11Ext
 import android.opengl.GLES20
 import android.view.Surface
 import java.io.File
+
 class VideoReEncoder(
     private val context: Context,
     private val inputUri: Uri,
@@ -40,8 +41,12 @@ class VideoReEncoder(
     private var muxerTrackIndex: Int = -1
     private val bufferInfo = MediaCodec.BufferInfo()
 
-    fun transcode() {
-        // 1. Extractor を初期化して、動画トラックを選択
+    /**
+     * startMs はミリ秒単位の開始時刻。
+     * その位置から1秒間の映像を再エンコードして出力する。
+     */
+    fun transcode(startMs: Long) {
+        // 1. Extractor の初期化とシーク
         extractor = MediaExtractor()
         extractor.setDataSource(context, inputUri, null)
         var videoTrackIndex = -1
@@ -57,15 +62,21 @@ class VideoReEncoder(
             throw RuntimeException("No video track found in $inputUri")
         }
         extractor.selectTrack(videoTrackIndex)
+        // シーク（MediaExtractor のタイムスタンプはマイクロ秒単位）
+        val startUs = startMs * 1000L
+        extractor.seekTo(startUs, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
         val inputFormat = extractor.getTrackFormat(videoTrackIndex)
 
         // 2. Decoder の初期化
-        val decoderMime = inputFormat.getString(MediaFormat.KEY_MIME) ?: throw RuntimeException("No MIME type in input format")
-        // まず、生成する OpenGL テクスチャ ID を取得
+        val decoderMime = inputFormat.getString(MediaFormat.KEY_MIME)
+            ?: throw RuntimeException("No MIME type in input format")
         decoderTextureId = generateExternalTexture()
         decoderSurfaceTexture = SurfaceTexture(decoderTextureId).apply {
-            // 必要なら入力動画のサイズに合わせる。ここでは入力フォーマットの幅・高さを使います。
-            setDefaultBufferSize(inputFormat.getInteger(MediaFormat.KEY_WIDTH), inputFormat.getInteger(MediaFormat.KEY_HEIGHT))
+            // 入力動画の幅・高さでバッファサイズを設定
+            setDefaultBufferSize(
+                inputFormat.getInteger(MediaFormat.KEY_WIDTH),
+                inputFormat.getInteger(MediaFormat.KEY_HEIGHT)
+            )
         }
         decoderOutputSurface = Surface(decoderSurfaceTexture)
         decoder = MediaCodec.createDecoderByType(decoderMime)

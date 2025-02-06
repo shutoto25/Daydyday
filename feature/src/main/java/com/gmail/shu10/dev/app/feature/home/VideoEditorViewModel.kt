@@ -8,14 +8,18 @@ import android.net.Uri
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.transformer.Composition
 import androidx.media3.transformer.ExportException
 import androidx.media3.transformer.ExportResult
-import androidx.media3.transformer.TransformationRequest
 import androidx.media3.transformer.Transformer
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
@@ -90,7 +94,7 @@ class VideoEditorViewModel : ViewModel() {
      * @return 加工済みビットマップ画像
      */
     private fun cropToAspectRatio(
-        bitmap: Bitmap, videoWidth: Int, videoHeight: Int, rotation: Int
+        bitmap: Bitmap, videoWidth: Int, videoHeight: Int, rotation: Int,
     ): Bitmap {
         if (rotation != 0) {
             val matrix = Matrix().apply { postRotate(rotation.toFloat()) }
@@ -115,7 +119,7 @@ class VideoEditorViewModel : ViewModel() {
         outputFile: File,
         startMs: Long,
         onSuccess: (ExportResult) -> Unit,
-        onError: (ExportException) -> Unit
+        onError: (ExportException) -> Unit,
     ) {
         val transformer = Transformer.Builder(context)
             .setVideoMimeType(MimeTypes.VIDEO_H264)
@@ -128,7 +132,7 @@ class VideoEditorViewModel : ViewModel() {
                 override fun onError(
                     composition: Composition,
                     exportResult: ExportResult,
-                    exportException: ExportException
+                    exportException: ExportException,
                 ) {
                     // トリミング失敗
                     onError(exportException)
@@ -155,10 +159,37 @@ class VideoEditorViewModel : ViewModel() {
     /**
      *
      */
-    fun targetFile(context: Context, date: String) : File {
+    fun targetFile(context: Context, date: String): File {
         val appDir = File(context.filesDir, "videos/1sec")
         if (!appDir.exists()) appDir.mkdirs()
         val targetFile = File(appDir, "$date.mp4")
         return targetFile
+    }
+
+    fun startReEncoding(
+        context: Context,
+        inputUri: Uri,
+        outputFile: File,
+        startMs: Long,
+        onSuccess: () -> Unit,
+        onError: () -> Unit,
+    ) {
+        val reEncoder = VideoReEncoder(context, inputUri, outputFile)
+        // 必要に応じて、GlobalScope ではなく、適切なスコープ（例：ViewModelScopeなど）を利用してください
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                reEncoder.transcode(startMs)
+                // 成功時の処理はメインスレッドで行う
+                withContext(Dispatchers.Main) {
+                    onSuccess()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                // エラー処理はメインスレッドで行う
+                withContext(Dispatchers.Main) {
+                    onError()
+                }
+            }
+        }
     }
 }

@@ -5,6 +5,7 @@ import android.opengl.GLES11Ext
 import android.opengl.GLES20
 import android.opengl.GLUtils
 import android.opengl.Matrix
+import android.util.Log
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -15,7 +16,7 @@ import kotlin.math.min
  * GLRenderer は、固定出力解像度 1920×1920 の正方形内に、
  * 入力 Bitmap をアスペクト比を維持して中央配置（レターボックス）し描画する。
  */
-class GLRenderer(private val width: Int, private val height: Int) {
+class GLRenderer(private val width: Int, private val height: Int, private val isMp4: Boolean = false) {
 
     // 頂点シェーダーとフラグメントシェーダーのコード
     private val vertexShaderCode = """
@@ -37,6 +38,29 @@ class GLRenderer(private val width: Int, private val height: Int) {
             gl_FragColor = texture2D(uTexture, vTexCoord);
         }
     """.trimIndent()
+
+    // 頂点シェーダーのコード例
+    val vertexShaderCodeForMp4 = """
+    attribute vec4 aPosition;
+    attribute vec2 aTexCoord;
+    varying vec2 vTexCoord;
+    uniform mat4 uMVPMatrix;
+    void main(){
+        gl_Position = uMVPMatrix * aPosition;
+        vTexCoord = aTexCoord;
+    }
+""".trimIndent()
+
+    // フラグメントシェーダーのコード例（GL_TEXTURE_EXTERNAL_OESを利用）
+    val fragmentShaderCodeForMp4 = """
+    #extension GL_OES_EGL_image_external : require
+    precision mediump float;
+    varying vec2 vTexCoord;
+    uniform samplerExternalOES uTexture;
+    void main(){
+        gl_FragColor = texture2D(uTexture, vTexCoord);
+    }
+""".trimIndent()
 
     // 頂点インデックス（四角形を2つの三角形で表現）
     private val indexData = shortArrayOf(0, 1, 2, 2, 1, 3)
@@ -63,7 +87,11 @@ class GLRenderer(private val width: Int, private val height: Int) {
     var textureId: Int = -1
 
     init {
-        initGL()
+        Log.d("TEST", "init() called mp4 = $isMp4")
+        initGL(
+            if (isMp4) vertexShaderCodeForMp4 else vertexShaderCode,
+            if (isMp4) fragmentShaderCodeForMp4 else fragmentShaderCode
+        )
     }
 
     private fun loadShader(type: Int, shaderCode: String): Int {
@@ -73,7 +101,7 @@ class GLRenderer(private val width: Int, private val height: Int) {
         return shader
     }
 
-    private fun initGL() {
+    private fun initGL(vertexShaderCode: String, fragmentShaderCode: String) {
         val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode)
         val fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode)
         // viewportの設定
@@ -99,6 +127,8 @@ class GLRenderer(private val width: Int, private val height: Int) {
     }
 
     /**
+     * Bitmap を元に1秒間（frameRate枚分）の静止画動画を生成する際に使用する。
+     *
      * 入力 Bitmap をテクスチャに転送し、固定出力 1920×1920 の正方形内に、
      * 入力画像のアスペクト比を維持して中央に配置（レターボックス）して描画する。
      * rotationDegrees が0以外の場合は、画像中心を軸に回転する。
@@ -208,6 +238,9 @@ class GLRenderer(private val width: Int, private val height: Int) {
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
     }
 
+    /**
+     * mp4から秒動画を生成する際に使用しているメソッド。
+     */
     fun renderFrameFromDecoder(
         decoderTextureId: Int,
         transformMatrix: FloatArray,
@@ -221,6 +254,8 @@ class GLRenderer(private val width: Int, private val height: Int) {
 
         // ② MVP 行列の生成は、ここでは単純に既存の projectionMatrix と transformMatrix を合成する例です。
         val mvpMatrix = FloatArray(16)
+        Matrix.setIdentityM(transformMatrix, 0)
+        Log.d("TEST", "MVP Matrix: ${mvpMatrix.joinToString()}")
         // ここでは、transformMatrix は decoderSurfaceTexture から取得した変換行列
         // 合成方法は実装次第ですが、ここでは単純に projectionMatrix * transformMatrix としています。
         Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, transformMatrix, 0)

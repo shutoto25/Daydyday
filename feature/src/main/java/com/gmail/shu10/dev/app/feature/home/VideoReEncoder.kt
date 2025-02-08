@@ -10,8 +10,11 @@ import android.media.MediaMuxer
 import android.net.Uri
 import android.opengl.GLES11Ext
 import android.opengl.GLES20
+import android.opengl.Matrix
+import android.util.Log
 import android.view.Surface
 import java.io.File
+import java.nio.ByteBuffer
 
 class VideoReEncoder(
     private val context: Context,
@@ -41,6 +44,9 @@ class VideoReEncoder(
     private var muxerTrackIndex: Int = -1
     private val bufferInfo = MediaCodec.BufferInfo()
 
+    // エンコード済みサンプルを保持するリスト
+    private val sampleList = mutableListOf<EncodedSample>()
+
     /**
      * startMs はミリ秒単位の開始時刻。
      * その位置から1秒間の映像を再エンコードして出力する。
@@ -62,7 +68,7 @@ class VideoReEncoder(
             throw RuntimeException("No video track found in $inputUri")
         }
         extractor.selectTrack(videoTrackIndex)
-        // シーク（MediaExtractor のタイムスタンプはマイクロ秒単位）
+        // MediaExtractor のタイムスタンプはマイクロ秒単位
         val startUs = startMs * 1000L
         extractor.seekTo(startUs, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
         val inputFormat = extractor.getTrackFormat(videoTrackIndex)
@@ -72,7 +78,6 @@ class VideoReEncoder(
             ?: throw RuntimeException("No MIME type in input format")
         decoderTextureId = generateExternalTexture()
         decoderSurfaceTexture = SurfaceTexture(decoderTextureId).apply {
-            // 入力動画の幅・高さでバッファサイズを設定
             setDefaultBufferSize(
                 inputFormat.getInteger(MediaFormat.KEY_WIDTH),
                 inputFormat.getInteger(MediaFormat.KEY_HEIGHT)
@@ -101,71 +106,111 @@ class VideoReEncoder(
 
         // 5. EGLHelper と GLRenderer の初期化（encoderInputSurface を使用）
         eglHelper = EGLHelper(encoderInputSurface, targetWidth, targetHeight)
-        glRenderer = GLRenderer(targetWidth, targetHeight)
+        glRenderer = GLRenderer(targetWidth, targetHeight, true)
 
         // 6. 再エンコードループ
-        val timeoutUs = 10000L
-        // フレーム間隔の計算：ここでは、最終フレームのタイムスタンプが正確に1秒（1,000,000μs）となるようにします。
-        val totalFrames = targetFrameRate  // 例: 30
+        // ここでは、出力を targetFrameRate 枚のフレームで1秒間に均等に割り当てる。
+        val totalFrames = targetFrameRate // 例: 30フレーム
+        // (totalFrames - 1)で割ることで、0〜1,000,000 μs を均等に割る（最終フレームは強制1,000,000 μs）
         val frameIntervalUs = if (totalFrames > 1) 1_000_000L / (totalFrames - 1) else 1_000_000L
         var frameIndex = 0
 
-        var sawOutputEOS = false
-        while (!sawOutputEOS) {
-            // ① Decoder の出力を更新
-            // 通常は、SurfaceTexture の updateTexImage() を呼び出して最新フレームを取得します
+        // ※ 再エンコードループの中で、decoderSurfaceTexture.updateTexImage() を呼び出し、
+        // 出力フレームの希望タイムスタンプを待つ処理が必要ですが、入力が静的な場合は更新されない可能性があります。
+        // ここでは単純に updateTexImage() を呼び出して最新フレームを取得します。
+        while (frameIndex < totalFrames) {
+            // デコーダ出力フレームの更新
             decoderSurfaceTexture.updateTexImage()
             // SurfaceTexture の変換行列を取得
             val transformMatrix = FloatArray(16)
-            decoderSurfaceTexture.getTransformMatrix(transformMatrix)
+            if (decoderSurfaceTexture.timestamp == 0L) {
+                Matrix.setIdentityM(transformMatrix, 0)
+                Log.d("TEST", "Using identity matrix for transformMatrix")
+            } else {
+                decoderSurfaceTexture.getTransformMatrix(transformMatrix)
+            }
+            Log.d("TEST", "Transform Matrix: ${transformMatrix.joinToString()}")
 
-            // ② GLRenderer を用いて、decoderTextureId のテクスチャ（デコーダ出力）を encoderInputSurface に描画する
-            // このメソッドは、decoderTextureId（GL_TEXTURE_EXTERNAL_OES）を使用して描画します。
+            // GLRenderer で、decoderTextureId のテクスチャ（decoder出力）を encoderInputSurface に描画する
             glRenderer.renderFrameFromDecoder(decoderTextureId, transformMatrix, targetWidth)
 
-            // ③ 各フレームの presentationTimeUs を計算
+            // 各フレームの希望する presentationTimeUs を計算
             val presentationTimeUs = if (frameIndex == totalFrames - 1) {
                 1_000_000L
             } else {
                 frameIndex * frameIntervalUs
             }
-            eglHelper.swapBuffers(presentationTimeUs * 1000) // μs -> ns
-            frameIndex++
-            if (frameIndex >= totalFrames) {
-                // EOS: 終了したとみなす
-                // ここでは単純にループ回数で終了させています。
-                // 実際は decoder EOS を待つ処理が必要です。
-                break
-            }
+            // swapBuffers により、エンコーダの入力Surfaceにフレームを送出。タイムスタンプはμs→nsに変換
+            eglHelper.swapBuffers(presentationTimeUs * 1000)
 
-            // ④ エンコーダから出力サンプルを取り出し、MediaMuxer に書き込む
-            var encoderOutputBufferId = encoder.dequeueOutputBuffer(bufferInfo, timeoutUs)
-            while (encoderOutputBufferId >= 0) {
+            // ドレインして出力サンプルをサンプルリストに蓄積
+            drainEncoderCollectSamples(presentationTimeUs)
+            frameIndex++
+        }
+
+        // EOS をエンコーダに送信
+        encoder.signalEndOfInputStream()
+
+        // EOS 後のエンコーダ出力をすべてドレイン
+        drainEncoderCollectSamples(1_000_000L)
+
+        // 7. タイムスタンプの再スケーリング
+        val maxTs = sampleList.maxOfOrNull { it.presentationTimeUs } ?: 1_000_000L
+        val scaleFactor = 1_000_000.0 / maxTs
+        sampleList.forEach { sample ->
+            sample.presentationTimeUs = (sample.presentationTimeUs * scaleFactor).toLong()
+        }
+
+        // 8. Muxer に書き出し
+        muxerTrackIndex = muxer.addTrack(encoder.outputFormat)
+        muxer.start()
+        sampleList.forEach { sample ->
+            val info = MediaCodec.BufferInfo().apply {
+                offset = 0
+                size = sample.data.limit() - sample.data.position()
+                presentationTimeUs = sample.presentationTimeUs
+                flags = sample.flags
+            }
+            muxer.writeSampleData(muxerTrackIndex, sample.data, info)
+        }
+        muxer.stop()
+        muxer.release()
+
+        // 9. リソース解放
+        releaseResources()
+    }
+
+    private fun drainEncoderCollectSamples(overrideTimestamp: Long) {
+        val timeoutUs = 10000L
+        while (true) {
+            val encoderOutputBufferId = encoder.dequeueOutputBuffer(bufferInfo, timeoutUs)
+            if (encoderOutputBufferId >= 0) {
                 val encodedData = encoder.getOutputBuffer(encoderOutputBufferId)
                     ?: throw RuntimeException("Encoder output buffer $encoderOutputBufferId was null")
                 if (bufferInfo.size != 0) {
                     encodedData.position(bufferInfo.offset)
                     encodedData.limit(bufferInfo.offset + bufferInfo.size)
-                    if (muxerTrackIndex < 0) {
-                        val newFormat = encoder.outputFormat
-                        muxerTrackIndex = muxer.addTrack(newFormat)
-                        muxer.start()
-                    }
-                    muxer.writeSampleData(muxerTrackIndex, encodedData, bufferInfo)
+                    // overrideTimestamp を採用してサンプルを作成
+                    val sample = EncodedSample(
+                        data = ByteBuffer.allocate(bufferInfo.size).apply {
+                            put(encodedData)
+                            flip()
+                        },
+                        presentationTimeUs = overrideTimestamp,
+                        flags = bufferInfo.flags
+                    )
+                    sampleList.add(sample)
                 }
                 encoder.releaseOutputBuffer(encoderOutputBufferId, false)
                 if (bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) {
-                    sawOutputEOS = true
                     break
                 }
-                encoderOutputBufferId = encoder.dequeueOutputBuffer(bufferInfo, timeoutUs)
+            } else if (encoderOutputBufferId == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                // 出力フォーマット変更時の処理（必要なら実装）
+            } else if (encoderOutputBufferId == MediaCodec.INFO_TRY_AGAIN_LATER) {
+                break
             }
         }
-
-        // 7. リソース解放
-        muxer.stop()
-        muxer.release()
-        releaseResources()
     }
 
     private fun releaseResources() {
@@ -191,3 +236,9 @@ class VideoReEncoder(
         return textures[0]
     }
 }
+
+data class EncodedSample(
+    val data: ByteBuffer,          // エンコード済みのバイトデータ
+    var presentationTimeUs: Long,  // presentationTimeUs（マイクロ秒単位）
+    val flags: Int                 // バッファフラグ（例：キーフレームなど）
+)

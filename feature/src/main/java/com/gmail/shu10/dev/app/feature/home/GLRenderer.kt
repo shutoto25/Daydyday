@@ -39,30 +39,16 @@ class GLRenderer(private val width: Int, private val height: Int, private val is
         }
     """.trimIndent()
 
-    // 頂点シェーダーのコード例
-    val vertexShaderCodeForMp4 = """
-    attribute vec4 aPosition;
-    attribute vec2 aTexCoord;
-    varying vec2 vTexCoord;
-    uniform mat4 uMVPMatrix;
-    void main(){
-        gl_Position = uMVPMatrix * aPosition;
-        vTexCoord = aTexCoord;
-    }
-""".trimIndent()
+    private val fragmentShaderCodeForMp4 = """
+        #extension GL_OES_EGL_image_external : require
+        precision mediump float;
+        varying vec2 vTexCoord;
+        uniform samplerExternalOES uTexture;
+        void main(){
+            gl_FragColor = texture2D(uTexture, vTexCoord);
+        }
+    """.trimIndent()
 
-    // フラグメントシェーダーのコード例（GL_TEXTURE_EXTERNAL_OESを利用）
-    val fragmentShaderCodeForMp4 = """
-    #extension GL_OES_EGL_image_external : require
-    precision mediump float;
-    varying vec2 vTexCoord;
-    uniform samplerExternalOES uTexture;
-    void main(){
-        gl_FragColor = texture2D(uTexture, vTexCoord);
-    }
-""".trimIndent()
-
-    // 頂点インデックス（四角形を2つの三角形で表現）
     private val indexData = shortArrayOf(0, 1, 2, 2, 1, 3)
     private val indexBuffer: ShortBuffer = ByteBuffer.allocateDirect(indexData.size * 2)
         .order(ByteOrder.nativeOrder()).asShortBuffer().apply {
@@ -70,26 +56,29 @@ class GLRenderer(private val width: Int, private val height: Int, private val is
             position(0)
         }
 
-    // 頂点データは動的に生成するので、十分なサイズのFloatBufferを確保
-    private var vertexBuffer: FloatBuffer = ByteBuffer.allocateDirect(4 * 5 * 4)
+    // 頂点バッファは render() 内では更新しているが、
+    // renderFrameFromDecoder() では更新されていなかったので、ここで full screen quad 用の座標を設定する
+    private val vertexBuffer: FloatBuffer = ByteBuffer.allocateDirect(4 * 5 * 4)
         .order(ByteOrder.nativeOrder()).asFloatBuffer()
 
-    private var program: Int = 0
-    private var aPositionHandle: Int = 0
-    private var aTexCoordHandle: Int = 0
-    private var uMVPMatrixHandle: Int = 0
-    private var uTextureHandle: Int = 0
+    var program: Int = 0
+        private set
+    var aPositionHandle: Int = 0
+        private set
+    var aTexCoordHandle: Int = 0
+        private set
+    var uMVPMatrixHandle: Int = 0
+        private set
+    var uTextureHandle: Int = 0
+        private set
 
-    // 投影行列（オーソグラフィック）
-    private val projectionMatrix = FloatArray(16)
-
-    // テクスチャハンドル
+    val projectionMatrix = FloatArray(16)
     var textureId: Int = -1
+        private set
 
     init {
-        Log.d("TEST", "init() called mp4 = $isMp4")
         initGL(
-            if (isMp4) vertexShaderCodeForMp4 else vertexShaderCode,
+            if (isMp4) vertexShaderCode else vertexShaderCode,
             if (isMp4) fragmentShaderCodeForMp4 else fragmentShaderCode
         )
     }
@@ -104,9 +93,7 @@ class GLRenderer(private val width: Int, private val height: Int, private val is
     private fun initGL(vertexShaderCode: String, fragmentShaderCode: String) {
         val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode)
         val fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode)
-        // viewportの設定
         GLES20.glViewport(0, 0, width, height)
-        // オーソグラフィック投影行列を作成（左=0, 右=targetSize, 下=0, 上=targetSize）
         Matrix.orthoM(projectionMatrix, 0, 0f, width.toFloat(), height.toFloat(), 0f, -1f, 1f)
         program = GLES20.glCreateProgram().also {
             GLES20.glAttachShader(it, vertexShader)
@@ -244,28 +231,31 @@ class GLRenderer(private val width: Int, private val height: Int, private val is
     fun renderFrameFromDecoder(
         decoderTextureId: Int,
         transformMatrix: FloatArray,
-        targetSize: Int,
+        targetSize: Int
     ) {
-        // ① 背景を黒でクリア
         GLES20.glClearColor(0f, 0f, 0f, 1f)
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
         GLES20.glUseProgram(program)
         GLES20.glViewport(0, 0, targetSize, targetSize)
 
-        // ② MVP 行列の生成は、ここでは単純に既存の projectionMatrix と transformMatrix を合成する例です。
+        // フルスクリーン用の四角形の頂点データをセット（0,0 から targetSize,targetSize）
+        val vertices = floatArrayOf(
+            0f, 0f, 0f, 0f, 0f,                                  // bottom-left
+            targetSize.toFloat(), 0f, 0f, 1f, 0f,                 // bottom-right
+            0f, targetSize.toFloat(), 0f, 0f, 1f,                 // top-left
+            targetSize.toFloat(), targetSize.toFloat(), 0f, 1f, 1f // top-right
+        )
+        vertexBuffer.clear()
+        vertexBuffer.put(vertices)
+        vertexBuffer.position(0)
+
+        // MVP 行列の生成：projectionMatrix * transformMatrix
         val mvpMatrix = FloatArray(16)
-        Matrix.setIdentityM(transformMatrix, 0)
-        Log.d("TEST", "MVP Matrix: ${mvpMatrix.joinToString()}")
-        // ここでは、transformMatrix は decoderSurfaceTexture から取得した変換行列
-        // 合成方法は実装次第ですが、ここでは単純に projectionMatrix * transformMatrix としています。
         Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, transformMatrix, 0)
         GLES20.glUniformMatrix4fv(uMVPMatrixHandle, 1, false, mvpMatrix, 0)
 
-        // ③ decoderTextureId は GL_TEXTURE_EXTERNAL_OES ターゲットにバインド
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, decoderTextureId)
-
-        // ④ 頂点属性の設定と描画
         vertexBuffer.position(0)
         GLES20.glEnableVertexAttribArray(aPositionHandle)
         GLES20.glVertexAttribPointer(

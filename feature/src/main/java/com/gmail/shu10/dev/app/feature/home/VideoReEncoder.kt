@@ -106,46 +106,68 @@ class VideoReEncoder(
 
         // 5. EGLHelper と GLRenderer の初期化（encoderInputSurface を使用）
         eglHelper = EGLHelper(encoderInputSurface, targetWidth, targetHeight)
+        // isMp4 = true として、GLRenderer は外部テクスチャ用のシェーダーを使用
         glRenderer = GLRenderer(targetWidth, targetHeight, true)
 
         // 6. 再エンコードループ
-        // ここでは、出力を targetFrameRate 枚のフレームで1秒間に均等に割り当てる。
-        val totalFrames = targetFrameRate // 例: 30フレーム
-        // (totalFrames - 1)で割ることで、0〜1,000,000 μs を均等に割る（最終フレームは強制1,000,000 μs）
+// 出力フレーム数を targetFrameRate 枚として、0〜1,000,000μs を均等に割る
+        val totalFrames = targetFrameRate  // 例: 30
         val frameIntervalUs = if (totalFrames > 1) 1_000_000L / (totalFrames - 1) else 1_000_000L
         var frameIndex = 0
+        val timeoutUs = 10000L
 
-        // ※ 再エンコードループの中で、decoderSurfaceTexture.updateTexImage() を呼び出し、
-        // 出力フレームの希望タイムスタンプを待つ処理が必要ですが、入力が静的な場合は更新されない可能性があります。
-        // ここでは単純に updateTexImage() を呼び出して最新フレームを取得します。
         while (frameIndex < totalFrames) {
-            // デコーダ出力フレームの更新
-            decoderSurfaceTexture.updateTexImage()
-            // SurfaceTexture の変換行列を取得
-            val transformMatrix = FloatArray(16)
-            if (decoderSurfaceTexture.timestamp == 0L) {
-                Matrix.setIdentityM(transformMatrix, 0)
-                Log.d("TEST", "Using identity matrix for transformMatrix")
-            } else {
-                decoderSurfaceTexture.getTransformMatrix(transformMatrix)
+            // ① 入力側：デコーダへの入力データを供給する
+            val inputBufferId = decoder.dequeueInputBuffer(timeoutUs)
+            if (inputBufferId >= 0) {
+                val inputBuffer = decoder.getInputBuffer(inputBufferId)
+                val sampleSize = extractor.readSampleData(inputBuffer!!, 0)
+                if (sampleSize < 0) {
+                    // 終端に達したのでEOSフラグを送信
+                    decoder.queueInputBuffer(inputBufferId, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+                } else {
+                    val sampleTime = extractor.sampleTime
+                    decoder.queueInputBuffer(inputBufferId, 0, sampleSize, sampleTime, 0)
+                    extractor.advance()
+                }
             }
-            Log.d("TEST", "Transform Matrix: ${transformMatrix.joinToString()}")
 
-            // GLRenderer で、decoderTextureId のテクスチャ（decoder出力）を encoderInputSurface に描画する
-            glRenderer.renderFrameFromDecoder(decoderTextureId, transformMatrix, targetWidth)
+            // ② 出力側：デコーダからフレームを取得
+            val outputBufferId = decoder.dequeueOutputBuffer(bufferInfo, timeoutUs)
+            if (outputBufferId >= 0) {
+                // 出力バッファをレンダリング（true を指定）
+                decoder.releaseOutputBuffer(outputBufferId, true)
+                // ここで、デコーダが出力したフレームが SurfaceTexture に反映されるのを待つ
+                // updateTexImage() を呼び出して最新フレームを取得
+                decoderSurfaceTexture.updateTexImage()
+                val transformMatrix = FloatArray(16)
+                if (decoderSurfaceTexture.timestamp == 0L) {
+                    Matrix.setIdentityM(transformMatrix, 0)
+                    Log.d("TEST", "Using identity matrix for transformMatrix")
+                } else {
+                    decoderSurfaceTexture.getTransformMatrix(transformMatrix)
+                }
+                Log.d("TEST", "Transform Matrix: ${transformMatrix.joinToString()}")
 
-            // 各フレームの希望する presentationTimeUs を計算
-            val presentationTimeUs = if (frameIndex == totalFrames - 1) {
-                1_000_000L
-            } else {
-                frameIndex * frameIntervalUs
+                // ③ GLRenderer でデコーダ出力テクスチャを encoderInputSurface に描画する
+                glRenderer.renderFrameFromDecoder(decoderTextureId, transformMatrix, targetWidth)
+
+                // ④ 希望する出力フレームの presentationTimeUs を計算し、swapBuffers() で出力
+                val presentationTimeUs = if (frameIndex == totalFrames - 1) {
+                    1_000_000L
+                } else {
+                    frameIndex * frameIntervalUs
+                }
+                eglHelper.swapBuffers(presentationTimeUs * 1000) // μs -> ns
+
+                // エンコーダ出力をドレインしてサンプルリストに蓄積
+                drainEncoderCollectSamples(presentationTimeUs)
+                frameIndex++
+            } else if (outputBufferId == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                // 出力フォーマット変更時の処理（必要に応じて）
+            } else if (outputBufferId == MediaCodec.INFO_TRY_AGAIN_LATER) {
+                // 特に何もせずループ継続
             }
-            // swapBuffers により、エンコーダの入力Surfaceにフレームを送出。タイムスタンプはμs→nsに変換
-            eglHelper.swapBuffers(presentationTimeUs * 1000)
-
-            // ドレインして出力サンプルをサンプルリストに蓄積
-            drainEncoderCollectSamples(presentationTimeUs)
-            frameIndex++
         }
 
         // EOS をエンコーダに送信
@@ -154,7 +176,7 @@ class VideoReEncoder(
         // EOS 後のエンコーダ出力をすべてドレイン
         drainEncoderCollectSamples(1_000_000L)
 
-        // 7. タイムスタンプの再スケーリング
+        // 7. タイムスタンプ再スケーリング（全サンプルの最大タイムスタンプに合わせてスケーリング）
         val maxTs = sampleList.maxOfOrNull { it.presentationTimeUs } ?: 1_000_000L
         val scaleFactor = 1_000_000.0 / maxTs
         sampleList.forEach { sample ->
@@ -190,7 +212,7 @@ class VideoReEncoder(
                 if (bufferInfo.size != 0) {
                     encodedData.position(bufferInfo.offset)
                     encodedData.limit(bufferInfo.offset + bufferInfo.size)
-                    // overrideTimestamp を採用してサンプルを作成
+                    // ここでは overrideTimestamp で上書きしてサンプルを作成
                     val sample = EncodedSample(
                         data = ByteBuffer.allocate(bufferInfo.size).apply {
                             put(encodedData)
@@ -206,7 +228,7 @@ class VideoReEncoder(
                     break
                 }
             } else if (encoderOutputBufferId == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
-                // 出力フォーマット変更時の処理（必要なら実装）
+                // 必要に応じて処理
             } else if (encoderOutputBufferId == MediaCodec.INFO_TRY_AGAIN_LATER) {
                 break
             }

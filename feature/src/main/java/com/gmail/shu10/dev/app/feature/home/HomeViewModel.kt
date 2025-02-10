@@ -29,9 +29,6 @@ open class HomeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
-    private val _diaryList = MutableStateFlow(generateDateList())
-    val diaryList: StateFlow<List<Diary>> = _diaryList
-
     init {
         fetchAllDiaries()
     }

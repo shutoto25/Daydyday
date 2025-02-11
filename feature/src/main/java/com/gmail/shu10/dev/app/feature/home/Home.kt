@@ -89,7 +89,7 @@ import kotlinx.serialization.json.Json
 fun HomeRoute(
     navController: NavController,
 ) {
-    val viewModel: HomeViewModel = hiltViewModel()
+    val viewModel: SharedDiaryViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -375,14 +375,14 @@ fun getVideoThumbnail(context: Context, videoUri: Uri): Bitmap? {
  * ＠param navController NavController
  * ＠param viewModel HomeViewModel
  */
-private fun updateDiaryFromBackStack(navController: NavController, viewModel: HomeViewModel) {
+private fun updateDiaryFromBackStack(navController: NavController, viewModel: SharedDiaryViewModel) {
     val updateDairyJson = navController.currentBackStackEntry
         ?.savedStateHandle
         ?.get<String>("updateDiary")
 
     updateDairyJson?.let {
         val updateDairy = Json.decodeFromString<Diary>(it)
-        viewModel.updateDiaryList(updateDairy)
+//        viewModel.updateDiaryList(updateDairy)
     }
     navController.currentBackStackEntry
         ?.savedStateHandle

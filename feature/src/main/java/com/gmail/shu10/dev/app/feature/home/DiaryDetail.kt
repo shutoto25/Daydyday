@@ -61,7 +61,7 @@ import java.util.UUID
 fun DiaryDetailScreen(
     navHostController: NavHostController,
     diary: Diary,
-    viewModel: DiaryDetailViewModel = hiltViewModel()
+    viewModel: SharedDiaryViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     var isLoading by remember { mutableStateOf(false) }
@@ -158,7 +158,7 @@ fun DiaryDetailScreen(
                 val saveData = tempDiary.copy(uuid = tempDiary.uuid.ifEmpty {
                     UUID.randomUUID().toString() /* 初回保存時 */
                 })
-                viewModel.saveDiary(saveData)
+                viewModel.saveDiaryToLocal(saveData)
                 val json = Json.encodeToString(saveData)
                 navHostController.previousBackStackEntry?.savedStateHandle?.set("updateDiary", json)
                 navHostController.popBackStack()

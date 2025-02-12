@@ -43,6 +43,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.gmail.shu10.dev.app.core.utils.convertDateFormat
@@ -60,8 +61,9 @@ import java.util.UUID
 @Composable
 fun DiaryDetailScreen(
     navHostController: NavHostController,
+    navBackStackEntry: NavBackStackEntry,
     diary: Diary,
-    viewModel: SharedDiaryViewModel = hiltViewModel()
+    viewModel: SharedDiaryViewModel = hiltViewModel(navBackStackEntry)
 ) {
     val context = LocalContext.current
     var isLoading by remember { mutableStateOf(false) }

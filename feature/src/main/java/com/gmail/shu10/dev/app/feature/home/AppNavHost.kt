@@ -36,10 +36,12 @@ fun AppNavHost(intent: MutableState<Intent?>) {
         startDestination = AppScreen.Home.route
     ) {
         // ホーム画面
-        composable(AppScreen.Home.route) { HomeRoute(navController) }
+        composable(AppScreen.Home.route) { navBackStackEntry ->
+            HomeRoute(navController, navBackStackEntry)
+        }
         // 日付詳細画面
         composable(AppScreen.DiaryDetail("{diaryJson}").route) { navBackStackEntry ->
-            DiaryDetailScreen(navController, getDiaryFromNavBackStackEntry(navBackStackEntry))
+            DiaryDetailScreen(navController, navBackStackEntry, getDiaryFromNavBackStackEntry(navBackStackEntry))
         }
         // 動画編集画面
         composable(AppScreen.VideoEditor("{diaryJson}").route) { navBackStackEntry ->

@@ -72,6 +72,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.gmail.shu10.dev.app.core.utils.convertDateFormat
@@ -88,8 +89,9 @@ import kotlinx.serialization.json.Json
 @Composable
 fun HomeRoute(
     navController: NavController,
+    navBackStackEntry: NavBackStackEntry,
+    viewModel: SharedDiaryViewModel = hiltViewModel(navBackStackEntry)
 ) {
-    val viewModel: SharedDiaryViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)

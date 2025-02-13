@@ -8,7 +8,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -59,27 +58,16 @@ import java.util.UUID
  * 日記詳細画面
  */
 @Composable
-fun DiaryDetailScreen(
+fun DiaryDetailRoute(
     navHostController: NavHostController,
     navBackStackEntry: NavBackStackEntry,
-    diary: Diary,
-    viewModel: SharedDiaryViewModel = hiltViewModel(navBackStackEntry)
+    viewModel: SharedDiaryViewModel = hiltViewModel(navBackStackEntry),
 ) {
     val context = LocalContext.current
+
     var isLoading by remember { mutableStateOf(false) }
     // 状態管理
-    var tempDiary by remember { mutableStateOf(diary) }
-
-    val updateDairyJson = navHostController.currentBackStackEntry
-        ?.savedStateHandle
-        ?.get<String>("updateDiaryWithTrimmedVideo")
-
-    updateDairyJson?.let {
-        tempDiary = Json.decodeFromString<Diary>(it)
-    }
-    navHostController.currentBackStackEntry
-        ?.savedStateHandle
-        ?.remove<String>("updateDiaryWithTrimmedVideo")
+    var tempDiary by remember { mutableStateOf(viewModel.selectedDiary) }
 
     DisposableEffect(Unit) {
         onDispose {
@@ -91,21 +79,24 @@ fun DiaryDetailScreen(
     val phonePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { mediaUri ->
-        mediaUri?.let { url ->
-            val mimeType = context.contentResolver.getType(url)
+        // tempDiaryがnullの場合、ここで早期リターンする
+        val diary = tempDiary ?: return@rememberLauncherForActivityResult
+
+        mediaUri?.let {
+            val mimeType = context.contentResolver.getType(it) ?: return@let
 
             // TODO 画像が変わったときに古い画像を消さないとゴミデータがどんどん溜まっていく
             // TODO 保存するタイミングが保存時じゃなくて選択時になっているの直さないと
             when {
-                mimeType?.startsWith("image") == true -> {
-                    val file = viewModel.savePhotoToAppDir(context, url, diary.date)
-                    tempDiary = tempDiary.copy(photoPath = file?.toContentUri(context).toString())
+                mimeType.startsWith("image") -> {
+                    val file = viewModel.savePhotoToAppDir(context, it, diary.date)
+                    tempDiary = diary.copy(photoPath = file?.toContentUri(context).toString())
                 }
 
-                mimeType?.startsWith("video") == true -> {
+                mimeType.startsWith("video") -> {
                     isLoading = true
-                    val file = viewModel.saveVideoToAppDir(context, url, diary.date)
-                    tempDiary = tempDiary.copy(videoPath = file?.toContentUri(context).toString())
+                    val file = viewModel.saveVideoToAppDir(context, it, diary.date)
+                    tempDiary = diary.copy(videoPath = file?.toContentUri(context).toString())
                     navHostController.navigate(
                         AppScreen.VideoEditor(Json.encodeToString(tempDiary)).createRoute()
                     )
@@ -115,7 +106,35 @@ fun DiaryDetailScreen(
             }
         }
     }
+    tempDiary?.let {
+        DiaryDetailScreen(
+            context = context,
+            tempDiary = it,
+            onClickAddPhotoOrVideo = {
+                phonePickerLauncher.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
+                )
+            },
+            onClickAddLocation = { /* TODO: 位置情報設定画面へ遷移 */ },
+                    onSave = {
+                val saveData = it.copy(uuid = it.uuid.ifEmpty {
+                    UUID.randomUUID().toString() /* 初回保存時 */
+                })
+                viewModel.saveDiaryToLocal(saveData)
+                navHostController.popBackStack()
+            }
+        )
+    }
+}
 
+@Composable
+fun DiaryDetailScreen(
+    context: Context,
+    tempDiary: Diary,
+    onClickAddPhotoOrVideo: () -> Unit,
+    onClickAddLocation: () -> Unit,
+    onSave: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -135,38 +154,23 @@ fun DiaryDetailScreen(
 //                    trackColor = MaterialTheme.colorScheme.surfaceVariant)
 //            }
 //        }
-        DateTitle(date = diary.date)
+        DateTitle(date = tempDiary.date)
         MediaContentArea(
             context = context,
             diary = tempDiary,
-            onClickAddPhotoOrVideo = {
-                phonePickerLauncher.launch(
-                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
-                )
-            },
-            onClickAddLocation = { /* TODO: 位置情報設定画面へ遷移 */ }
+            onClickAddPhotoOrVideo = { onClickAddPhotoOrVideo() },
+            onClickAddLocation = { onClickAddLocation() }
         )
         Spacer(modifier = Modifier.height(16.dp))
         DiaryContentInput(
             modifier = Modifier,
             diary = tempDiary,
-            onContentChange = { tempDiary = tempDiary.copy(content = it) }
+            onContentChange = { /* あとで */ }
         )
-
         Spacer(modifier = Modifier.height(16.dp))
-
-        DiarySaveButton(
-            onSave = {
-                val saveData = tempDiary.copy(uuid = tempDiary.uuid.ifEmpty {
-                    UUID.randomUUID().toString() /* 初回保存時 */
-                })
-                viewModel.saveDiaryToLocal(saveData)
-                val json = Json.encodeToString(saveData)
-                navHostController.previousBackStackEntry?.savedStateHandle?.set("updateDiary", json)
-                navHostController.popBackStack()
-            }
-        )
+        DiarySaveButton(onSave = { onSave() })
     }
+
 }
 
 /**
@@ -198,7 +202,7 @@ fun MediaContentArea(
     context: Context,
     diary: Diary,
     onClickAddPhotoOrVideo: () -> Unit,
-    onClickAddLocation: () -> Unit
+    onClickAddLocation: () -> Unit,
 ) {
     when {
         diary.photoPath != null -> {
@@ -223,7 +227,7 @@ fun MediaContentArea(
 @Composable
 fun MediaPreView(
     content: @Composable () -> Unit,
-    onClickAddLocation: () -> Unit
+    onClickAddLocation: () -> Unit,
 ) {
     content()
     LocationSetting { onClickAddLocation() }
@@ -324,7 +328,7 @@ fun VideoPlayer(context: Context, uri: Uri) {
 fun DiaryContentInput(
     modifier: Modifier,
     diary: Diary,
-    onContentChange: (String) -> Unit
+    onContentChange: (String) -> Unit,
 ) {
     TextField(
         value = diary.content,

@@ -5,9 +5,11 @@ import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.remember
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.gmail.shu10.dev.app.domain.Diary
 import kotlinx.serialization.json.Json
@@ -26,29 +28,37 @@ fun AppNavHost(intent: MutableState<Intent?>) {
             val date = it.getQueryParameter("date")
             if (date != null) {
                 // 日記詳細画面へ遷移
-                navController.navigate(AppScreen.DiaryDetail(date).createRoute())
+//                navController.navigate(AppScreen.DiaryDetail(date).createRoute())
             }
         }
     }
 
     NavHost(
         navController = navController,
-        startDestination = AppScreen.Home.route
+        startDestination = "mainGraph"
     ) {
-        // ホーム画面
-        composable(AppScreen.Home.route) { navBackStackEntry ->
-            HomeRoute(navController, navBackStackEntry)
+        navigation(startDestination = AppScreen.Home.route, route = "mainGraph") {
+            // ホーム画面
+            composable(AppScreen.Home.route) { navBackStackEntry ->
+                val parentEntry = remember(navBackStackEntry) {
+                    navController.getBackStackEntry("mainGraph")
+                }
+                HomeRoute(navController, parentEntry)
+            }
+            // 日付詳細画面
+            composable(AppScreen.DiaryDetail.route) { navBackStackEntry ->
+                val parentEntry = remember(navBackStackEntry) {
+                    navController.getBackStackEntry("mainGraph")
+                }
+                DiaryDetailRoute(navController, parentEntry)
+            }
+            // 動画編集画面
+            composable(AppScreen.VideoEditor("{diaryJson}").route) { navBackStackEntry ->
+                VideoEditorScreen(navController, getDiaryFromNavBackStackEntry(navBackStackEntry))
+            }
+            // 再生画面
+            composable(AppScreen.PlayBackRoute.route) { PlayBackRoute(navController) }
         }
-        // 日付詳細画面
-        composable(AppScreen.DiaryDetail("{diaryJson}").route) { navBackStackEntry ->
-            DiaryDetailScreen(navController, navBackStackEntry, getDiaryFromNavBackStackEntry(navBackStackEntry))
-        }
-        // 動画編集画面
-        composable(AppScreen.VideoEditor("{diaryJson}").route) { navBackStackEntry ->
-            VideoEditorScreen(navController, getDiaryFromNavBackStackEntry(navBackStackEntry))
-        }
-        // 再生画面
-        composable(AppScreen.PlayBackRoute.route) { PlayBackRoute(navController) }
     }
 }
 
@@ -68,7 +78,7 @@ private fun getDiaryFromNavBackStackEntry(navBackStackEntry: NavBackStackEntry):
  */
 sealed class AppScreen(val route: String) {
     data object Home : AppScreen("home")
-    data class DiaryDetail(val diaryJson: String) : AppScreen("detail/{diaryJson}")
+    data object DiaryDetail : AppScreen("detail")
     data class VideoEditor(val diaryJson: String) : AppScreen("videoEditor/{diaryJson}")
     data object PlayBackRoute: AppScreen("playBack")
 }
@@ -81,7 +91,7 @@ fun AppScreen.createRoute(): String {
         // ホーム画面へ遷移
         is AppScreen.Home -> route
         // 日付詳細画面へ遷移
-        is AppScreen.DiaryDetail -> "detail/${Uri.encode(diaryJson)}"
+        is AppScreen.DiaryDetail -> route
         // 動画編集画面へ遷移
         is AppScreen.VideoEditor -> "videoEditor/${Uri.encode(diaryJson)}"
         // 再生画面へ遷移

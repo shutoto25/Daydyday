@@ -85,6 +85,8 @@ import kotlinx.serialization.json.Json
 /**
  * ホーム画面(日付リスト)
  * @param navController NavController
+ * @param navBackStackEntry NavBackStackEntry
+ * @param viewModel SharedDiaryViewModel
  */
 @Composable
 fun HomeRoute(
@@ -124,9 +126,8 @@ fun HomeRoute(
                         }
                     },
                     onDateClick = { diary ->
-                        navController.navigate(
-                            AppScreen.DiaryDetail(Json.encodeToString(diary)).createRoute()
-                        )
+                        viewModel.selectedDiary = diary
+                        navController.navigate(AppScreen.DiaryDetail.route)
                     },
                     onPlayClick = {
                         navController.navigate(AppScreen.PlayBackRoute.route)

@@ -39,6 +39,12 @@ class SharedDiaryViewModel@Inject constructor(
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+    // 選択中の日記
+    private var _selectedDiary: Diary? = null
+    var selectedDiary: Diary?
+        get() = _selectedDiary
+        set(value) { _selectedDiary = value }
+
     init {
         syncDiaryList()
     }

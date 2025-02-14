@@ -114,6 +114,14 @@ class SharedDiaryViewModel@Inject constructor(
     }
 
     /**
+     * 今日の日記を選択
+     */
+    fun setTodayDiary() {
+        _selectedDiary = _diaryList.value.find {
+            it.date == LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        }
+    }
+    /**
      * 写真保存
      * @param context Context
      * @param uri Uri

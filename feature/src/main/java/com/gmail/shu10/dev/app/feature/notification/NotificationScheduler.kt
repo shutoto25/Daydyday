@@ -8,14 +8,15 @@ import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
 /**
- * 通知スケジューラ
+ * デイリー通知スケジューラ
+ * @param context Context
  */
-fun scheduleNotification(context: Context) {
+fun scheduleDailyNotification(context: Context) {
     val workManager = WorkManager.getInstance(context)
 
     val currentTime = System.currentTimeMillis()
     val targetTime = Calendar.getInstance().apply {
-        set(Calendar.HOUR_OF_DAY, 12)
+        set(Calendar.HOUR_OF_DAY, 22)
         set(Calendar.MINUTE, 0)
         set(Calendar.SECOND, 0)
         set(Calendar.MILLISECOND, 0)

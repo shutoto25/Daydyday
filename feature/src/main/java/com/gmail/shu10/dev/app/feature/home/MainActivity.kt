@@ -10,7 +10,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
-import com.gmail.shu10.dev.app.feature.notification.scheduleNotification
+import com.gmail.shu10.dev.app.feature.notification.scheduleDailyNotification
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -26,10 +26,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         currentIntent.value = intent
-
+        // 画面コンテンツ設定
         setContentValue()
-
-        scheduleNotification(this)
+        // デイリー通知設定
+        scheduleDailyNotification(this)
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -53,7 +53,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     AppNavHost(currentIntent)
-                    RequestPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    PermissionRequestDialog(this, Manifest.permission.POST_NOTIFICATIONS)
                 }
             }
         }

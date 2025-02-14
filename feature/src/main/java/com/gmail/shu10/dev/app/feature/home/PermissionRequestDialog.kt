@@ -14,10 +14,14 @@ import com.gmail.shu10.dev.app.core.utils.hasPermission
 
 /**
  * 権限リクエスト
+ * @param context Context
+ * @param permission 要求権限
  */
 @Composable
-fun RequestPermission(context: Context, permission: String) {
-
+fun PermissionRequestDialog(
+    context: Context,
+    permission: String,
+) {
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),

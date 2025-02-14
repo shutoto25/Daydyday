@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.remember
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -17,18 +18,24 @@ import kotlinx.serialization.json.Json
 /**
  * 画面遷移ホスト
  * @param intent Intent
+ * @param viewModel SharedDiaryViewModel
  */
 @Composable
-fun AppNavHost(intent: MutableState<Intent?>) {
+fun AppNavHost(
+    intent: MutableState<Intent?>,
+    viewModel: SharedDiaryViewModel = hiltViewModel()
+) {
     val navController = rememberNavController()
 
     // Intentの監視と画面遷移
+    // TODO: dateパラメータ使ってないな
     LaunchedEffect(intent.value) {
         intent.value?.data?.let {
             val date = it.getQueryParameter("date")
             if (date != null) {
                 // 日記詳細画面へ遷移
-//                navController.navigate(AppScreen.DiaryDetail(date).createRoute())
+                viewModel.setTodayDiary()
+                navController.navigate(AppScreen.DiaryDetail.route)
             }
         }
     }
@@ -40,6 +47,8 @@ fun AppNavHost(intent: MutableState<Intent?>) {
         navigation(startDestination = AppScreen.Home.route, route = "mainGraph") {
             // ホーム画面
             composable(AppScreen.Home.route) { navBackStackEntry ->
+                // コンストラクタのViewModelと同じViewModelStoreOwner(Activity scope)を使って
+                // ViewModelを取得するため同じインスタンスのViewModelが取得できる
                 val parentEntry = remember(navBackStackEntry) {
                     navController.getBackStackEntry("mainGraph")
                 }
@@ -80,7 +89,7 @@ sealed class AppScreen(val route: String) {
     data object Home : AppScreen("home")
     data object DiaryDetail : AppScreen("detail")
     data class VideoEditor(val diaryJson: String) : AppScreen("videoEditor/{diaryJson}")
-    data object PlayBackRoute: AppScreen("playBack")
+    data object PlayBackRoute : AppScreen("playBack")
 }
 
 /**

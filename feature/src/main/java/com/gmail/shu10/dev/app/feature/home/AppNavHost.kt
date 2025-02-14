@@ -63,7 +63,7 @@ fun AppNavHost(
             }
             // 動画編集画面
             composable(AppScreen.VideoEditor("{diaryJson}").route) { navBackStackEntry ->
-                VideoEditorScreen(navController, getDiaryFromNavBackStackEntry(navBackStackEntry))
+                VideoEditorRoute(navController, getDiaryFromNavBackStackEntry(navBackStackEntry))
             }
             // 再生画面
             composable(AppScreen.PlayBackRoute.route) { PlayBackRoute(navController) }

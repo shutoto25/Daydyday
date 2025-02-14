@@ -60,15 +60,14 @@ import kotlinx.serialization.json.Json
  * 動画編集画面
  * @param navHostController ナビゲーションコントローラー
  * @param diary 日記データ
+ * @param viewModel VideoEditorViewModel
  */
 @Composable
-fun VideoEditorScreen(
+fun VideoEditorRoute(
     navHostController: NavHostController,
     diary: Diary,
-//    viewModel: DiaryDetailViewModel = hiltViewModel()
+    viewModel: VideoEditorViewModel = hiltViewModel()
 ) {
-    val viewModel: VideoEditorViewModel = hiltViewModel()
-
     val context = LocalContext.current
     // 動画再生プレイヤー
     val exoPlayer = remember { ExoPlayer.Builder(context).build() }
@@ -76,7 +75,8 @@ fun VideoEditorScreen(
     val thumbnails = remember { viewModel.extractThumbnails(context, diary.videoPath?.toUri()) }
     // 動画再生位置
     var position by remember { mutableLongStateOf(0L) }
-    ViewEditScreenContent(
+
+    ViewEditScreen(
         context = context,
         viewModel = viewModel,
         exoPlayer = exoPlayer,
@@ -134,7 +134,7 @@ fun VideoEditorScreen(
  * 動画編集画面コンテンツ
  */
 @Composable
-fun ViewEditScreenContent(
+fun ViewEditScreen(
     context: Context,
     viewModel: VideoEditorViewModel,
     exoPlayer: ExoPlayer,

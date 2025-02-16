@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -41,6 +42,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.FabPosition
@@ -92,7 +94,7 @@ import kotlinx.serialization.json.Json
 fun HomeRoute(
     navController: NavController,
     navBackStackEntry: NavBackStackEntry,
-    viewModel: SharedDiaryViewModel = hiltViewModel(navBackStackEntry)
+    viewModel: SharedDiaryViewModel = hiltViewModel(navBackStackEntry),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val coroutineScope = rememberCoroutineScope()
@@ -110,9 +112,12 @@ fun HomeRoute(
         drawerState = drawerState,
         drawerContent = { DrawerContent() }
     ) {
-        when(uiState) {
+        when (uiState) {
             is HomeUiState.Loading -> LoadingScreen()
-            is HomeUiState.Error -> ErrorScreen((uiState as HomeUiState.Error).message)
+            is HomeUiState.Error -> ErrorScreen(
+                message = (uiState as HomeUiState.Error).message,
+                onReload = { viewModel.syncDiaryList() }
+            )
             is HomeUiState.Success -> {
                 val successState = uiState as HomeUiState.Success
                 HomeScreen(
@@ -184,19 +189,33 @@ fun DrawerContentItem(text: String, icon: ImageVector, description: String) {
     }
 }
 
+/**
+ * ローディング画面
+ */
 @Composable
 fun LoadingScreen() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
+        CircularProgressIndicator(modifier = Modifier.size(64.dp))
     }
 }
 
+/**
+ * エラー画面
+ * @param message エラーメッセージ
+ * @param onReload リロード処理
+ */
 @Composable
-fun ErrorScreen(message: String) {
+fun ErrorScreen(
+    message: String,
+    onReload: () -> Unit,
+) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = "エラーが発生しました", color = Color.Red)
+            Text(text = "エラーが発生しました")
             Text(text = message)
+            Button(onClick = onReload) {
+                Text(text = "リトライ")
+            }
         }
     }
 }
@@ -378,7 +397,10 @@ fun getVideoThumbnail(context: Context, videoUri: Uri): Bitmap? {
  * ＠param navController NavController
  * ＠param viewModel HomeViewModel
  */
-private fun updateDiaryFromBackStack(navController: NavController, viewModel: SharedDiaryViewModel) {
+private fun updateDiaryFromBackStack(
+    navController: NavController,
+    viewModel: SharedDiaryViewModel,
+) {
     val updateDairyJson = navController.currentBackStackEntry
         ?.savedStateHandle
         ?.get<String>("updateDiary")
@@ -401,7 +423,8 @@ fun InfiniteDateListPreview() {
             color = MaterialTheme.colorScheme.background
         ) {
 //            DateGridItem(Diary(date = "2025-01-01"), onClickItem = {})
-            DrawerContent()
+//            DrawerContent()
+            LoadingScreen()
         }
     }
 }

@@ -29,21 +29,27 @@ import javax.inject.Inject
  * ホーム画面と詳細画面で共有するViewModel
  */
 @HiltViewModel
-class SharedDiaryViewModel@Inject constructor(
+class SharedDiaryViewModel @Inject constructor(
     private val getDiaryUseCase: GetDiaryUseCase,
-    private val saveDiaryUseCase: SaveDiaryUseCase
+    private val saveDiaryUseCase: SaveDiaryUseCase,
 ) : ViewModel() {
-
     private val _diaryList = MutableStateFlow(generateDateList())
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
+    /**
+     * UI state
+     */
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
-    // 選択中の日記
     private var _selectedDiary: Diary? = null
+    /**
+     * 選択中の日記
+     */
     var selectedDiary: Diary?
         get() = _selectedDiary
-        set(value) { _selectedDiary = value }
+        set(value) {
+            _selectedDiary = value
+        }
 
     init {
         syncDiaryList()
@@ -52,8 +58,10 @@ class SharedDiaryViewModel@Inject constructor(
     /**
      * 日記リストを同期
      */
-    private fun syncDiaryList() {
-            viewModelScope.launch {
+    fun syncDiaryList() {
+        _uiState.value = HomeUiState.Loading
+        viewModelScope.launch {
+            try {
                 getDiaryUseCase().collect { diaries ->
                     _diaryList.update { currentList ->
                         currentList.map { diary ->
@@ -66,9 +74,16 @@ class SharedDiaryViewModel@Inject constructor(
                         fabIcon = Icons.Default.KeyboardArrowDown,
                     )
                 }
+            } catch (e: Exception) {
+                _uiState.value = HomeUiState.Error(e.message ?: "UnKnown Error")
             }
+        }
     }
 
+    /**
+     * FABの表示状態を更新
+     * @param gridPosition グリッド位置
+     */
     fun updateFabState(gridPosition: Int) {
         _uiState.update { currentState ->
             if (currentState is HomeUiState.Success) {
@@ -121,6 +136,7 @@ class SharedDiaryViewModel@Inject constructor(
             it.date == LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         }
     }
+
     /**
      * 写真保存
      * @param context Context
@@ -170,7 +186,11 @@ class SharedDiaryViewModel@Inject constructor(
         return targetFile
     }
 
-    private fun createStillImageVideo(bitmap: Bitmap, outputFile: File, rotationDegrees: Float = 0f) {
+    private fun createStillImageVideo(
+        bitmap: Bitmap,
+        outputFile: File,
+        rotationDegrees: Float = 0f,
+    ) {
         // 固定出力解像度 1920×1920 を使用するため、ここでは直接 1920,1920 を指定する
         val encoder = ImageToVideoEncoder(outputFile.absolutePath, 1920, 1920, frameRate = 30)
         encoder.encodeStillImage(bitmap, rotationDegrees)

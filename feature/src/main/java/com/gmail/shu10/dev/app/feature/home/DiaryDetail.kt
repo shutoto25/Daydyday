@@ -86,20 +86,21 @@ fun DiaryDetailRoute(
         // tempDiaryがnullの場合、ここで早期リターンする
         val diary = tempDiary ?: return@rememberLauncherForActivityResult
 
-        mediaUri?.let {
-            val mimeType = context.contentResolver.getType(it) ?: return@let
+        mediaUri?.let { uri ->
+            val mimeType = context.contentResolver.getType(uri) ?: return@let
 
-            // TODO 画像が変わったときに古い画像を消さないとゴミデータがどんどん溜まっていく
-            // TODO 保存するタイミングが保存時じゃなくて選択時になっているの直さないと
             when {
                 mimeType.startsWith("image") -> {
-                    val file = viewModel.savePhotoToAppDir(context, it, diary.date)
-                    tempDiary = diary.copy(photoPath = file?.toContentUri(context).toString())
+                    val file = viewModel.savePhotoToAppDir(context, uri, diary.date)
+                    val newPhotoUri = file?.toContentUri(context)?.let {
+                        "$it?ts=${System.currentTimeMillis()}" // キャッシュバスティング
+                    }
+                    tempDiary = diary.copy(photoPath = newPhotoUri)
                 }
 
                 mimeType.startsWith("video") -> {
                     isLoading = true
-                    val file = viewModel.saveVideoToAppDir(context, it, diary.date)
+                    val file = viewModel.saveVideoToAppDir(context, uri, diary.date)
                     tempDiary = diary.copy(videoPath = file?.toContentUri(context).toString())
                     navHostController.navigate(
                         AppScreen.VideoEditor(Json.encodeToString(tempDiary)).createRoute()

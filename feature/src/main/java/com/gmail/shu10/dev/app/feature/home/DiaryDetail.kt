@@ -2,12 +2,15 @@ package com.gmail.shu10.dev.app.feature.home
 
 import android.content.Context
 import android.net.Uri
+import android.provider.ContactsContract.Contacts.Photo
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Text
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -116,7 +120,7 @@ fun DiaryDetailRoute(
                 )
             },
             onClickAddLocation = { /* TODO: 位置情報設定画面へ遷移 */ },
-                    onSave = {
+            onSave = {
                 val saveData = it.copy(uuid = it.uuid.ifEmpty {
                     UUID.randomUUID().toString() /* 初回保存時 */
                 })
@@ -133,7 +137,7 @@ fun DiaryDetailScreen(
     tempDiary: Diary,
     onClickAddPhotoOrVideo: () -> Unit,
     onClickAddLocation: () -> Unit,
-    onSave: () -> Unit
+    onSave: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -206,7 +210,12 @@ fun MediaContentArea(
 ) {
     when {
         diary.photoPath != null -> {
-            MediaPreView({ PhotoImage(diary.photoPath!!.toUri()) }) { onClickAddLocation() }
+            MediaPreView({
+                PhotoImage(
+                    diary.photoPath!!.toUri(),
+                    onClickAddPhotoOrVideo
+                )
+            }) { onClickAddLocation() }
         }
 
         diary.trimmedVideoPath != null -> {
@@ -286,14 +295,25 @@ fun LocationSetting(onClickAddLocation: () -> Unit) {
  * @param uri 写真URI
  */
 @Composable
-fun PhotoImage(uri: Uri) {
-    AsyncImage(
-        model = uri,
-        contentDescription = "dairy's photo",
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(200.dp)
-    )
+fun PhotoImage(uri: Uri, onRefreshClick: () -> Unit) {
+    Box {
+        AsyncImage(
+            model = uri,
+            contentDescription = "dairy's photo",
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+        )
+        Icon(
+            imageVector = Icons.Default.Refresh,
+            contentDescription = "change",
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(12.dp)
+                .size(32.dp)
+                .clickable { onRefreshClick() }
+        )
+    }
 }
 
 /**

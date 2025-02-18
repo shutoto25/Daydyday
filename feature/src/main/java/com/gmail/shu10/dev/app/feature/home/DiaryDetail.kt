@@ -3,6 +3,7 @@ package com.gmail.shu10.dev.app.feature.home
 import android.content.Context
 import android.net.Uri
 import android.provider.ContactsContract.Contacts.Photo
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -74,44 +75,25 @@ fun DiaryDetailRoute(
     var tempDiary by remember { mutableStateOf(viewModel.selectedDiary) }
 
     DisposableEffect(Unit) {
-        onDispose {
-            isLoading = false
-        }
+        onDispose { isLoading = false }
     }
 
-    // 画像/動画選択
-    val phonePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia()
-    ) { mediaUri ->
-        // tempDiaryがnullの場合、ここで早期リターンする
-        val diary = tempDiary ?: return@rememberLauncherForActivityResult
 
-        mediaUri?.let { uri ->
-            val mimeType = context.contentResolver.getType(uri) ?: return@let
+    // メディア選択ロジック（画像・動画の選択後の処理）
+    val phonePickerLauncher = rememberPhonePickerLauncher(
+        context = context,
+        viewModel = viewModel,
+        navHostController = navHostController,
+        getCurrentDiary = { tempDiary },
+        onDiaryUpdated = { updatedDiary -> tempDiary = updatedDiary },
+        setLoading = { isLoading = it }
+    )
 
-            when {
-                mimeType.startsWith("image") -> {
-                    val file = viewModel.savePhotoToAppDir(context, uri, diary.date)
-                    val newPhotoUri = file?.toContentUri(context)?.let {
-                        "$it?ts=${System.currentTimeMillis()}" // キャッシュバスティング
-                    }
-                    tempDiary = diary.copy(photoPath = newPhotoUri)
-                }
-
-                mimeType.startsWith("video") -> {
-                    isLoading = true
-                    val file = viewModel.saveVideoToAppDir(context, uri, diary.date)
-                    tempDiary = diary.copy(videoPath = file?.toContentUri(context).toString())
-                    navHostController.navigate(
-                        AppScreen.VideoEditor(Json.encodeToString(tempDiary)).createRoute()
-                    )
-                }
-
-                else -> {}
-            }
-        }
-    }
     tempDiary?.let {
+//        BackHandler {
+//            onBack(it, viewModel)
+//        }
+
         DiaryDetailScreen(
             context = context,
             tempDiary = it,
@@ -132,8 +114,92 @@ fun DiaryDetailRoute(
     }
 }
 
+private fun onBack(
+    diary: Diary,
+    viewModel: SharedDiaryViewModel
+) {
+    val saveData = diary.copy(uuid = diary.uuid.ifEmpty {
+        UUID.randomUUID().toString() /* 初回保存時 */
+    })
+    viewModel.saveDiaryToLocal(saveData)
+}
+
+/**
+ * PhonePickerLauncherを生成するComposable
+ * 内部で選択されたメディアのMIMEタイプに応じた処理をhandleMediaSelection()に委譲
+ */
 @Composable
-fun DiaryDetailScreen(
+private fun rememberPhonePickerLauncher(
+    context: Context,
+    viewModel: SharedDiaryViewModel,
+    navHostController: NavHostController,
+    getCurrentDiary: () -> Diary?,
+    onDiaryUpdated: (Diary) -> Unit,
+    setLoading: (Boolean) -> Unit,
+) = rememberLauncherForActivityResult(
+    contract = ActivityResultContracts.PickVisualMedia()
+) { mediaUri ->
+    // 現在の一時日記が null なら早期リターン
+    val diary = getCurrentDiary() ?: return@rememberLauncherForActivityResult
+
+    mediaUri?.let { uri ->
+        handleMediaSelection(
+            context = context,
+            uri = uri,
+            diary = diary,
+            viewModel = viewModel,
+            navHostController = navHostController,
+            onDiaryUpdated = onDiaryUpdated,
+            setLoading = setLoading
+        )
+    }
+}
+
+/**
+ * 選択されたメディアのMIMEタイプに応じた処理を実行
+ */
+private fun handleMediaSelection(
+    context: Context,
+    uri: Uri,
+    diary: Diary,
+    viewModel: SharedDiaryViewModel,
+    navHostController: NavHostController,
+    onDiaryUpdated: (Diary) -> Unit,
+    setLoading: (Boolean) -> Unit,
+) {
+    val mimeType = context.contentResolver.getType(uri) ?: return
+    when {
+        mimeType.startsWith("image") -> {
+            val file = viewModel.savePhotoToAppDir(context, uri, diary.date)
+            // キャッシュバスティング用にクエリパラメータを追加
+            val newPhotoUri = file?.toContentUri(context)?.let {
+                "$it?ts=${System.currentTimeMillis()}"
+            }
+            onDiaryUpdated(diary.copy(photoPath = newPhotoUri))
+        }
+
+        mimeType.startsWith("video") -> {
+            setLoading(true)
+            val file = viewModel.saveVideoToAppDir(context, uri, diary.date)
+            val newVideoUri = file?.toContentUri(context)?.let {
+                "$it?ts=${System.currentTimeMillis()}"
+            }
+            onDiaryUpdated(diary.copy(videoPath = newVideoUri))
+            navHostController.navigate(
+                AppScreen.VideoEditor(
+                    Json.encodeToString(diary.copy(videoPath = newVideoUri))
+                ).createRoute()
+            )
+        }
+
+        else -> {
+            // 必要なら他のメディアタイプへの処理を追加
+        }
+    }
+}
+
+@Composable
+private fun DiaryDetailScreen(
     context: Context,
     tempDiary: Diary,
     onClickAddPhotoOrVideo: () -> Unit,
@@ -182,7 +248,7 @@ fun DiaryDetailScreen(
  * 日付タイトル
  */
 @Composable
-fun DateTitle(date: String) {
+private fun DateTitle(date: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -203,7 +269,7 @@ fun DateTitle(date: String) {
  * メディア表示
  */
 @Composable
-fun MediaContentArea(
+private fun MediaContentArea(
     context: Context,
     diary: Diary,
     onClickAddPhotoOrVideo: () -> Unit,
@@ -235,7 +301,7 @@ fun MediaContentArea(
 }
 
 @Composable
-fun MediaPreView(
+private fun MediaPreView(
     content: @Composable () -> Unit,
     onClickAddLocation: () -> Unit,
 ) {
@@ -248,7 +314,7 @@ fun MediaPreView(
  * @param onClickAddPhotoOrVideo 写真/動画追加ボタンクリックコールバック
  */
 @Composable
-fun NoMediaView(onClickAddPhotoOrVideo: () -> Unit) {
+private fun NoMediaView(onClickAddPhotoOrVideo: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -272,7 +338,7 @@ fun NoMediaView(onClickAddPhotoOrVideo: () -> Unit) {
  * @param onClickAddLocation 位置情報追加ボタンクリックコールバック
  */
 @Composable
-fun LocationSetting(onClickAddLocation: () -> Unit) {
+private fun LocationSetting(onClickAddLocation: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -296,7 +362,7 @@ fun LocationSetting(onClickAddLocation: () -> Unit) {
  * @param uri 写真URI
  */
 @Composable
-fun PhotoImage(uri: Uri, onRefreshClick: () -> Unit) {
+private fun PhotoImage(uri: Uri, onRefreshClick: () -> Unit) {
     Box {
         AsyncImage(
             model = uri,
@@ -323,7 +389,7 @@ fun PhotoImage(uri: Uri, onRefreshClick: () -> Unit) {
  * @param uri 動画URI
  */
 @Composable
-fun VideoPlayer(context: Context, uri: Uri) {
+private fun VideoPlayer(context: Context, uri: Uri) {
     val expPlayer = remember {
         ExoPlayer.Builder(context).build().apply {
             setMediaItem(MediaItem.fromUri(uri))
@@ -346,7 +412,7 @@ fun VideoPlayer(context: Context, uri: Uri) {
  * 内容入力欄
  */
 @Composable
-fun DiaryContentInput(
+private fun DiaryContentInput(
     modifier: Modifier,
     diary: Diary,
     onContentChange: (String) -> Unit,
@@ -365,7 +431,7 @@ fun DiaryContentInput(
  * 保存ボタン
  */
 @Composable
-fun DiarySaveButton(onSave: () -> Unit) {
+private fun DiarySaveButton(onSave: () -> Unit) {
     Button(
         onClick = onSave,
         modifier = Modifier.fillMaxWidth()
@@ -376,7 +442,7 @@ fun DiarySaveButton(onSave: () -> Unit) {
 
 @Preview(showBackground = true)
 @Composable
-fun DateDetailViewPreview() {
+private fun DateDetailViewPreview() {
     DaydydayTheme {
 
         Column(

@@ -117,6 +117,7 @@ fun HomeRoute(
                 message = (uiState as HomeUiState.Error).message,
                 onReload = { viewModel.syncDiaryList() }
             )
+
             is HomeUiState.Success -> {
                 val successState = uiState as HomeUiState.Success
                 HomeScreen(
@@ -146,7 +147,7 @@ fun HomeRoute(
  * ドロワー
  */
 @Composable
-fun DrawerContent() {
+private fun DrawerContent() {
     Column(
         modifier = Modifier
             .fillMaxHeight()
@@ -175,7 +176,7 @@ fun DrawerContent() {
  * @param description 説明
  */
 @Composable
-fun DrawerContentItem(text: String, icon: ImageVector, description: String) {
+private fun DrawerContentItem(text: String, icon: ImageVector, description: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -192,7 +193,7 @@ fun DrawerContentItem(text: String, icon: ImageVector, description: String) {
  * ローディング画面
  */
 @Composable
-fun LoadingScreen() {
+private fun LoadingScreen() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         CircularProgressIndicator(modifier = Modifier.size(64.dp))
     }
@@ -204,7 +205,7 @@ fun LoadingScreen() {
  * @param onReload リロード処理
  */
 @Composable
-fun ErrorScreen(
+private fun ErrorScreen(
     message: String,
     onReload: () -> Unit,
 ) {
@@ -229,7 +230,7 @@ fun ErrorScreen(
  * @param onDateClick 日付クリック時の処理
  */
 @Composable
-fun HomeScreen(
+private fun HomeScreen(
     diaryList: List<Diary>,
     gridState: LazyGridState,
     isFabVisible: Boolean,
@@ -265,7 +266,7 @@ fun HomeScreen(
  * ボトムナビゲーションバー
  */
 @Composable
-fun BottomNavigationBar(onPlayClick: () -> Unit) {
+private fun BottomNavigationBar(onPlayClick: () -> Unit) {
     BottomAppBar(
         modifier = Modifier.fillMaxWidth(),
         actions = {
@@ -286,7 +287,7 @@ fun BottomNavigationBar(onPlayClick: () -> Unit) {
  * @param onClick FABクリック時の処理
  */
 @Composable
-fun DateFloatingActionButton(
+private fun DateFloatingActionButton(
     isFabVisible: Boolean,
     icon: ImageVector,
     onClick: () -> Unit,
@@ -316,7 +317,7 @@ fun DateFloatingActionButton(
  * @param modifier Modifier
  */
 @Composable
-fun DateGrid(
+private fun DateGrid(
     diaryList: List<Diary>,
     gridState: LazyGridState,
     onDateClick: (Diary) -> Unit,
@@ -342,7 +343,7 @@ fun DateGrid(
  * @param onClickItem アイテムクリック時の処理
  */
 @Composable
-fun DateGridItem(diary: Diary, onClickItem: () -> Unit) {
+private fun DateGridItem(diary: Diary, onClickItem: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -378,7 +379,7 @@ fun DateGridItem(diary: Diary, onClickItem: () -> Unit) {
     }
 }
 
-fun getVideoThumbnail(context: Context, videoUri: Uri): Bitmap? {
+private fun getVideoThumbnail(context: Context, videoUri: Uri): Bitmap? {
     val retriever = MediaMetadataRetriever()
     return try {
         retriever.setDataSource(context, videoUri)
@@ -415,7 +416,7 @@ private fun updateDiaryFromBackStack(
 
 @Preview(showBackground = true)
 @Composable
-fun InfiniteDateListPreview() {
+private fun InfiniteDateListPreview() {
     DaydydayTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),

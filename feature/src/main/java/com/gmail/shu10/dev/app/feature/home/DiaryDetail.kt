@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -77,7 +78,6 @@ fun DiaryDetailRoute(
     DisposableEffect(Unit) {
         onDispose { isLoading = false }
     }
-
 
     // メディア選択ロジック（画像・動画の選択後の処理）
     val phonePickerLauncher = rememberPhonePickerLauncher(

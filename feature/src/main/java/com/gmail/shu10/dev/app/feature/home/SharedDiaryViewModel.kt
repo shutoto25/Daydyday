@@ -12,8 +12,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gmail.shu10.dev.app.domain.Diary
+import com.gmail.shu10.dev.app.domain.GetConfigUseCase
 import com.gmail.shu10.dev.app.domain.GetDiaryUseCase
 import com.gmail.shu10.dev.app.domain.SaveDiaryUseCase
+import com.gmail.shu10.dev.app.domain.SetConfigUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,16 +34,20 @@ import javax.inject.Inject
 class SharedDiaryViewModel @Inject constructor(
     private val getDiaryUseCase: GetDiaryUseCase,
     private val saveDiaryUseCase: SaveDiaryUseCase,
+    private val setConfigUseCase: SetConfigUseCase,
+    private val getConfigUseCase: GetConfigUseCase,
 ) : ViewModel() {
     private val _diaryList = MutableStateFlow(generateDateList())
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
+
     /**
      * UI state
      */
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     private var _selectedDiary: Diary? = null
+
     /**
      * 選択中の日記
      */
@@ -138,6 +144,24 @@ class SharedDiaryViewModel @Inject constructor(
     }
 
     /**
+     * メディアタイプを設定
+     * @param mediaType MediaType
+     */
+    fun setMediaType(mediaType: MediaType) {
+        setConfigUseCase.setMediaType(mediaType.name)
+    }
+
+    /**
+     * メディアタイプを取得
+     * @return MediaType(初回起動時はnull)
+     */
+    fun getMediaType(): MediaType? {
+        val mediaTypeStr = getConfigUseCase.getMediaType()
+        Log.d("TEST", "getMediaType() called $mediaTypeStr")
+        return if (mediaTypeStr.isBlank()) null else MediaType.valueOf(mediaTypeStr)
+    }
+
+    /**
      * 写真保存
      * @param context Context
      * @param uri Uri
@@ -209,4 +233,10 @@ sealed class HomeUiState {
     ) : HomeUiState()
 
     data class Error(val message: String) : HomeUiState()
+}
+
+enum class MediaType {
+    PHOTO,
+    VIDEO,
+    PHOTO_AND_VIDEO // 現状使えないが使える様になったら課金対象にする
 }

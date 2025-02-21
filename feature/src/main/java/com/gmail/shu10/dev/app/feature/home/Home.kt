@@ -1,15 +1,10 @@
 package com.gmail.shu10.dev.app.feature.home
 
-import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import androidx.activity.compose.LocalActivity
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -35,29 +30,27 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.FabPosition
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -139,7 +132,7 @@ fun HomeRoute(
                     gridState = gridState,
                     isFabVisible = successState.isFabVisible,
                     fabIcon = successState.fabIcon,
-                    onFabClick = {
+                    onTodayClick = {
                         coroutineScope.launch {
                             gridState.animateScrollToItem(index = 365)
                         }
@@ -148,7 +141,8 @@ fun HomeRoute(
                         viewModel.selectedDiary = diary
                         navController.navigate(AppScreen.DiaryDetail.route)
                     },
-                    onPlayClick = {
+                    onFabClick
+                    = {
                         navController.navigate(AppScreen.PlayBackRoute.route)
                     }
                 )
@@ -157,6 +151,10 @@ fun HomeRoute(
     }
 }
 
+/**
+ * メディアタイプ選択ダイアログ
+ * @param onMediaTypeSelected メディアタイプ選択時の処理
+ */
 @Composable
 private fun MediaTypeSelection(
     onMediaTypeSelected: (MediaType) -> Unit,
@@ -280,84 +278,56 @@ private fun ErrorScreen(
  * @param onFabClick FABクリック時の処理
  * @param onDateClick 日付クリック時の処理
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HomeScreen(
     diaryList: List<Diary>,
     gridState: LazyGridState,
     isFabVisible: Boolean,
     fabIcon: ImageVector,
-    onFabClick: () -> Unit,
+    onTodayClick: () -> Unit,
     onDateClick: (Diary) -> Unit,
-    onPlayClick: () -> Unit,
+    onFabClick: () -> Unit,
 ) {
-    Scaffold(
-        bottomBar = { BottomNavigationBar(onPlayClick) },
-        floatingActionButton = {
-            DateFloatingActionButton(
-                isFabVisible = isFabVisible,
-                icon = fabIcon,
-                onClick = onFabClick
+    // ボトムシート表示の状態管理
+    val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
+        bottomSheetState = rememberStandardBottomSheetState()
+    )
+    BottomSheetScaffold(
+        scaffoldState = bottomSheetScaffoldState,
+        sheetContent = {
+            Text(
+                text = "Bottom Sheet Content",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.clickable { onTodayClick() }
             )
         },
-        floatingActionButtonPosition = FabPosition.Center,
+        // peekHeight: シートがCollapsed状態のときに見える高さ
+        sheetPeekHeight = 100.dp,
+        // Optional: シートの形状を指定（例: MaterialTheme.shapes.medium）
+        sheetShape = MaterialTheme.shapes.medium,
         content = { innerPadding ->
-            DateGrid(
-                diaryList = diaryList,
-                gridState = gridState,
-                onDateClick = onDateClick,
-                Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            )
-        }
-    )
-}
-
-/**
- * ボトムナビゲーションバー
- */
-@Composable
-private fun BottomNavigationBar(onPlayClick: () -> Unit) {
-    BottomAppBar(
-        modifier = Modifier.fillMaxWidth(),
-        actions = {
-            IconButton(onClick = { onPlayClick() }) {
-                Icon(Icons.Default.PlayArrow, contentDescription = "再生")
-            }
-            IconButton(onClick = {}) {
-                Icon(Icons.Default.Add, contentDescription = "追加")
+            Box(modifier = Modifier.fillMaxSize()) {
+                DateGrid(
+                    diaryList = diaryList,
+                    gridState = gridState,
+                    onDateClick = onDateClick,
+                    Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                )
+                FloatingActionButton(
+                    onClick = { onFabClick() },
+                    modifier = Modifier.align(Alignment.TopStart)
+                ) {
+                    Icon(
+                        imageVector = fabIcon,
+                        contentDescription = ""
+                    )
+                }
             }
         }
     )
-}
-
-/**
- * FABアイコン
- * @param isFabVisible FAB表示フラグ
- * @param icon FABアイコン
- * @param onClick FABクリック時の処理
- */
-@Composable
-private fun DateFloatingActionButton(
-    isFabVisible: Boolean,
-    icon: ImageVector,
-    onClick: () -> Unit,
-) {
-    AnimatedVisibility(
-        visible = isFabVisible,
-        enter = fadeIn(animationSpec = tween(durationMillis = 500)),
-        exit = fadeOut(animationSpec = tween(durationMillis = 500))
-    ) {
-        FloatingActionButton(
-            shape = RoundedCornerShape(50),
-            onClick = { onClick() }
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = "scroll to today's position"
-            )
-        }
-    }
 }
 
 /**
@@ -473,8 +443,6 @@ private fun InfiniteDateListPreview() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-//            DateGridItem(Diary(date = "2025-01-01"), onClickItem = {})
-//            DrawerContent()
             LoadingScreen()
         }
     }

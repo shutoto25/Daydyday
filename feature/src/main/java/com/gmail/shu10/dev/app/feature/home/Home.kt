@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -68,7 +69,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -291,24 +295,31 @@ private fun HomeScreen(
     onDateClick: (Diary) -> Unit,
     onFabClick: () -> Unit,
 ) {
-    // ボトムシート表示の状態管理
-    val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
-        bottomSheetState = rememberStandardBottomSheetState(skipHiddenState = true)
-    )
-
+    val sheetMaxHeight = LocalConfiguration.current.screenHeightDp.dp * 0.7f
+    val sheetSeekHeight = LocalConfiguration.current.screenHeightDp.dp * 0.15f
     BottomSheetScaffold(
-        scaffoldState = bottomSheetScaffoldState,
+        sheetPeekHeight = sheetSeekHeight,
+        sheetShape = MaterialTheme.shapes.medium,
         sheetContent = {
-            Column(modifier = Modifier.fillMaxHeight().fillMaxWidth()) {
-                Text(
-                    text = "Bottom Sheet Content",
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.clickable { onTodayClick() }
-                )
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .height(sheetMaxHeight)) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    // 常に表示されるコンテンツ
+                    Text(
+                        text = "Bottom Sheet Top",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(sheetSeekHeight)
+                            .clickable { onTodayClick() }
+                    )
+                    // 折りたたみ部分のコンテンツ
+                    Text(
+                        text = "Content"
+                    )
+                }
             }
         },
-        sheetPeekHeight = 120.dp,
-        sheetShape = MaterialTheme.shapes.medium,
         content = { innerPadding ->
             Box(modifier = Modifier.fillMaxSize()) {
                 DateGrid(

@@ -45,7 +45,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheetDefaults
 import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
@@ -291,20 +293,21 @@ private fun HomeScreen(
 ) {
     // ボトムシート表示の状態管理
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
-        bottomSheetState = rememberStandardBottomSheetState()
+        bottomSheetState = rememberStandardBottomSheetState(skipHiddenState = true)
     )
+
     BottomSheetScaffold(
         scaffoldState = bottomSheetScaffoldState,
         sheetContent = {
-            Text(
-                text = "Bottom Sheet Content",
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.clickable { onTodayClick() }
-            )
+            Column(modifier = Modifier.fillMaxHeight().fillMaxWidth()) {
+                Text(
+                    text = "Bottom Sheet Content",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.clickable { onTodayClick() }
+                )
+            }
         },
-        // peekHeight: シートがCollapsed状態のときに見える高さ
-        sheetPeekHeight = 100.dp,
-        // Optional: シートの形状を指定（例: MaterialTheme.shapes.medium）
+        sheetPeekHeight = 120.dp,
         sheetShape = MaterialTheme.shapes.medium,
         content = { innerPadding ->
             Box(modifier = Modifier.fillMaxSize()) {

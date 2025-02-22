@@ -76,30 +76,11 @@ class SharedDiaryViewModel @Inject constructor(
                     }
                     _uiState.value = HomeUiState.Success(
                         diaryList = _diaryList.value,
-                        isFabVisible = false,
                         fabIcon = Icons.Default.KeyboardArrowDown,
                     )
                 }
             } catch (e: Exception) {
                 _uiState.value = HomeUiState.Error(e.message ?: "UnKnown Error")
-            }
-        }
-    }
-
-    /**
-     * FABの表示状態を更新
-     * @param gridPosition グリッド位置
-     */
-    fun updateFabState(gridPosition: Int) {
-        _uiState.update { currentState ->
-            if (currentState is HomeUiState.Success) {
-                val isFabVisible = gridPosition !in 360..365
-                val newFabIcon =
-                    if (gridPosition <= 365) Icons.Default.KeyboardArrowDown
-                    else Icons.Default.KeyboardArrowUp
-                currentState.copy(isFabVisible = isFabVisible, fabIcon = newFabIcon)
-            } else {
-                currentState
             }
         }
     }
@@ -228,7 +209,6 @@ sealed class HomeUiState {
 
     data class Success(
         val diaryList: List<Diary>,
-        val isFabVisible: Boolean,
         val fabIcon: ImageVector,
     ) : HomeUiState()
 

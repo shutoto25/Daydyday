@@ -5,6 +5,10 @@ import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import androidx.activity.compose.LocalActivity
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -46,30 +50,27 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheetDefaults
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberDrawerState
-import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -106,11 +107,7 @@ fun HomeRoute(
     // リスト初期位置は今日
     val gridState = rememberLazyGridState(initialFirstVisibleItemIndex = 365)
 
-    LaunchedEffect(remember { derivedStateOf { gridState.firstVisibleItemIndex } }) {
-        viewModel.updateFabState(gridState.firstVisibleItemIndex)
-    }
-
-    updateDiaryFromBackStack(navController, viewModel)
+//    updateDiaryFromBackStack(navController, viewModel)
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -136,7 +133,6 @@ fun HomeRoute(
                 HomeScreen(
                     diaryList = successState.diaryList,
                     gridState = gridState,
-                    isFabVisible = successState.isFabVisible,
                     fabIcon = successState.fabIcon,
                     onTodayClick = {
                         coroutineScope.launch {
@@ -279,7 +275,6 @@ private fun ErrorScreen(
  * ホーム画面コンテンツ
  * @param diaryList 日記リスト
  * @param gridState LazyGridState
- * @param isFabVisible FAB表示フラグ
  * @param fabIcon FABアイコン
  * @param onFabClick FABクリック時の処理
  * @param onDateClick 日付クリック時の処理
@@ -289,59 +284,92 @@ private fun ErrorScreen(
 private fun HomeScreen(
     diaryList: List<Diary>,
     gridState: LazyGridState,
-    isFabVisible: Boolean,
     fabIcon: ImageVector,
     onTodayClick: () -> Unit,
     onDateClick: (Diary) -> Unit,
     onFabClick: () -> Unit,
 ) {
-    val sheetMaxHeight = LocalConfiguration.current.screenHeightDp.dp * 0.7f
-    val sheetSeekHeight = LocalConfiguration.current.screenHeightDp.dp * 0.15f
-    BottomSheetScaffold(
-        sheetPeekHeight = sheetSeekHeight,
-        sheetShape = MaterialTheme.shapes.medium,
-        sheetContent = {
-            Column(modifier = Modifier
-                .fillMaxWidth()
-                .height(sheetMaxHeight)) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    // 常に表示されるコンテンツ
-                    Text(
-                        text = "Bottom Sheet Top",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(sheetSeekHeight)
-                            .clickable { onTodayClick() }
-                    )
-                    // 折りたたみ部分のコンテンツ
-                    Text(
-                        text = "Content"
+    val sheetState = rememberBottomSheetScaffoldState()
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val sheetMaxHeight = screenHeight * 0.7f
+    val sheetSeekHeight = screenHeight * 0.2f
+    val density = LocalDensity.current
+
+    // 現在のシートオフセット（dp）を保持する状態
+    var currentSheetOffsetDp by remember { mutableStateOf(sheetSeekHeight) }
+    // FABのpaddingBottomを計算
+    val fabPaddingBottom = screenHeight - currentSheetOffsetDp
+    LaunchedEffect(sheetState.bottomSheetState) {
+        snapshotFlow {
+            try {
+                sheetState.bottomSheetState.requireOffset()
+            } catch (e: IllegalStateException) {
+                // 初回はオフセットが初期化されていない可能性があるため
+                with(density) { sheetSeekHeight.toPx() }
+            }
+        }.collect { currentSheetOffsetDp = with(density) { it.toDp() } }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        BottomSheetScaffold(
+            scaffoldState = sheetState,
+            sheetPeekHeight = sheetSeekHeight,
+            sheetShape = MaterialTheme.shapes.medium,
+            sheetContent = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(sheetMaxHeight)
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        // 常に表示されるコンテンツ
+                        Text(
+                            text = "Bottom Sheet Top",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(sheetSeekHeight)
+                                .clickable { onTodayClick() }
+                        )
+                        // 折りたたみ部分のコンテンツ
+                        Text(
+                            text = "Content"
+                        )
+                    }
+                }
+            },
+            content = { innerPadding ->
+                Box(modifier = Modifier.fillMaxSize()) {
+                    DateGrid(
+                        diaryList = diaryList,
+                        gridState = gridState,
+                        onDateClick = onDateClick,
+                        Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding)
                     )
                 }
             }
-        },
-        content = { innerPadding ->
+        )
+        AnimatedVisibility(
+            visible = sheetState.bottomSheetState.targetValue == SheetValue.PartiallyExpanded,
+            enter = fadeIn(animationSpec = tween(durationMillis = 500)),
+            exit = fadeOut(animationSpec = tween(durationMillis = 500))
+        ) {
             Box(modifier = Modifier.fillMaxSize()) {
-                DateGrid(
-                    diaryList = diaryList,
-                    gridState = gridState,
-                    onDateClick = onDateClick,
-                    Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                )
                 FloatingActionButton(
                     onClick = { onFabClick() },
-                    modifier = Modifier.align(Alignment.TopStart)
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(bottom = 8.dp + fabPaddingBottom, end = 8.dp)
                 ) {
                     Icon(
                         imageVector = fabIcon,
-                        contentDescription = ""
+                        contentDescription = "FAB"
                     )
                 }
             }
         }
-    )
+    }
 }
 
 /**

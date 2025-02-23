@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -53,6 +54,7 @@ import coil.compose.AsyncImage
 import com.gmail.shu10.dev.app.core.utils.convertDateFormat
 import com.gmail.shu10.dev.app.core.utils.getDayOfWeek
 import com.gmail.shu10.dev.app.domain.Diary
+import com.gmail.shu10.dev.app.feature.R
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 import com.gmail.shu10.dev.app.feature.utils.toContentUri
 import kotlinx.serialization.encodeToString
@@ -120,7 +122,7 @@ fun DiaryDetailRoute(
 
 private fun onBack(
     diary: Diary,
-    viewModel: SharedDiaryViewModel
+    viewModel: SharedDiaryViewModel,
 ) {
     val saveData = diary.copy(uuid = diary.uuid.ifEmpty {
         UUID.randomUUID().toString() /* 初回保存時 */
@@ -287,33 +289,29 @@ private fun MediaContentArea(
     onClickAddPhotoOrVideo: () -> Unit,
     onClickAddLocation: () -> Unit,
 ) {
-    with(sharedTransitionScope) {
-        when {
-            diary.photoPath != null -> {
-                MediaPreView({
-                    PhotoImage(
-                        diary.photoPath!!.toUri(),
-                        Modifier.sharedElement(
-                            state = rememberSharedContentState(diary.date),
-                            animatedVisibilityScope = animatedVisibilityScope
-                        ),
-                        onClickAddPhotoOrVideo
-                    )
-                }) { onClickAddLocation() }
-            }
+    when {
+        diary.photoPath != null -> {
+            MediaPreView({
+                PhotoImage(
+                    diary,
+                    sharedTransitionScope,
+                    animatedVisibilityScope,
+                    onClickAddPhotoOrVideo
+                )
+            }) { onClickAddLocation() }
+        }
 
-            diary.trimmedVideoPath != null -> {
-                MediaPreView({
-                    VideoPlayer(
-                        context,
-                        diary.trimmedVideoPath!!.toUri()
-                    )
-                }) { onClickAddLocation() }
-            }
+        diary.trimmedVideoPath != null -> {
+            MediaPreView({
+                VideoPlayer(
+                    context,
+                    diary.trimmedVideoPath!!.toUri()
+                )
+            }) { onClickAddLocation() }
+        }
 
-            else -> {
-                NoMediaView(onClickAddPhotoOrVideo)
-            }
+        else -> {
+            NoMediaView(onClickAddPhotoOrVideo)
         }
     }
 }
@@ -377,31 +375,37 @@ private fun LocationSetting(onClickAddLocation: () -> Unit) {
 
 /**
  * 写真プレビュー
- * @param uri 写真URI
  */
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun PhotoImage(
-    uri: Uri,
-    modifier: Modifier,
-    onRefreshClick: () -> Unit
+    diary: Diary,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
+    onRefreshClick: () -> Unit,
 ) {
-    Box {
-        AsyncImage(
-            model = uri,
-            contentDescription = "dairy's photo",
-            modifier = modifier
-                .fillMaxWidth()
-                .height(200.dp)
-        )
-        Icon(
-            imageVector = Icons.Default.Refresh,
-            contentDescription = "change",
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(12.dp)
-                .size(32.dp)
-                .clickable { onRefreshClick() }
-        )
+    with(sharedTransitionScope) {
+        Box {
+            AsyncImage(
+                model = diary.photoPath!!.toString(),
+                contentDescription = "dairy's photo",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .sharedElement( // TODO 初回読み込みが間に合っていないのか遷移時に下から出てきてしまうような動作になる
+                        state = rememberSharedContentState(diary.date),
+                        animatedVisibilityScope = animatedVisibilityScope
+                    ),
+            )
+            Icon(
+                imageVector = Icons.Default.Refresh,
+                contentDescription = "change",
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(12.dp)
+                    .size(40.dp)
+                    .clickable { onRefreshClick() }
+            )
+        }
     }
 }
 

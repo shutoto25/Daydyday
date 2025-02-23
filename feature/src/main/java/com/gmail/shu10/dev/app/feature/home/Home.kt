@@ -38,6 +38,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Info
@@ -84,18 +85,18 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.gmail.shu10.dev.app.core.utils.convertDateFormat
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
 
 /**
  * ホーム画面(日付リスト)
  * @param navController NavController
+ * @param sharedTransitionScope SharedTransitionScope
+ * @param animatedVisibilityScope AnimatedVisibilityScope
  * @param navBackStackEntry NavBackStackEntry
  * @param viewModel SharedDiaryViewModel
  */
@@ -109,12 +110,9 @@ fun HomeRoute(
     viewModel: SharedDiaryViewModel = hiltViewModel(navBackStackEntry),
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val coroutineScope = rememberCoroutineScope()
+    val gridState = rememberLazyGridState(initialFirstVisibleItemIndex = 365) // 初期位置:今日
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    // リスト初期位置は今日
-    val gridState = rememberLazyGridState(initialFirstVisibleItemIndex = 365)
-
-//    updateDiaryFromBackStack(navController, viewModel)
+    val coroutineScope = rememberCoroutineScope()
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -126,21 +124,17 @@ fun HomeRoute(
                 message = (uiState as HomeUiState.Error).message,
                 onReload = { viewModel.syncDiaryList() }
             )
-
             is HomeUiState.Success -> {
-
                 if (viewModel.getMediaType() == null) {
                     // 初回起動時にメディアタイプを選択
                     MediaTypeSelection { mediaType ->
                         viewModel.setMediaType(mediaType)
                     }
                 }
-
                 val successState = uiState as HomeUiState.Success
                 HomeScreen(
                     diaryList = successState.diaryList,
                     gridState = gridState,
-                    fabIcon = successState.fabIcon,
                     sharedTransitionScope = sharedTransitionScope,
                     animatedVisibilityScope = animatedVisibilityScope,
                     onTodayClick = {
@@ -284,7 +278,6 @@ private fun ErrorScreen(
  * ホーム画面コンテンツ
  * @param diaryList 日記リスト
  * @param gridState LazyGridState
- * @param fabIcon FABアイコン
  * @param onFabClick FABクリック時の処理
  * @param onDateClick 日付クリック時の処理
  */
@@ -293,7 +286,6 @@ private fun ErrorScreen(
 private fun HomeScreen(
     diaryList: List<Diary>,
     gridState: LazyGridState,
-    fabIcon: ImageVector,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
     onTodayClick: () -> Unit,
@@ -376,7 +368,7 @@ private fun HomeScreen(
                         .padding(bottom = 8.dp + fabPaddingBottom, end = 8.dp)
                 ) {
                     Icon(
-                        imageVector = fabIcon,
+                        imageVector = Icons.Default.Add,
                         contentDescription = "FAB"
                     )
                 }
@@ -482,28 +474,6 @@ private fun getVideoThumbnail(context: Context, videoUri: Uri): Bitmap? {
     } finally {
         retriever.release()
     }
-}
-
-/**
- * 日記詳細画面から戻ってきた際に日記データを更新
- * ＠param navController NavController
- * ＠param viewModel HomeViewModel
- */
-private fun updateDiaryFromBackStack(
-    navController: NavController,
-    viewModel: SharedDiaryViewModel,
-) {
-    val updateDairyJson = navController.currentBackStackEntry
-        ?.savedStateHandle
-        ?.get<String>("updateDiary")
-
-    updateDairyJson?.let {
-        val updateDairy = Json.decodeFromString<Diary>(it)
-//        viewModel.updateDiaryList(updateDairy)
-    }
-    navController.currentBackStackEntry
-        ?.savedStateHandle
-        ?.remove<String>("updateDiary")
 }
 
 @Preview(showBackground = true)

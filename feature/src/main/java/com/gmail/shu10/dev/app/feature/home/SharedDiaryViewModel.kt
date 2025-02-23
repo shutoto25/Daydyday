@@ -74,10 +74,7 @@ class SharedDiaryViewModel @Inject constructor(
                             diaries.find { it.date == diary.date } ?: diary
                         }
                     }
-                    _uiState.value = HomeUiState.Success(
-                        diaryList = _diaryList.value,
-                        fabIcon = Icons.Default.KeyboardArrowDown,
-                    )
+                    _uiState.value = HomeUiState.Success(diaryList = _diaryList.value)
                 }
             } catch (e: Exception) {
                 _uiState.value = HomeUiState.Error(e.message ?: "UnKnown Error")
@@ -95,10 +92,8 @@ class SharedDiaryViewModel @Inject constructor(
         // 過去1年分の日付を生成（365日）
         val pastDates =
             (1..365).map { today.minusDays(it.toLong()).format(formatter) }.reversed()
-
         // 未来1年分の日付を生成（365日）
         val futureDates = (1..365).map { today.plusDays(it.toLong()).format(formatter) }
-
         // 今日の日付を中央に配置してリストを統合
         val dataListString = pastDates + today.format(formatter) + futureDates
 
@@ -209,7 +204,6 @@ sealed class HomeUiState {
 
     data class Success(
         val diaryList: List<Diary>,
-        val fabIcon: ImageVector,
     ) : HomeUiState()
 
     data class Error(val message: String) : HomeUiState()

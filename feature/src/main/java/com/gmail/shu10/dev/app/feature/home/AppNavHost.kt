@@ -2,6 +2,8 @@ package com.gmail.shu10.dev.app.feature.home
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -20,10 +22,11 @@ import kotlinx.serialization.json.Json
  * @param intent Intent
  * @param viewModel SharedDiaryViewModel
  */
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun AppNavHost(
     intent: MutableState<Intent?>,
-    viewModel: SharedDiaryViewModel = hiltViewModel()
+    viewModel: SharedDiaryViewModel = hiltViewModel(),
 ) {
     val navController = rememberNavController()
 
@@ -40,33 +43,48 @@ fun AppNavHost(
         }
     }
 
-    NavHost(
-        navController = navController,
-        startDestination = "mainGraph"
-    ) {
-        navigation(startDestination = AppScreen.Home.route, route = "mainGraph") {
-            // ホーム画面
-            composable(AppScreen.Home.route) { navBackStackEntry ->
-                // コンストラクタのViewModelと同じViewModelStoreOwner(Activity scope)を使って
-                // ViewModelを取得するため同じインスタンスのViewModelが取得できる
-                val parentEntry = remember(navBackStackEntry) {
-                    navController.getBackStackEntry("mainGraph")
+    SharedTransitionLayout {
+        NavHost(
+            navController = navController,
+            startDestination = "mainGraph"
+        ) {
+            navigation(startDestination = AppScreen.Home.route, route = "mainGraph") {
+                // ホーム画面
+                composable(AppScreen.Home.route) { navBackStackEntry ->
+                    // コンストラクタのViewModelと同じViewModelStoreOwner(Activity scope)を使って
+                    // ViewModelを取得するため同じインスタンスのViewModelが取得できる
+                    val parentEntry = remember(navBackStackEntry) {
+                        navController.getBackStackEntry("mainGraph")
+                    }
+                    HomeRoute(
+                        navController = navController,
+                        sharedTransitionScope = this@SharedTransitionLayout,
+                        animatedVisibilityScope = this@composable,
+                        navBackStackEntry = parentEntry
+                    )
                 }
-                HomeRoute(navController, parentEntry)
-            }
-            // 日付詳細画面
-            composable(AppScreen.DiaryDetail.route) { navBackStackEntry ->
-                val parentEntry = remember(navBackStackEntry) {
-                    navController.getBackStackEntry("mainGraph")
+                // 日付詳細画面
+                composable(AppScreen.DiaryDetail.route) { navBackStackEntry ->
+                    val parentEntry = remember(navBackStackEntry) {
+                        navController.getBackStackEntry("mainGraph")
+                    }
+                    DiaryDetailRoute(
+                        navController = navController,
+                        sharedTransitionScope = this@SharedTransitionLayout,
+                        animatedVisibilityScope = this@composable,
+                        navBackStackEntry = parentEntry
+                    )
                 }
-                DiaryDetailRoute(navController, parentEntry)
+                // 動画編集画面
+                composable(AppScreen.VideoEditor("{diaryJson}").route) { navBackStackEntry ->
+                    VideoEditorRoute(
+                        navController,
+                        getDiaryFromNavBackStackEntry(navBackStackEntry)
+                    )
+                }
+                // 再生画面
+                composable(AppScreen.PlayBackRoute.route) { PlayBackRoute(navController) }
             }
-            // 動画編集画面
-            composable(AppScreen.VideoEditor("{diaryJson}").route) { navBackStackEntry ->
-                VideoEditorRoute(navController, getDiaryFromNavBackStackEntry(navBackStackEntry))
-            }
-            // 再生画面
-            composable(AppScreen.PlayBackRoute.route) { PlayBackRoute(navController) }
         }
     }
 }

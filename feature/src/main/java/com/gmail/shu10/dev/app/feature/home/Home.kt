@@ -6,6 +6,9 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -82,6 +85,7 @@ import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.gmail.shu10.dev.app.core.utils.convertDateFormat
 import com.gmail.shu10.dev.app.domain.Diary
@@ -95,9 +99,12 @@ import kotlinx.serialization.json.Json
  * @param navBackStackEntry NavBackStackEntry
  * @param viewModel SharedDiaryViewModel
  */
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun HomeRoute(
-    navController: NavController,
+    navController: NavHostController,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     navBackStackEntry: NavBackStackEntry,
     viewModel: SharedDiaryViewModel = hiltViewModel(navBackStackEntry),
 ) {
@@ -134,6 +141,8 @@ fun HomeRoute(
                     diaryList = successState.diaryList,
                     gridState = gridState,
                     fabIcon = successState.fabIcon,
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedVisibilityScope = animatedVisibilityScope,
                     onTodayClick = {
                         coroutineScope.launch {
                             gridState.animateScrollToItem(index = 365)
@@ -279,12 +288,14 @@ private fun ErrorScreen(
  * @param onFabClick FABクリック時の処理
  * @param onDateClick 日付クリック時の処理
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 private fun HomeScreen(
     diaryList: List<Diary>,
     gridState: LazyGridState,
     fabIcon: ImageVector,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     onTodayClick: () -> Unit,
     onDateClick: (Diary) -> Unit,
     onFabClick: () -> Unit,
@@ -343,6 +354,8 @@ private fun HomeScreen(
                         diaryList = diaryList,
                         gridState = gridState,
                         onDateClick = onDateClick,
+                        sharedTransitionScope = sharedTransitionScope,
+                        animatedVisibilityScope = animatedVisibilityScope,
                         Modifier
                             .fillMaxSize()
                             .padding(innerPadding)
@@ -379,23 +392,34 @@ private fun HomeScreen(
  * @param onDateClick 日付クリック時の処理
  * @param modifier Modifier
  */
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun DateGrid(
     diaryList: List<Diary>,
     gridState: LazyGridState,
     onDateClick: (Diary) -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     modifier: Modifier = Modifier,
 ) {
-    LazyVerticalGrid(
-        state = gridState,
-        columns = GridCells.Fixed(3),
-        modifier = modifier,
-        contentPadding = PaddingValues(4.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        items(diaryList) { diary ->
-            DateGridItem(diary) { onDateClick(diary) }
+    with(sharedTransitionScope) {
+        LazyVerticalGrid(
+            state = gridState,
+            columns = GridCells.Fixed(3),
+            modifier = modifier,
+            contentPadding = PaddingValues(4.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            items(diaryList) { diary ->
+                DateGridItem(
+                    diary,
+                    Modifier.sharedElement(
+                        state = rememberSharedContentState(diary.date),
+                        animatedVisibilityScope = animatedVisibilityScope
+                    )
+                ) { onDateClick(diary) }
+            }
         }
     }
 }
@@ -406,7 +430,11 @@ private fun DateGrid(
  * @param onClickItem アイテムクリック時の処理
  */
 @Composable
-private fun DateGridItem(diary: Diary, onClickItem: () -> Unit) {
+private fun DateGridItem(
+    diary: Diary,
+    modifier: Modifier,
+    onClickItem: () -> Unit,
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -429,6 +457,7 @@ private fun DateGridItem(diary: Diary, onClickItem: () -> Unit) {
             }
         } else if (diary.photoPath != null) {
             AsyncImage(
+                modifier = modifier,
                 model = diary.photoPath!!.toUri(),
                 contentDescription = "dairy's photo",
                 contentScale = ContentScale.Crop

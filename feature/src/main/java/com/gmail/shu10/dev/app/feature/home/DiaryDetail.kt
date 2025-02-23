@@ -2,12 +2,12 @@ package com.gmail.shu10.dev.app.feature.home
 
 import android.content.Context
 import android.net.Uri
-import android.provider.ContactsContract.Contacts.Photo
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,7 +24,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -63,9 +62,12 @@ import java.util.UUID
 /**
  * 日記詳細画面
  */
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun DiaryDetailRoute(
-    navHostController: NavHostController,
+    navController: NavHostController,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     navBackStackEntry: NavBackStackEntry,
     viewModel: SharedDiaryViewModel = hiltViewModel(navBackStackEntry),
 ) {
@@ -83,7 +85,7 @@ fun DiaryDetailRoute(
     val phonePickerLauncher = rememberPhonePickerLauncher(
         context = context,
         viewModel = viewModel,
-        navHostController = navHostController,
+        navHostController = navController,
         getCurrentDiary = { tempDiary },
         onDiaryUpdated = { updatedDiary -> tempDiary = updatedDiary },
         setLoading = { isLoading = it }
@@ -97,6 +99,8 @@ fun DiaryDetailRoute(
         DiaryDetailScreen(
             context = context,
             tempDiary = it,
+            sharedTransitionScope = sharedTransitionScope,
+            animatedVisibilityScope = animatedVisibilityScope,
             onClickAddPhotoOrVideo = {
                 phonePickerLauncher.launch(
                     PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
@@ -108,7 +112,7 @@ fun DiaryDetailRoute(
                     UUID.randomUUID().toString() /* 初回保存時 */
                 })
                 viewModel.saveDiaryToLocal(saveData)
-                navHostController.popBackStack()
+                navController.popBackStack()
             }
         )
     }
@@ -198,10 +202,13 @@ private fun handleMediaSelection(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun DiaryDetailScreen(
     context: Context,
     tempDiary: Diary,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     onClickAddPhotoOrVideo: () -> Unit,
     onClickAddLocation: () -> Unit,
     onSave: () -> Unit,
@@ -229,6 +236,8 @@ private fun DiaryDetailScreen(
         MediaContentArea(
             context = context,
             diary = tempDiary,
+            sharedTransitionScope = sharedTransitionScope,
+            animatedVisibilityScope = animatedVisibilityScope,
             onClickAddPhotoOrVideo = { onClickAddPhotoOrVideo() },
             onClickAddLocation = { onClickAddLocation() }
         )
@@ -268,34 +277,43 @@ private fun DateTitle(date: String) {
 /**
  * メディア表示
  */
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun MediaContentArea(
     context: Context,
     diary: Diary,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     onClickAddPhotoOrVideo: () -> Unit,
     onClickAddLocation: () -> Unit,
 ) {
-    when {
-        diary.photoPath != null -> {
-            MediaPreView({
-                PhotoImage(
-                    diary.photoPath!!.toUri(),
-                    onClickAddPhotoOrVideo
-                )
-            }) { onClickAddLocation() }
-        }
+    with(sharedTransitionScope) {
+        when {
+            diary.photoPath != null -> {
+                MediaPreView({
+                    PhotoImage(
+                        diary.photoPath!!.toUri(),
+                        Modifier.sharedElement(
+                            state = rememberSharedContentState(diary.date),
+                            animatedVisibilityScope = animatedVisibilityScope
+                        ),
+                        onClickAddPhotoOrVideo
+                    )
+                }) { onClickAddLocation() }
+            }
 
-        diary.trimmedVideoPath != null -> {
-            MediaPreView({
-                VideoPlayer(
-                    context,
-                    diary.trimmedVideoPath!!.toUri()
-                )
-            }) { onClickAddLocation() }
-        }
+            diary.trimmedVideoPath != null -> {
+                MediaPreView({
+                    VideoPlayer(
+                        context,
+                        diary.trimmedVideoPath!!.toUri()
+                    )
+                }) { onClickAddLocation() }
+            }
 
-        else -> {
-            NoMediaView(onClickAddPhotoOrVideo)
+            else -> {
+                NoMediaView(onClickAddPhotoOrVideo)
+            }
         }
     }
 }
@@ -362,12 +380,16 @@ private fun LocationSetting(onClickAddLocation: () -> Unit) {
  * @param uri 写真URI
  */
 @Composable
-private fun PhotoImage(uri: Uri, onRefreshClick: () -> Unit) {
+private fun PhotoImage(
+    uri: Uri,
+    modifier: Modifier,
+    onRefreshClick: () -> Unit
+) {
     Box {
         AsyncImage(
             model = uri,
             contentDescription = "dairy's photo",
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth()
                 .height(200.dp)
         )

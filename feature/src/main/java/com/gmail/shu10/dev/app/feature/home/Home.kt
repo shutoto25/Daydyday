@@ -87,6 +87,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.gmail.shu10.dev.app.core.utils.convertDateFormat
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
@@ -449,8 +450,13 @@ private fun DateGridItem(
             }
         } else if (diary.photoPath != null) {
             AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(diary.photoPath)
+                    .crossfade(true)
+                    .placeholderMemoryCacheKey(diary.date)
+                    .memoryCacheKey(diary.date)
+                    .build(),
                 modifier = modifier,
-                model = diary.photoPath!!.toUri(),
                 contentDescription = "dairy's photo",
                 contentScale = ContentScale.Crop
             )

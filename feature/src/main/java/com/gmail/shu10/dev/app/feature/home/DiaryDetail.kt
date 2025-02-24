@@ -39,7 +39,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -51,10 +50,10 @@ import androidx.media3.ui.PlayerView
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.gmail.shu10.dev.app.core.utils.convertDateFormat
 import com.gmail.shu10.dev.app.core.utils.getDayOfWeek
 import com.gmail.shu10.dev.app.domain.Diary
-import com.gmail.shu10.dev.app.feature.R
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 import com.gmail.shu10.dev.app.feature.utils.toContentUri
 import kotlinx.serialization.encodeToString
@@ -387,11 +386,16 @@ private fun PhotoImage(
     with(sharedTransitionScope) {
         Box {
             AsyncImage(
-                model = diary.photoPath!!.toString(),
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(diary.photoPath)
+                    .crossfade(true)
+                    .placeholderMemoryCacheKey(diary.date)
+                    .memoryCacheKey(diary.date)
+                    .build(),
                 contentDescription = "dairy's photo",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .sharedElement( // TODO 初回読み込みが間に合っていないのか遷移時に下から出てきてしまうような動作になる
+                    .sharedElement(
                         state = rememberSharedContentState(diary.date),
                         animatedVisibilityScope = animatedVisibilityScope
                     ),

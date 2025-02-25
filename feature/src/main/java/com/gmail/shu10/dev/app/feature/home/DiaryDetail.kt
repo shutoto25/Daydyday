@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
@@ -96,26 +98,30 @@ fun DiaryDetailRoute(
 //        BackHandler {
 //            onBack(it, viewModel)
 //        }
-
-        DiaryDetailScreen(
-            context = context,
-            tempDiary = it,
-            sharedTransitionScope = sharedTransitionScope,
-            animatedVisibilityScope = animatedVisibilityScope,
-            onClickAddPhotoOrVideo = {
-                phonePickerLauncher.launch(
-                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
-                )
-            },
-            onClickAddLocation = { /* TODO: 位置情報設定画面へ遷移 */ },
-            onSave = {
-                val saveData = it.copy(uuid = it.uuid.ifEmpty {
-                    UUID.randomUUID().toString() /* 初回保存時 */
-                })
-                viewModel.saveDiaryToLocal(saveData)
-                navController.popBackStack()
-            }
-        )
+        HorizontalPager(
+            state = rememberPagerState {365},
+            modifier = Modifier.fillMaxSize()
+        ) { page ->
+            DiaryDetailScreen(
+                context = context,
+                tempDiary = it,
+                sharedTransitionScope = sharedTransitionScope,
+                animatedVisibilityScope = animatedVisibilityScope,
+                onClickAddPhotoOrVideo = {
+                    phonePickerLauncher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
+                    )
+                },
+                onClickAddLocation = { /* TODO: 位置情報設定画面へ遷移 */ },
+                onSave = {
+                    val saveData = it.copy(uuid = it.uuid.ifEmpty {
+                        UUID.randomUUID().toString() /* 初回保存時 */
+                    })
+                    viewModel.saveDiaryToLocal(saveData)
+                    navController.popBackStack()
+                }
+            )
+        }
     }
 }
 

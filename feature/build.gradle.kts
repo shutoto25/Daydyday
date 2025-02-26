@@ -71,6 +71,7 @@ dependencies {
     // ----- google ----- //
     implementation(libs.dagger.hilt.android)
     kapt(libs.dagger.hilt.compiler)
+    implementation(libs.maps.compose)
 
     // ----- jetbrains ----- //
     implementation(libs.kotlinx.serialization.json)

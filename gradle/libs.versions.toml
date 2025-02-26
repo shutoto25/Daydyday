@@ -37,6 +37,7 @@ androidx-test-ext-junit = "1.2.1"
 espresso-core = "3.6.1"
 junit = "4.13.2"
 ## ------ google ------ ##
+mapsCompose = "6.4.4"
 firebase-bom = "33.9.0"
 ## ------ jetbrains ------ ##
 kotlinx-serialization-json = "1.6.0"
@@ -94,6 +95,7 @@ junit = { module = "junit:junit", version.ref = "junit" }
 ## ------ google ------ ##
 dagger-hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "dagger-hilt" }
 dagger-hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "dagger-hilt" }
+maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "mapsCompose" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-analytics-ktx = { module = "com.google.firebase:firebase-analytics-ktx" }
 firebase-messaging-ktx = { module = "com.google.firebase:firebase-messaging-ktx" }

@@ -47,6 +47,7 @@ dependencies {
 
     // ----- androidx ----- //
     implementation(libs.core.ktx)
+    implementation(libs.runtime.livedata)
     kapt(libs.hilt.compiler)
     implementation(libs.hilt.work)
     implementation(libs.work)

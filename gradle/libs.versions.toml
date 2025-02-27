@@ -21,6 +21,7 @@ dagger-hilt = "2.49"
 # ------ libraries version ------ #
 ## ------ androidx ------ ##
 core-ktx = "1.15.0"
+runtimeLivedata = "1.7.8"
 work-ktx = "2.10.0"
 hilt-work = "1.2.0"
 hilt-compiler = "1.2.0"
@@ -61,6 +62,7 @@ dagger-hilt = { id = "com.google.dagger.hilt.android", version.ref = "dagger-hil
 [libraries]
 ## ------ androidx ------ ##
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "core-ktx" }
+runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "runtimeLivedata" }
 hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hilt-work" }
 hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hilt-compiler" }
 work = { module = "androidx.work:work-runtime-ktx", version.ref = "work-ktx" }

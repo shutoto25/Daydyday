@@ -35,12 +35,8 @@ class SharedDiaryViewModel @Inject constructor(
 ) : ViewModel() {
     private val _diaryList = MutableStateFlow(generateDateList())
 
-    private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
-
-    /**
-     * UI state
-     */
-    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+    private val _homeUiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
+    val homeUiState: StateFlow<HomeUiState> = _homeUiState.asStateFlow()
 
     private var _selectedDiary: Diary? = null
 
@@ -61,7 +57,7 @@ class SharedDiaryViewModel @Inject constructor(
      * 日記リストを同期
      */
     fun syncDiaryList() {
-        _uiState.value = HomeUiState.Loading
+        _homeUiState.value = HomeUiState.Loading
         viewModelScope.launch {
             try {
                 getDiaryUseCase().collect { diaries ->
@@ -70,10 +66,10 @@ class SharedDiaryViewModel @Inject constructor(
                             diaries.find { it.date == diary.date } ?: diary
                         }
                     }
-                    _uiState.value = HomeUiState.Success(diaryList = _diaryList.value)
+                    _homeUiState.value = HomeUiState.Success(diaryList = _diaryList.value)
                 }
             } catch (e: Exception) {
-                _uiState.value = HomeUiState.Error(e.message ?: "UnKnown Error")
+                _homeUiState.value = HomeUiState.Error(e.message ?: "UnKnown Error")
             }
         }
     }
@@ -203,6 +199,12 @@ sealed class HomeUiState {
     ) : HomeUiState()
 
     data class Error(val message: String) : HomeUiState()
+}
+
+sealed class DiaryDetailUiState {
+    object Loading : DiaryDetailUiState()
+    data class Success(val diary: Diary) : DiaryDetailUiState()
+    data class Error(val message: String) : DiaryDetailUiState()
 }
 
 enum class MediaType {

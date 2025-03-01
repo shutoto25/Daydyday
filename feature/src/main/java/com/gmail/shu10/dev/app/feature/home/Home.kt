@@ -110,7 +110,7 @@ fun HomeRoute(
     navBackStackEntry: NavBackStackEntry,
     viewModel: SharedDiaryViewModel = hiltViewModel(navBackStackEntry),
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.homeUiState.collectAsState()
     val gridState = rememberLazyGridState(initialFirstVisibleItemIndex = 365) // 初期位置:今日
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()

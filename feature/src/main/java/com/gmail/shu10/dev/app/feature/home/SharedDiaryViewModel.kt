@@ -190,7 +190,9 @@ class SharedDiaryViewModel @Inject constructor(
     }
 }
 
-
+/**
+ * ホーム画面のUI状態
+ */
 sealed class HomeUiState {
     object Loading : HomeUiState()
 
@@ -201,6 +203,9 @@ sealed class HomeUiState {
     data class Error(val message: String) : HomeUiState()
 }
 
+/**
+ * 日記詳細画面のUI状態
+ */
 sealed class DiaryDetailUiState {
     object Loading : DiaryDetailUiState()
     data class Success(val diary: Diary) : DiaryDetailUiState()

@@ -39,10 +39,6 @@ class SharedDiaryViewModel @Inject constructor(
     val homeUiState: StateFlow<HomeUiState> = _homeUiState.asStateFlow()
 
     private var _selectedDiary: Diary? = null
-
-    /**
-     * 選択中の日記
-     */
     var selectedDiary: Diary?
         get() = _selectedDiary
         set(value) {

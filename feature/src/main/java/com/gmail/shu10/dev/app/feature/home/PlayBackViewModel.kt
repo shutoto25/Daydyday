@@ -23,6 +23,9 @@ class PlayBackViewModel @Inject constructor() : ViewModel() {
     private val _mergedVideoUri = mutableStateOf<Uri?>(null)
     val mergedVideoUri: State<Uri?> get() = _mergedVideoUri
 
+    /**
+     * 1秒間の動画ファイルを連結して、ひとつの動画ファイルとして出力する。
+     */
     fun mergeVideos(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -62,7 +65,6 @@ class PlayBackViewModel @Inject constructor() : ViewModel() {
         if (outputFile.exists()) {
             outputFile.delete()
         }
-
         try {
             // MediaMuxer の初期化（出力形式は MPEG_4）
             val muxer =

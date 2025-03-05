@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.nio.ByteBuffer
 import javax.inject.Inject
+import kotlin.math.min
 
 @HiltViewModel
 class PlayBackViewModel @Inject constructor() : ViewModel() {
@@ -43,55 +44,49 @@ class PlayBackViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-    /**
-     * 指定ディレクトリ内の mp4 ファイルを日付順（ここではファイル名順）に連結し、
-     * ひとつの動画ファイルとして出力する。
-     *
-     * @param context アプリケーションコンテキスト
-     */
     private fun concatenateVideos(context: Context) {
         // 入力ディレクトリ
         val videoDir = File(context.filesDir, "videos/1sec")
         val videoFiles = videoDir.listFiles { file ->
             file.extension.equals("mp4", ignoreCase = true)
-        }?.sortedBy { it.name }  // 日付名（ファイル名）順にソート
-            ?: run {
-                Log.e("VideoConcat", "動画ファイルが見つかりません")
-                return
-            }
+        }?.sortedBy { it.name } ?: run {
+            Log.e("VideoConcat", "動画ファイルが見つかりません")
+            return
+        }
 
         // 出力先ファイル
         val outputFile = File(context.filesDir, "videos/merged.mp4")
         if (outputFile.exists()) {
             outputFile.delete()
         }
-        try {
-            // MediaMuxer の初期化（出力形式は MPEG_4）
-            val muxer =
-                MediaMuxer(outputFile.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
 
-            // 各動画ファイルのトラック情報は同一である前提
+        try {
+            // MediaMuxer の初期化
+            val muxer = MediaMuxer(outputFile.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+
             var muxerTrackIndex = -1
             var muxerStarted = false
-            // 各ファイルのタイムスタンプを連結するためのオフセット（マイクロ秒単位）
             var timeOffsetUs: Long = 0
 
-            // バッファ（サンプルデータ格納用）
-            val bufferSize = 1024 * 1024  // 1MB ほど（動画によっては大きくする必要がある場合も）
+            // 各ファイルの固定長さ )
+            val fixedDurationUs = 1_000_000L
+
+            // バッファ
+            val bufferSize = 5 * 1024 * 1024
             val buffer = ByteBuffer.allocate(bufferSize)
             val bufferInfo = MediaCodec.BufferInfo()
 
-            // 1秒間に相当するフレーム数（例：30fpsなら30フレーム）
-            val framesPerSecond = 30
-            val defaultDurationUs = 1_000_000L // 1秒（マイクロ秒）
-
             // 各動画ファイルについて
-            for (videoFile in videoFiles) {
-                Log.d("VideoConcat", "処理開始: ${videoFile.absolutePath}")
+            for (videoFileIndex in videoFiles.indices) {
+                val videoFile = videoFiles[videoFileIndex]
+                val isLastFile = videoFileIndex == videoFiles.size - 1
+
+                Log.d("VideoConcat", "処理開始: ${videoFile.absolutePath}, ファイル ${videoFileIndex + 1}/${videoFiles.size}")
+
                 val extractor = MediaExtractor()
                 extractor.setDataSource(videoFile.absolutePath)
 
-                // 対象となる動画トラックを探す（動画のみを対象）
+                // トラック検索
                 var videoTrackIndex = -1
                 for (i in 0 until extractor.trackCount) {
                     val format = extractor.getTrackFormat(i)
@@ -101,6 +96,7 @@ class PlayBackViewModel @Inject constructor() : ViewModel() {
                         break
                     }
                 }
+
                 if (videoTrackIndex < 0) {
                     Log.e("VideoConcat", "動画トラックが見つかりません: ${videoFile.name}")
                     extractor.release()
@@ -110,59 +106,89 @@ class PlayBackViewModel @Inject constructor() : ViewModel() {
                 extractor.selectTrack(videoTrackIndex)
                 val trackFormat = extractor.getTrackFormat(videoTrackIndex)
 
-                // 最初のファイルの場合は muxer にトラックを追加して開始する
+                // 初回のみMuxer開始
                 if (!muxerStarted) {
                     muxerTrackIndex = muxer.addTrack(trackFormat)
                     muxer.start()
                     muxerStarted = true
                 }
 
-                // ファイル内の最後のサンプルタイムを記録する変数
-                var lastSampleTimeUs = 0L
+                // ファイル内の最初のサンプルタイムを記録（正規化用）
+                var firstSampleTimeUs = -1L
+                var lastWrittenTimeUs = -1L  // 前回書き込みタイムスタンプ
 
-                // 動画ファイル内のサンプルを読み出し、muxer に書き込む
+                // この動画ファイル用の個別オフセット
+                val fileStartTimeUs = timeOffsetUs
+
+                // 動画ファイル内のサンプルを処理
                 while (true) {
                     bufferInfo.offset = 0
                     bufferInfo.size = extractor.readSampleData(buffer, 0)
+
                     if (bufferInfo.size < 0) {
-                        // ファイル終端
-                        break
+                        break  // ファイル終端
                     }
+
                     val sampleTime = extractor.sampleTime
-                    lastSampleTimeUs = sampleTime  // 最後の有効なサンプルタイムを記録
 
-                    // presentationTimeUs にオフセットを加算
-                    bufferInfo.presentationTimeUs = sampleTime + timeOffsetUs
+                    // 最初のサンプルタイムを記録
+                    if (firstSampleTimeUs < 0) {
+                        firstSampleTimeUs = sampleTime
+                    }
 
-                    // extractor.sampleFlags から MediaCodec 用のフラグに変換する
+                    // 相対的なサンプルタイム（ファイル内で正規化）
+                    val normalizedSampleTime = sampleTime - firstSampleTimeUs
+
+                    // 現在のファイルの相対位置を制限する（最後のファイル以外）
+                    if (!isLastFile && normalizedSampleTime > fixedDurationUs) {
+                        Log.d("VideoConcat", "ファイル ${videoFile.name} の固定長さ ${fixedDurationUs}us を超えるフレームをスキップ")
+                        extractor.advance()
+                        continue
+                    }
+
+                    // presentationTimeとして設定するタイムスタンプ
+                    bufferInfo.presentationTimeUs = fileStartTimeUs + normalizedSampleTime
+
+                    // 前回のタイムスタンプより小さい場合は修正（念のため）
+                    if (lastWrittenTimeUs >= 0 && bufferInfo.presentationTimeUs <= lastWrittenTimeUs) {
+                        bufferInfo.presentationTimeUs = lastWrittenTimeUs + 1000 // 1ms加算
+                    }
+
+                    lastWrittenTimeUs = bufferInfo.presentationTimeUs
+
+                    // フラグ設定
                     val codecFlags = mapExtractorFlagsToCodecFlags(extractor.sampleFlags)
                     bufferInfo.flags = codecFlags
 
+                    // Muxerに書き込み
                     muxer.writeSampleData(muxerTrackIndex, buffer, bufferInfo)
                     extractor.advance()
                 }
 
-                // ファイル終了後のオフセット更新
-                // もし lastSampleTimeUs が 0（＝サンプルタイムが取得できなかった場合）は、デフォルトで 1,000,000 マイクロ秒（1秒）とする
-                val fileDurationUs = if (trackFormat.containsKey(MediaFormat.KEY_DURATION)) {
-                    trackFormat.getLong(MediaFormat.KEY_DURATION)
+                // ファイル間のオフセット更新
+                // 最後のファイル以外は固定長を使用
+                timeOffsetUs += if (isLastFile) {
+                    // 最後のファイルは実際の長さを使用（最大でも固定長+10%まで）
+                    val actualDuration = if (lastWrittenTimeUs > fileStartTimeUs)
+                        (lastWrittenTimeUs - fileStartTimeUs) else fixedDurationUs
+
+                    min(actualDuration, (fixedDurationUs * 1.1).toLong())
                 } else {
-                    if (lastSampleTimeUs > 0) lastSampleTimeUs else 1_000_000L
+                    fixedDurationUs
                 }
-                timeOffsetUs += fileDurationUs
 
                 extractor.release()
-                Log.d("VideoConcat", "処理完了: ${videoFile.name}")
+                Log.d("VideoConcat", "処理完了: ${videoFile.name}, タイムオフセット: ${timeOffsetUs}us")
             }
 
             // 終了処理
             muxer.stop()
             muxer.release()
 
-            Log.d("VideoConcat", "連結完了: ${outputFile.absolutePath}")
-
+            Log.d("VideoConcat", "連結完了: ${outputFile.absolutePath}, 総時間: ${timeOffsetUs}us")
         } catch (e: Exception) {
             Log.e("VideoConcat", "動画連結中にエラー発生", e)
+            e.printStackTrace()
         }
     }
     // ．，：：：：：：：：：：：：：：：：：：：：：：」＿＿＿＿＿＿＿＿＿＿「lっっっっっっっっっっっっっっk」＠
@@ -179,9 +205,6 @@ class PlayBackViewModel @Inject constructor() : ViewModel() {
         if ((extractorFlags and MediaExtractor.SAMPLE_FLAG_PARTIAL_FRAME) != 0) {
             codecFlags = codecFlags or MediaCodec.BUFFER_FLAG_PARTIAL_FRAME
         }
-        // ※ SAMPLE_FLAG_ENCRYPTED については、用途に合わせた対応が必要です
-        // ここでは特にマッピングしない例とします。
-
         return codecFlags
     }
 }

@@ -56,10 +56,10 @@ fun AppNavHost(
                     val parentEntry = remember(navBackStackEntry) {
                         navController.getBackStackEntry("mainGraph")
                     }
-                    HomeRoute(
+                    HomeScreen(
                         navController = navController,
                         sharedTransitionScope = this@SharedTransitionLayout,
-                        animatedVisibilityScope = this@composable,
+                        animatedVisibilityScope = this,
                         navBackStackEntry = parentEntry
                     )
                 }

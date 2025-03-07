@@ -93,6 +93,14 @@ import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 import kotlinx.coroutines.launch
 
+/*
+　画面構成方針
+　Screen：画面 viewmodelのアクセスはここのみ
+　Content：スクリーン直下
+　Section：画面幅いっぱいの要素
+　Component：セクションより小さな要素
+ */
+
 /**
  * ホーム画面(日付リスト)
  * @param navController NavController
@@ -103,7 +111,7 @@ import kotlinx.coroutines.launch
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun HomeRoute(
+fun HomeScreen(
     navController: NavHostController,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,

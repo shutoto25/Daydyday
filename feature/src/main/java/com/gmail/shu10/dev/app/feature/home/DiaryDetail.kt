@@ -34,7 +34,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -73,6 +75,9 @@ fun DiaryDetailSection(
     navBackStackEntry: NavBackStackEntry,
     viewModel: SharedDiaryViewModel = hiltViewModel(navBackStackEntry),
 ) {
+    /**
+     * 画詳細画面のUIスタータス
+     */
     val uiState by viewModel.detailUiState.collectAsState()
 
     DetailContent(
@@ -81,7 +86,7 @@ fun DiaryDetailSection(
         navController = navController,
         sharedTransitionScope = sharedTransitionScope,
         animatedVisibilityScope = animatedVisibilityScope,
-        onDiaryUpdated = { diary -> viewModel.updateDiaryListItem(diary) }
+        onDiaryUpdated = { index, diary -> viewModel.updateDiaryListItem(index, diary) }
     )
 }
 
@@ -93,7 +98,7 @@ fun DetailContent(
     navController: NavHostController,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
-    onDiaryUpdated: (Diary) -> Unit,
+    onDiaryUpdated: (Int, Diary) -> Unit,
 ) {
     when (uiState) {
         is DiaryDetailUiState.Loading -> {
@@ -107,16 +112,20 @@ fun DetailContent(
                 modifier = Modifier.fillMaxSize()
             ) { page ->
                 successState.diaryList[page].let { diary ->
+                    var selectedDiary by remember { mutableStateOf(diary) }
                     // メディア選択ロジック（画像・動画の選択後の処理）
                     val phonePickerLauncher = rememberPhonePickerLauncher(
-                        selectedDiary = diary,
+                        selectedDiary = selectedDiary,
                         viewModel = viewModel,
                         navHostController = navController,
-                        onDiaryUpdated = { updatedDiary -> onDiaryUpdated(updatedDiary) }
+                        onDiaryUpdated = { updatedDiary ->
+                            selectedDiary = updatedDiary
+                            onDiaryUpdated(page, updatedDiary)
+                        }
                     )
 
                     DiaryDetailSection(
-                        tempDiary = diary,
+                        tempDiary = selectedDiary,
                         sharedTransitionScope = sharedTransitionScope,
                         animatedVisibilityScope = animatedVisibilityScope,
                         onClickAddPhotoOrVideo = {
@@ -125,13 +134,6 @@ fun DetailContent(
                             )
                         },
                         onClickAddLocation = { /* TODO: 位置情報設定画面へ遷移 */ },
-                        onSave = {
-                            val saveData = diary.copy(uuid = diary.uuid.ifEmpty {
-                                UUID.randomUUID().toString() /* 初回保存時 */
-                            })
-                            viewModel.saveDiaryToLocal(saveData)
-                            navController.popBackStack()
-                        }
                     )
                 }
             }
@@ -218,7 +220,6 @@ private fun DiaryDetailSection(
     animatedVisibilityScope: AnimatedVisibilityScope,
     onClickAddPhotoOrVideo: () -> Unit,
     onClickAddLocation: () -> Unit,
-    onSave: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -239,8 +240,6 @@ private fun DiaryDetailSection(
             diary = tempDiary,
             onContentChange = { /* あとで */ }
         )
-        Spacer(modifier = Modifier.height(16.dp))
-        DiarySaveButton(onSave = { onSave() })
     }
 
 }
@@ -442,19 +441,6 @@ private fun DiaryContentInput(
         maxLines = Int.MAX_VALUE,
         singleLine = false
     )
-}
-
-/**
- * 保存ボタン
- */
-@Composable
-private fun DiarySaveButton(onSave: () -> Unit) {
-    Button(
-        onClick = onSave,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Text("保存")
-    }
 }
 
 @Preview(showBackground = true)

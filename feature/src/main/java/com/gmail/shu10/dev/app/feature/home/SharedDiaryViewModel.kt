@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 import javax.inject.Inject
 
 /**
@@ -53,12 +54,18 @@ class SharedDiaryViewModel @Inject constructor(
         )
     }
 
-    fun updateDiaryListItem(updatedDiary: Diary) {
-        _diaryList.update { currentList ->
-            currentList.map { diary ->
-                if (diary.date == updatedDiary.date) updatedDiary else diary
-            }
-        }
+    fun updateDiaryListItem(index: Int, updatedDiary: Diary) {
+        val saveData = updatedDiary.copy(uuid = updatedDiary.uuid.ifEmpty {
+            UUID.randomUUID().toString() /* 初回保存時 */
+        })
+        saveDiaryToLocal(saveData)
+
+        // 更新のタイミングが早すぎて反映が間に合っていないので更新タイミング変えないと
+        _detailUiState.value = DiaryDetailUiState.Success(
+            diaryList = _diaryList.value,
+            index = index,
+            diary = saveData,
+        )
     }
 
     /**
@@ -104,7 +111,7 @@ class SharedDiaryViewModel @Inject constructor(
      * 内部DBへ日記を保存
      * @param diary 日記
      */
-    fun saveDiaryToLocal(diary: Diary) {
+    private fun saveDiaryToLocal(diary: Diary) {
         viewModelScope.launch {
             saveDiaryUseCase(diary)
         }

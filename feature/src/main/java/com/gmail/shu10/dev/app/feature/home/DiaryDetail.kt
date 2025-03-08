@@ -32,10 +32,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -67,72 +66,81 @@ import java.util.UUID
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun DiaryDetailScreen(
+fun DiaryDetailSection(
     navController: NavHostController,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
     navBackStackEntry: NavBackStackEntry,
     viewModel: SharedDiaryViewModel = hiltViewModel(navBackStackEntry),
 ) {
-    val context = LocalContext.current
+    val uiState by viewModel.detailUiState.collectAsState()
 
-    var isLoading by remember { mutableStateOf(false) }
-    // 状態管理
-    var tempDiary by remember { mutableStateOf(viewModel.selectedDiary) }
-
-    DisposableEffect(Unit) {
-        onDispose { isLoading = false }
-    }
-
-    // メディア選択ロジック（画像・動画の選択後の処理）
-    val phonePickerLauncher = rememberPhonePickerLauncher(
-        context = context,
+    DetailContent(
         viewModel = viewModel,
-        navHostController = navController,
-        getCurrentDiary = { tempDiary },
-        onDiaryUpdated = { updatedDiary -> tempDiary = updatedDiary },
-        setLoading = { isLoading = it }
+        uiState = uiState,
+        navController = navController,
+        sharedTransitionScope = sharedTransitionScope,
+        animatedVisibilityScope = animatedVisibilityScope,
+        onDiaryUpdated = { diary -> viewModel.updateDiaryListItem(diary) }
     )
-
-    tempDiary?.let {
-//        BackHandler {
-//            onBack(it, viewModel)
-//        }
-        HorizontalPager(
-            state = rememberPagerState {365},
-            modifier = Modifier.fillMaxSize()
-        ) { page ->
-            DiaryDetailScreen(
-                context = context,
-                tempDiary = it,
-                sharedTransitionScope = sharedTransitionScope,
-                animatedVisibilityScope = animatedVisibilityScope,
-                onClickAddPhotoOrVideo = {
-                    phonePickerLauncher.launch(
-                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
-                    )
-                },
-                onClickAddLocation = { /* TODO: 位置情報設定画面へ遷移 */ },
-                onSave = {
-                    val saveData = it.copy(uuid = it.uuid.ifEmpty {
-                        UUID.randomUUID().toString() /* 初回保存時 */
-                    })
-                    viewModel.saveDiaryToLocal(saveData)
-                    navController.popBackStack()
-                }
-            )
-        }
-    }
 }
 
-private fun onBack(
-    diary: Diary,
-    viewModel: SharedDiaryViewModel,
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+fun DetailContent(
+    viewModel: SharedDiaryViewModel, // TODO 渡さなくていいように後ほど変更する
+    uiState: DiaryDetailUiState,
+    navController: NavHostController,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
+    onDiaryUpdated: (Diary) -> Unit,
 ) {
-    val saveData = diary.copy(uuid = diary.uuid.ifEmpty {
-        UUID.randomUUID().toString() /* 初回保存時 */
-    })
-    viewModel.saveDiaryToLocal(saveData)
+    when (uiState) {
+        is DiaryDetailUiState.Loading -> {
+            TODO()
+        }
+
+        is DiaryDetailUiState.Success -> {
+            val successState = uiState as DiaryDetailUiState.Success
+            HorizontalPager(
+                state = rememberPagerState(initialPage = successState.index) { successState.diaryList.size },
+                modifier = Modifier.fillMaxSize()
+            ) { page ->
+                successState.diaryList[page].let { diary ->
+                    // メディア選択ロジック（画像・動画の選択後の処理）
+                    val phonePickerLauncher = rememberPhonePickerLauncher(
+                        selectedDiary = diary,
+                        viewModel = viewModel,
+                        navHostController = navController,
+                        onDiaryUpdated = { updatedDiary -> onDiaryUpdated(updatedDiary) }
+                    )
+
+                    DiaryDetailSection(
+                        tempDiary = diary,
+                        sharedTransitionScope = sharedTransitionScope,
+                        animatedVisibilityScope = animatedVisibilityScope,
+                        onClickAddPhotoOrVideo = {
+                            phonePickerLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
+                            )
+                        },
+                        onClickAddLocation = { /* TODO: 位置情報設定画面へ遷移 */ },
+                        onSave = {
+                            val saveData = diary.copy(uuid = diary.uuid.ifEmpty {
+                                UUID.randomUUID().toString() /* 初回保存時 */
+                            })
+                            viewModel.saveDiaryToLocal(saveData)
+                            navController.popBackStack()
+                        }
+                    )
+                }
+            }
+        }
+
+        is DiaryDetailUiState.Error -> {
+            // エラー
+        }
+    }
 }
 
 /**
@@ -141,27 +149,22 @@ private fun onBack(
  */
 @Composable
 private fun rememberPhonePickerLauncher(
-    context: Context,
+    context: Context = LocalContext.current,
+    selectedDiary: Diary,
     viewModel: SharedDiaryViewModel,
     navHostController: NavHostController,
-    getCurrentDiary: () -> Diary?,
     onDiaryUpdated: (Diary) -> Unit,
-    setLoading: (Boolean) -> Unit,
 ) = rememberLauncherForActivityResult(
     contract = ActivityResultContracts.PickVisualMedia()
 ) { mediaUri ->
-    // 現在の一時日記が null なら早期リターン
-    val diary = getCurrentDiary() ?: return@rememberLauncherForActivityResult
-
     mediaUri?.let { uri ->
         handleMediaSelection(
             context = context,
             uri = uri,
-            diary = diary,
+            diary = selectedDiary,
             viewModel = viewModel,
             navHostController = navHostController,
             onDiaryUpdated = onDiaryUpdated,
-            setLoading = setLoading
         )
     }
 }
@@ -176,7 +179,6 @@ private fun handleMediaSelection(
     viewModel: SharedDiaryViewModel,
     navHostController: NavHostController,
     onDiaryUpdated: (Diary) -> Unit,
-    setLoading: (Boolean) -> Unit,
 ) {
     val mimeType = context.contentResolver.getType(uri) ?: return
     when {
@@ -190,7 +192,6 @@ private fun handleMediaSelection(
         }
 
         mimeType.startsWith("video") -> {
-            setLoading(true)
             val file = viewModel.saveVideoToAppDir(context, uri, diary.date)
             val newVideoUri = file?.toContentUri(context)?.let {
                 "$it?ts=${System.currentTimeMillis()}"
@@ -211,8 +212,7 @@ private fun handleMediaSelection(
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-private fun DiaryDetailScreen(
-    context: Context,
+private fun DiaryDetailSection(
     tempDiary: Diary,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
@@ -225,23 +225,8 @@ private fun DiaryDetailScreen(
             .fillMaxSize()
             .padding(8.dp)
     ) {
-        // ローディングインジケーター
-//        if (isLoading) {
-//            Box(
-//                modifier = Modifier
-//                    .fillMaxSize()
-//                    .background(Color.Black.copy(alpha = 0.5f)), // 背景を半透明に
-//                contentAlignment = Alignment.Center
-//            ) {
-//                CircularProgressIndicator(
-//                    modifier = Modifier.width(64.dp),
-//                    color = MaterialTheme.colorScheme.secondary,
-//                    trackColor = MaterialTheme.colorScheme.surfaceVariant)
-//            }
-//        }
-        DateTitle(date = tempDiary.date)
+        DateTitleSection(date = tempDiary.date)
         MediaContentArea(
-            context = context,
             diary = tempDiary,
             sharedTransitionScope = sharedTransitionScope,
             animatedVisibilityScope = animatedVisibilityScope,
@@ -264,7 +249,7 @@ private fun DiaryDetailScreen(
  * 日付タイトル
  */
 @Composable
-private fun DateTitle(date: String) {
+private fun DateTitleSection(date: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -287,7 +272,6 @@ private fun DateTitle(date: String) {
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun MediaContentArea(
-    context: Context,
     diary: Diary,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
@@ -297,7 +281,7 @@ private fun MediaContentArea(
     when {
         diary.photoPath != null -> {
             MediaPreView({
-                PhotoImage(
+                PhotoImageComponent(
                     diary,
                     sharedTransitionScope,
                     animatedVisibilityScope,
@@ -308,15 +292,12 @@ private fun MediaContentArea(
 
         diary.trimmedVideoPath != null -> {
             MediaPreView({
-                VideoPlayer(
-                    context,
-                    diary.trimmedVideoPath!!.toUri()
-                )
+                VideoPreviewComponent(diary.trimmedVideoPath!!.toUri())
             }) { onClickAddLocation() }
         }
 
         else -> {
-            NoMediaView(onClickAddPhotoOrVideo)
+            NoMediaViewComponent(onClickAddPhotoOrVideo)
         }
     }
 }
@@ -335,7 +316,7 @@ private fun MediaPreView(
  * @param onClickAddPhotoOrVideo 写真/動画追加ボタンクリックコールバック
  */
 @Composable
-private fun NoMediaView(onClickAddPhotoOrVideo: () -> Unit) {
+private fun NoMediaViewComponent(onClickAddPhotoOrVideo: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -383,7 +364,7 @@ private fun LocationSetting(onClickAddLocation: () -> Unit) {
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-private fun PhotoImage(
+private fun PhotoImageComponent(
     diary: Diary,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
@@ -421,11 +402,11 @@ private fun PhotoImage(
 
 /**
  * 動画プレビュー
- * @param context Context
  * @param uri 動画URI
  */
 @Composable
-private fun VideoPlayer(context: Context, uri: Uri) {
+private fun VideoPreviewComponent(uri: Uri) {
+    val context = LocalContext.current
     val expPlayer = remember {
         ExoPlayer.Builder(context).build().apply {
             setMediaItem(MediaItem.fromUri(uri))
@@ -486,7 +467,7 @@ private fun DateDetailViewPreview() {
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            DateTitle(date = "2022-01-01")
+            DateTitleSection(date = "2022-01-01")
             LocationSetting {}
         }
     }

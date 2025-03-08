@@ -34,7 +34,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -151,12 +151,11 @@ fun HomeScreen(
                             gridState.animateScrollToItem(index = 365)
                         }
                     },
-                    onDateClick = { diary ->
-                        viewModel.selectedDiary = diary
+                    onDateClick = { index, diary ->
+                        viewModel.selectDiaryEvent(index, diary)
                         navController.navigate(AppScreen.DiaryDetail.route)
                     },
-                    onFabClick
-                    = {
+                    onFabClick = {
                         navController.navigate(AppScreen.PlayBackRoute.route)
                     }
                 )
@@ -298,7 +297,7 @@ private fun HomeScreen(
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
     onTodayClick: () -> Unit,
-    onDateClick: (Diary) -> Unit,
+    onDateClick: (Int, Diary) -> Unit,
     onFabClick: () -> Unit,
 ) {
     val sheetState = rememberBottomSheetScaffoldState()
@@ -398,7 +397,7 @@ private fun HomeScreen(
 private fun DateGrid(
     diaryList: List<Diary>,
     gridState: LazyGridState,
-    onDateClick: (Diary) -> Unit,
+    onDateClick: (Int, Diary) -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
     modifier: Modifier = Modifier,
@@ -412,14 +411,14 @@ private fun DateGrid(
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            items(diaryList) { diary ->
+            itemsIndexed(diaryList) { index, diary ->
                 DateGridItem(
                     diary,
                     Modifier.sharedElement(
                         state = rememberSharedContentState(diary.date),
                         animatedVisibilityScope = animatedVisibilityScope
                     )
-                ) { onDateClick(diary) }
+                ) { onDateClick(index, diary) }
             }
         }
     }

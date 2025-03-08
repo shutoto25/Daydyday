@@ -37,7 +37,7 @@ fun AppNavHost(
             val date = it.getQueryParameter("date")
             if (date != null) {
                 // 日記詳細画面へ遷移
-                viewModel.setTodayDiary()
+//                viewModel.selectedDiary // TODO 今のままだと落ちると思う
                 navController.navigate(AppScreen.DiaryDetail.route)
             }
         }
@@ -68,7 +68,7 @@ fun AppNavHost(
                     val parentEntry = remember(navBackStackEntry) {
                         navController.getBackStackEntry("mainGraph")
                     }
-                    DiaryDetailScreen(
+                    DiaryDetailSection(
                         navController = navController,
                         sharedTransitionScope = this@SharedTransitionLayout,
                         animatedVisibilityScope = this,

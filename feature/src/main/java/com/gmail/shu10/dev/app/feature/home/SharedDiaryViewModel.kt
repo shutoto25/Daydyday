@@ -38,15 +38,27 @@ class SharedDiaryViewModel @Inject constructor(
     private val _homeUiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val homeUiState: StateFlow<HomeUiState> = _homeUiState.asStateFlow()
 
-    private var _selectedDiary: Diary? = null
-    var selectedDiary: Diary?
-        get() = _selectedDiary
-        set(value) {
-            _selectedDiary = value
-        }
+    private val _detailUiState = MutableStateFlow<DiaryDetailUiState>(DiaryDetailUiState.Loading)
+    val detailUiState: StateFlow<DiaryDetailUiState> = _detailUiState.asStateFlow()
 
     init {
         syncDiaryList()
+    }
+
+    fun selectDiaryEvent(index: Int, selectedDiary: Diary) {
+        _detailUiState.value = DiaryDetailUiState.Success(
+            diaryList = _diaryList.value,
+            index = index,
+            diary = selectedDiary,
+        )
+    }
+
+    fun updateDiaryListItem(updatedDiary: Diary) {
+        _diaryList.update { currentList ->
+            currentList.map { diary ->
+                if (diary.date == updatedDiary.date) updatedDiary else diary
+            }
+        }
     }
 
     /**
@@ -95,15 +107,6 @@ class SharedDiaryViewModel @Inject constructor(
     fun saveDiaryToLocal(diary: Diary) {
         viewModelScope.launch {
             saveDiaryUseCase(diary)
-        }
-    }
-
-    /**
-     * 今日の日記を選択
-     */
-    fun setTodayDiary() {
-        _selectedDiary = _diaryList.value.find {
-            it.date == LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         }
     }
 
@@ -204,7 +207,13 @@ sealed class HomeUiState {
  */
 sealed class DiaryDetailUiState {
     object Loading : DiaryDetailUiState()
-    data class Success(val diary: Diary) : DiaryDetailUiState()
+
+    data class Success(
+        val diaryList: List<Diary>,
+        val index: Int,
+        val diary: Diary?,
+    ) : DiaryDetailUiState()
+
     data class Error(val message: String) : DiaryDetailUiState()
 }
 

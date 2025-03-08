@@ -54,18 +54,11 @@ class SharedDiaryViewModel @Inject constructor(
         )
     }
 
-    fun updateDiaryListItem(index: Int, updatedDiary: Diary) {
+    fun updateDiaryListItem(updatedDiary: Diary) {
         val saveData = updatedDiary.copy(uuid = updatedDiary.uuid.ifEmpty {
             UUID.randomUUID().toString() /* 初回保存時 */
         })
         saveDiaryToLocal(saveData)
-
-        // 更新のタイミングが早すぎて反映が間に合っていないので更新タイミング変えないと
-        _detailUiState.value = DiaryDetailUiState.Success(
-            diaryList = _diaryList.value,
-            index = index,
-            diary = saveData,
-        )
     }
 
     /**
@@ -75,6 +68,7 @@ class SharedDiaryViewModel @Inject constructor(
         _homeUiState.value = HomeUiState.Loading
         viewModelScope.launch {
             try {
+                // DBから日記リストを取得し、その後の変更を検知する
                 getDiaryUseCase().collect { diaries ->
                     _diaryList.update { currentList ->
                         currentList.map { diary ->
@@ -82,6 +76,10 @@ class SharedDiaryViewModel @Inject constructor(
                         }
                     }
                     _homeUiState.value = HomeUiState.Success(diaryList = _diaryList.value)
+                    val currentState = _detailUiState.value
+                    if (currentState is DiaryDetailUiState.Success) {
+                        _detailUiState.value = currentState.copy(diaryList = _diaryList.value)
+                    }
                 }
             } catch (e: Exception) {
                 _homeUiState.value = HomeUiState.Error(e.message ?: "UnKnown Error")

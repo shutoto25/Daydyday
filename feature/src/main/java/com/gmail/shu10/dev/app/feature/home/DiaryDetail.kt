@@ -86,7 +86,7 @@ fun DiaryDetailSection(
         navController = navController,
         sharedTransitionScope = sharedTransitionScope,
         animatedVisibilityScope = animatedVisibilityScope,
-        onDiaryUpdated = { index, diary -> viewModel.updateDiaryListItem(index, diary) }
+        onDiaryUpdated = { diary -> viewModel.updateDiaryListItem(diary) }
     )
 }
 
@@ -98,7 +98,7 @@ fun DetailContent(
     navController: NavHostController,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
-    onDiaryUpdated: (Int, Diary) -> Unit,
+    onDiaryUpdated: (Diary) -> Unit,
 ) {
     when (uiState) {
         is DiaryDetailUiState.Loading -> {
@@ -120,7 +120,7 @@ fun DetailContent(
                         navHostController = navController,
                         onDiaryUpdated = { updatedDiary ->
                             selectedDiary = updatedDiary
-                            onDiaryUpdated(page, updatedDiary)
+                            onDiaryUpdated(updatedDiary)
                         }
                     )
 

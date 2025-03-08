@@ -67,7 +67,7 @@ import java.util.UUID
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun DiaryDetailRoute(
+fun DiaryDetailScreen(
     navController: NavHostController,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,

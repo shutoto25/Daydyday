@@ -68,10 +68,10 @@ fun AppNavHost(
                     val parentEntry = remember(navBackStackEntry) {
                         navController.getBackStackEntry("mainGraph")
                     }
-                    DiaryDetailRoute(
+                    DiaryDetailScreen(
                         navController = navController,
                         sharedTransitionScope = this@SharedTransitionLayout,
-                        animatedVisibilityScope = this@composable,
+                        animatedVisibilityScope = this,
                         navBackStackEntry = parentEntry
                     )
                 }

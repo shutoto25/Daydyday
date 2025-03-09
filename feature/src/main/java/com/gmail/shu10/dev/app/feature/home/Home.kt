@@ -46,6 +46,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -88,10 +89,14 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.gmail.shu10.dev.app.core.utils.DateFormatConstants
 import com.gmail.shu10.dev.app.core.utils.convertDateFormat
+import com.gmail.shu10.dev.app.core.utils.getToday
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 /*
 　画面構成方針
@@ -133,6 +138,7 @@ fun HomeScreen(
                 message = (uiState as HomeUiState.Error).message,
                 onReload = { viewModel.syncDiaryList() }
             )
+
             is HomeUiState.Success -> {
                 if (viewModel.getMediaType() == null) {
                     // 初回起動時にメディアタイプを選択
@@ -332,18 +338,21 @@ private fun HomeContent(
                         .fillMaxWidth()
                         .height(sheetMaxHeight)
                 ) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         // 常に表示されるコンテンツ
                         Text(
-                            text = "Bottom Sheet Top",
+                            text = getToday(DateFormatConstants.YYYY_MM_DD_SLASH),
+                            fontSize = 24.sp,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(sheetSeekHeight)
-                                .clickable { onTodayClick() }
+                                .height(sheetSeekHeight - ((22.dp * 2) - 4.dp/*dragHandle分*/))
+                                .clickable { onTodayClick() },
                         )
                         // 折りたたみ部分のコンテンツ
                         Text(
-                            text = "Content"
+                            text = "Content",
                         )
                     }
                 }

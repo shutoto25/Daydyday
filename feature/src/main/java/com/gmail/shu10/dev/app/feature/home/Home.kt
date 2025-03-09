@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -132,6 +131,15 @@ fun HomeScreen(
     )
 }
 
+/**
+ * ホーム画面コンテンツ
+ * @param navController NavController
+ * @param sharedTransitionScope SharedTransitionScope
+ * @param animatedVisibilityScope AnimatedVisibilityScope
+ * @param gridState LazyGridState
+ * @param viewModel SharedDiaryViewModel
+ * @param uiState HomeUiState
+ */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun HomeContent(
@@ -287,10 +295,7 @@ private fun LoadingSection() {
  * @param onReload リロード処理
  */
 @Composable
-private fun ErrorSection(
-    message: String,
-    onReload: () -> Unit,
-) {
+private fun ErrorSection(message: String, onReload: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(text = "エラーが発生しました")
@@ -303,9 +308,11 @@ private fun ErrorSection(
 }
 
 /**
- * ホーム画面コンテンツ
+ * 日記リスト
  * @param diaryList 日記リスト
  * @param gridState LazyGridState
+ * @param sharedTransitionScope SharedTransitionScope
+ * @param animatedVisibilityScope AnimatedVisibilityScope
  * @param onFabClick FABクリック時の処理
  * @param onDateClick 日付クリック時の処理
  */
@@ -378,9 +385,9 @@ private fun ListSection(
                     DateGridSection(
                         diaryList = diaryList,
                         gridState = gridState,
-                        onDateClick = onDateClick,
                         sharedTransitionScope = sharedTransitionScope,
                         animatedVisibilityScope = animatedVisibilityScope,
+                        onDateClick = onDateClick,
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(innerPadding)
@@ -414,6 +421,8 @@ private fun ListSection(
  * 日付リスト
  * @param diaryList 日記リスト
  * @param gridState LazyGridState
+ * @param sharedTransitionScope SharedTransitionScope
+ * @param animatedVisibilityScope AnimatedVisibilityScope
  * @param onDateClick 日付クリック時の処理
  * @param modifier Modifier
  */
@@ -422,9 +431,9 @@ private fun ListSection(
 private fun DateGridSection(
     diaryList: List<Diary>,
     gridState: LazyGridState,
-    onDateClick: (Int, Diary) -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
+    onDateClick: (Int, Diary) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     with(sharedTransitionScope) {
@@ -452,14 +461,11 @@ private fun DateGridSection(
 /**
  * 日付アイテム
  * @param diary 日記
+ * @param modifier Modifier
  * @param onClickItem アイテムクリック時の処理
  */
 @Composable
-private fun DateGridItemComponent(
-    diary: Diary,
-    modifier: Modifier,
-    onClickItem: () -> Unit,
-) {
+private fun DateGridItemComponent(diary: Diary, modifier: Modifier, onClickItem: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()

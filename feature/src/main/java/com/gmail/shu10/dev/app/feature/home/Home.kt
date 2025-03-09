@@ -35,7 +35,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -46,7 +45,6 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -95,8 +93,6 @@ import com.gmail.shu10.dev.app.core.utils.getToday
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 /*
 　画面構成方針
@@ -125,38 +121,53 @@ fun HomeScreen(
     viewModel: SharedDiaryViewModel = hiltViewModel(navBackStackEntry),
 ) {
     val uiState by viewModel.homeUiState.collectAsState()
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val coroutineScope = rememberCoroutineScope()
 
+    HomeContent(
+        navController = navController,
+        sharedTransitionScope = sharedTransitionScope,
+        animatedVisibilityScope = animatedVisibilityScope,
+        gridState = gridState,
+        viewModel = viewModel,
+        uiState = uiState,
+    )
+}
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+private fun HomeContent(
+    navController: NavHostController,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
+    gridState: LazyGridState,
+    viewModel: SharedDiaryViewModel,
+    uiState: HomeUiState,
+) {
     ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = { DrawerContent() }
+        drawerState = rememberDrawerState(initialValue = DrawerValue.Closed),
+        drawerContent = { DrawerSection() }
     ) {
         when (uiState) {
-            is HomeUiState.Loading -> LoadingScreen()
-            is HomeUiState.Error -> ErrorScreen(
+            // ローディング
+            is HomeUiState.Loading -> LoadingSection()
+            // エラー
+            is HomeUiState.Error -> ErrorSection(
                 message = (uiState as HomeUiState.Error).message,
                 onReload = { viewModel.syncDiaryList() }
             )
-
+            // 通常画面
             is HomeUiState.Success -> {
                 if (viewModel.getMediaType() == null) {
                     // 初回起動時にメディアタイプを選択
-                    MediaTypeSelection { mediaType ->
+                    MediaTypeComponent { mediaType ->
                         viewModel.setMediaType(mediaType)
                     }
                 }
                 val successState = uiState as HomeUiState.Success
-                HomeContent(
+                ListSection(
                     diaryList = successState.diaryList,
                     gridState = gridState,
                     sharedTransitionScope = sharedTransitionScope,
                     animatedVisibilityScope = animatedVisibilityScope,
-                    onTodayClick = {
-                        coroutineScope.launch {
-                            gridState.animateScrollToItem(index = 365)
-                        }
-                    },
                     onDateClick = { index, diary ->
                         viewModel.selectDiaryEvent(index, diary)
                         navController.navigate(AppScreen.DiaryDetail.route)
@@ -175,7 +186,7 @@ fun HomeScreen(
  * @param onMediaTypeSelected メディアタイプ選択時の処理
  */
 @Composable
-private fun MediaTypeSelection(
+private fun MediaTypeComponent(
     onMediaTypeSelected: (MediaType) -> Unit,
 ) {
     // 初回起動時にダイアログを表示するかどうかの状態
@@ -215,7 +226,7 @@ private fun MediaTypeSelection(
  * ドロワー
  */
 @Composable
-private fun DrawerContent() {
+private fun DrawerSection() {
     Column(
         modifier = Modifier
             .fillMaxHeight()
@@ -224,16 +235,16 @@ private fun DrawerContent() {
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.Center
     ) {
-        DrawerContentItem(
+        DrawerItemComponent(
             "アカウント(大きめにエリアを取ってトップ位置に表示したい)",
             Icons.Default.Face,
             "アカウント"
         )
-        DrawerContentItem("お知らせ", Icons.Default.Email, "お知らせ")
-        DrawerContentItem("通知", Icons.Default.Notifications, "通知設定")
-        DrawerContentItem("言語", Icons.Default.Settings, "言語設定")
-        DrawerContentItem("ヘルプ", Icons.Default.Star, "ヘルプ")
-        DrawerContentItem("このアプリについて", Icons.Default.Info, "アプリについて")
+        DrawerItemComponent("お知らせ", Icons.Default.Email, "お知らせ")
+        DrawerItemComponent("通知", Icons.Default.Notifications, "通知設定")
+        DrawerItemComponent("言語", Icons.Default.Settings, "言語設定")
+        DrawerItemComponent("ヘルプ", Icons.Default.Star, "ヘルプ")
+        DrawerItemComponent("このアプリについて", Icons.Default.Info, "アプリについて")
     }
 }
 
@@ -244,7 +255,7 @@ private fun DrawerContent() {
  * @param description 説明
  */
 @Composable
-private fun DrawerContentItem(text: String, icon: ImageVector, description: String) {
+private fun DrawerItemComponent(text: String, icon: ImageVector, description: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -261,9 +272,12 @@ private fun DrawerContentItem(text: String, icon: ImageVector, description: Stri
  * ローディング画面
  */
 @Composable
-private fun LoadingScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator(modifier = Modifier.size(64.dp))
+private fun LoadingSection() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        CircularProgressIndicator() // FIXME なぜか表示されない
     }
 }
 
@@ -273,7 +287,7 @@ private fun LoadingScreen() {
  * @param onReload リロード処理
  */
 @Composable
-private fun ErrorScreen(
+private fun ErrorSection(
     message: String,
     onReload: () -> Unit,
 ) {
@@ -297,15 +311,15 @@ private fun ErrorScreen(
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-private fun HomeContent(
+private fun ListSection(
     diaryList: List<Diary>,
     gridState: LazyGridState,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
-    onTodayClick: () -> Unit,
     onDateClick: (Int, Diary) -> Unit,
     onFabClick: () -> Unit,
 ) {
+    val coroutineScope = rememberCoroutineScope()
     val sheetState = rememberBottomSheetScaffoldState()
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val sheetMaxHeight = screenHeight * 0.75f
@@ -348,7 +362,9 @@ private fun HomeContent(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(sheetSeekHeight - ((22.dp * 2) - 4.dp/*dragHandle分*/))
-                                .clickable { onTodayClick() },
+                                .clickable {
+                                    coroutineScope.launch { gridState.animateScrollToItem(index = 365) }
+                                },
                         )
                         // 折りたたみ部分のコンテンツ
                         Text(
@@ -365,7 +381,7 @@ private fun HomeContent(
                         onDateClick = onDateClick,
                         sharedTransitionScope = sharedTransitionScope,
                         animatedVisibilityScope = animatedVisibilityScope,
-                        Modifier
+                        modifier = Modifier
                             .fillMaxSize()
                             .padding(innerPadding)
                     )
@@ -506,7 +522,7 @@ private fun InfiniteDateListPreview() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            LoadingScreen()
+            LoadingSection()
         }
     }
 }

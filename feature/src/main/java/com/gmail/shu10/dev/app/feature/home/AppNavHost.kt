@@ -4,6 +4,8 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -29,6 +31,8 @@ fun AppNavHost(
     viewModel: SharedDiaryViewModel = hiltViewModel(),
 ) {
     val navController = rememberNavController()
+
+    val gridState = rememberLazyGridState(initialFirstVisibleItemIndex = 365) // 初期位置:今日
 
     // Intentの監視と画面遷移
     // TODO: dateパラメータ使ってないな
@@ -60,6 +64,7 @@ fun AppNavHost(
                         navController = navController,
                         sharedTransitionScope = this@SharedTransitionLayout,
                         animatedVisibilityScope = this,
+                        gridState = gridState,
                         navBackStackEntry = parentEntry
                     )
                 }
@@ -72,6 +77,7 @@ fun AppNavHost(
                         navController = navController,
                         sharedTransitionScope = this@SharedTransitionLayout,
                         animatedVisibilityScope = this,
+                        gridState = gridState,
                         navBackStackEntry = parentEntry
                     )
                 }

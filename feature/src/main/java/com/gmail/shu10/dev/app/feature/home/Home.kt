@@ -115,11 +115,11 @@ fun HomeScreen(
     navController: NavHostController,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
+    gridState: LazyGridState,
     navBackStackEntry: NavBackStackEntry,
     viewModel: SharedDiaryViewModel = hiltViewModel(navBackStackEntry),
 ) {
     val uiState by viewModel.homeUiState.collectAsState()
-    val gridState = rememberLazyGridState(initialFirstVisibleItemIndex = 365) // 初期位置:今日
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
 
@@ -141,7 +141,7 @@ fun HomeScreen(
                     }
                 }
                 val successState = uiState as HomeUiState.Success
-                HomeScreen(
+                HomeContent(
                     diaryList = successState.diaryList,
                     gridState = gridState,
                     sharedTransitionScope = sharedTransitionScope,
@@ -291,7 +291,7 @@ private fun ErrorScreen(
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-private fun HomeScreen(
+private fun HomeContent(
     diaryList: List<Diary>,
     gridState: LazyGridState,
     sharedTransitionScope: SharedTransitionScope,
@@ -302,8 +302,8 @@ private fun HomeScreen(
 ) {
     val sheetState = rememberBottomSheetScaffoldState()
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-    val sheetMaxHeight = screenHeight * 0.7f
-    val sheetSeekHeight = screenHeight * 0.2f
+    val sheetMaxHeight = screenHeight * 0.75f
+    val sheetSeekHeight = screenHeight * 0.15f
     val density = LocalDensity.current
 
     // 現在のシートオフセット（dp）を保持する状態
@@ -350,7 +350,7 @@ private fun HomeScreen(
             },
             content = { innerPadding ->
                 Box(modifier = Modifier.fillMaxSize()) {
-                    DateGrid(
+                    DateGridSection(
                         diaryList = diaryList,
                         gridState = gridState,
                         onDateClick = onDateClick,
@@ -394,7 +394,7 @@ private fun HomeScreen(
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-private fun DateGrid(
+private fun DateGridSection(
     diaryList: List<Diary>,
     gridState: LazyGridState,
     onDateClick: (Int, Diary) -> Unit,
@@ -412,7 +412,7 @@ private fun DateGrid(
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             itemsIndexed(diaryList) { index, diary ->
-                DateGridItem(
+                DateGridItemComponent(
                     diary,
                     Modifier.sharedElement(
                         state = rememberSharedContentState(diary.date),
@@ -430,7 +430,7 @@ private fun DateGrid(
  * @param onClickItem アイテムクリック時の処理
  */
 @Composable
-private fun DateGridItem(
+private fun DateGridItemComponent(
     diary: Diary,
     modifier: Modifier,
     onClickItem: () -> Unit,

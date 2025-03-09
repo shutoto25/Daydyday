@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
@@ -32,11 +33,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -59,6 +63,7 @@ import com.gmail.shu10.dev.app.core.utils.getDayOfWeek
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 import com.gmail.shu10.dev.app.feature.utils.toContentUri
+import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.UUID
@@ -72,6 +77,7 @@ fun DiaryDetailSection(
     navController: NavHostController,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
+    gridState: LazyGridState,
     navBackStackEntry: NavBackStackEntry,
     viewModel: SharedDiaryViewModel = hiltViewModel(navBackStackEntry),
 ) {
@@ -86,6 +92,7 @@ fun DiaryDetailSection(
         navController = navController,
         sharedTransitionScope = sharedTransitionScope,
         animatedVisibilityScope = animatedVisibilityScope,
+        gridState = gridState,
         onDiaryUpdated = { diary -> viewModel.updateDiaryListItem(diary) }
     )
 }
@@ -98,8 +105,10 @@ fun DetailContent(
     navController: NavHostController,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
+    gridState: LazyGridState,
     onDiaryUpdated: (Diary) -> Unit,
 ) {
+
     when (uiState) {
         is DiaryDetailUiState.Loading -> {
             TODO()
@@ -107,8 +116,35 @@ fun DetailContent(
 
         is DiaryDetailUiState.Success -> {
             val successState = uiState as DiaryDetailUiState.Success
+            val pagerState = rememberPagerState(initialPage = successState.index) { successState.diaryList.size }
+
+            // pagerStateとgridStateを同期
+            val coroutineScope = rememberCoroutineScope()
+            LaunchedEffect(pagerState) {
+                snapshotFlow { pagerState.currentPage }
+                    .collect { page ->
+                        coroutineScope.launch {
+                            // 現在表示されているアイテムの範囲を取得
+                            val visibleItems = gridState.layoutInfo.visibleItemsInfo
+                            val firstVisible = visibleItems.firstOrNull()?.index ?: 0
+                            val lastVisible = visibleItems.lastOrNull()?.index ?: 0
+
+                            // ターゲットページが現在表示されている範囲外の場合のみスクロール
+                            if (page < firstVisible || page > lastVisible) {
+                                // 必要最小限のスクロールを行う
+                                val scrollToPosition = when {
+                                    page < firstVisible -> page
+                                    else -> page - visibleItems.size + 1 // 表示領域の末尾にくるように
+                                }
+                                gridState.scrollToItem(scrollToPosition)
+                            }
+                            // 表示範囲内の場合はスクロールしない
+                        }
+                    }
+            }
+
             HorizontalPager(
-                state = rememberPagerState(initialPage = successState.index) { successState.diaryList.size },
+                state = pagerState,
                 userScrollEnabled = !sharedTransitionScope.isTransitionActive,  // 遷移中は横スクロール抑止
                 modifier = Modifier.fillMaxSize()
             ) { page ->

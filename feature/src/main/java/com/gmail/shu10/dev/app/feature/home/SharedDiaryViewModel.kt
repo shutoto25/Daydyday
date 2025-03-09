@@ -43,6 +43,7 @@ class SharedDiaryViewModel @Inject constructor(
     val detailUiState: StateFlow<DiaryDetailUiState> = _detailUiState.asStateFlow()
 
     init {
+        // roomからflowで日記リストを取得&同期
         syncDiaryList()
     }
 
@@ -75,7 +76,10 @@ class SharedDiaryViewModel @Inject constructor(
                             diaries.find { it.date == diary.date } ?: diary
                         }
                     }
+                    // ホーム画面のUI状態を更新
                     _homeUiState.value = HomeUiState.Success(diaryList = _diaryList.value)
+
+                    // 詳細画面のUI状態を更新
                     val currentState = _detailUiState.value
                     if (currentState is DiaryDetailUiState.Success) {
                         _detailUiState.value = currentState.copy(diaryList = _diaryList.value)

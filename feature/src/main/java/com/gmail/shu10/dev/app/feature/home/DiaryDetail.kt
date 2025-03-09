@@ -109,6 +109,7 @@ fun DetailContent(
             val successState = uiState as DiaryDetailUiState.Success
             HorizontalPager(
                 state = rememberPagerState(initialPage = successState.index) { successState.diaryList.size },
+                userScrollEnabled = !sharedTransitionScope.isTransitionActive,  // 遷移中は横スクロール抑止
                 modifier = Modifier.fillMaxSize()
             ) { page ->
                 successState.diaryList[page].let { diary ->

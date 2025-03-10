@@ -2,6 +2,7 @@ package com.gmail.shu10.dev.app.feature.home
 
 import android.content.Context
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -66,7 +67,6 @@ import com.gmail.shu10.dev.app.feature.utils.toContentUri
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import java.util.UUID
 
 /**
  * 日記詳細画面
@@ -116,7 +116,7 @@ fun DetailContent(
 
         is DiaryDetailUiState.Success -> {
             val successState = uiState as DiaryDetailUiState.Success
-            val pagerState = rememberPagerState(initialPage = successState.index) { successState.diaryList.size }
+            val pagerState = rememberPagerState(successState.index) { successState.diaryList.size }
 
             // pagerStateとgridStateを同期
             val coroutineScope = rememberCoroutineScope()

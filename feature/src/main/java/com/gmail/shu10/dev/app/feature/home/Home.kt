@@ -41,6 +41,7 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
@@ -401,16 +402,29 @@ private fun ListSection(
             exit = fadeOut(animationSpec = tween(durationMillis = 500))
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
-                FloatingActionButton(
-                    onClick = { onFabClick() },
+                Column(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(bottom = 8.dp + fabPaddingBottom, end = 8.dp)
+                        .padding(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "FAB"
-                    )
+                    FloatingActionButton(
+                        onClick = { onFabClick() }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = "PLAY"
+                        )
+                    }
+                    FloatingActionButton(
+                        onClick = {  },
+                        modifier = Modifier.padding(bottom = fabPaddingBottom)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "ADD"
+                        )
+                    }
                 }
             }
         }

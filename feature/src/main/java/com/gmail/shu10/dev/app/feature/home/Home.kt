@@ -181,8 +181,10 @@ private fun HomeContent(
                         viewModel.selectDiaryEvent(index, diary)
                         navController.navigate(AppScreen.DiaryDetail.route)
                     },
-                    onFabClick = {
+                    onPlay = {
                         navController.navigate(AppScreen.PlayBackRoute.route)
+                    },
+                    onCamera = {
                     }
                 )
             }
@@ -314,7 +316,6 @@ private fun ErrorSection(message: String, onReload: () -> Unit) {
  * @param gridState LazyGridState
  * @param sharedTransitionScope SharedTransitionScope
  * @param animatedVisibilityScope AnimatedVisibilityScope
- * @param onFabClick FABクリック時の処理
  * @param onDateClick 日付クリック時の処理
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
@@ -325,7 +326,8 @@ private fun ListSection(
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
     onDateClick: (Int, Diary) -> Unit,
-    onFabClick: () -> Unit,
+    onPlay: () -> Unit,
+    onCamera: () -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val sheetState = rememberBottomSheetScaffoldState()
@@ -409,7 +411,7 @@ private fun ListSection(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     FloatingActionButton(
-                        onClick = { onFabClick() }
+                        onClick = { onPlay() }
                     ) {
                         Icon(
                             imageVector = Icons.Default.PlayArrow,
@@ -417,7 +419,7 @@ private fun ListSection(
                         )
                     }
                     FloatingActionButton(
-                        onClick = {  },
+                        onClick = { onCamera() },
                         modifier = Modifier.padding(bottom = fabPaddingBottom)
                     ) {
                         Icon(

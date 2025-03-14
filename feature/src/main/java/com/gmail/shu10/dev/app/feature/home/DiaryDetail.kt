@@ -2,7 +2,6 @@ package com.gmail.shu10.dev.app.feature.home
 
 import android.content.Context
 import android.net.Uri
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -29,7 +28,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Text
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -259,12 +257,10 @@ private fun DiaryDetailSection(
     onClickAddLocation: () -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(8.dp)
+        modifier = Modifier.fillMaxSize()
     ) {
         DateTitleSection(date = tempDiary.date)
-        MediaContentArea(
+        MediaContentSection(
             diary = tempDiary,
             sharedTransitionScope = sharedTransitionScope,
             animatedVisibilityScope = animatedVisibilityScope,
@@ -289,7 +285,7 @@ private fun DateTitleSection(date: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 16.dp, horizontal = 8.dp)
+            .padding(vertical = 28.dp, horizontal = 16.dp)
     ) {
         Text(
             text = convertDateFormat(date),
@@ -307,7 +303,7 @@ private fun DateTitleSection(date: String) {
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-private fun MediaContentArea(
+private fun MediaContentSection(
     diary: Diary,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
@@ -316,7 +312,7 @@ private fun MediaContentArea(
 ) {
     when {
         diary.photoPath != null -> {
-            MediaPreView({
+            MediaPreViewComponent({
                 PhotoImageComponent(
                     diary,
                     sharedTransitionScope,
@@ -327,7 +323,7 @@ private fun MediaContentArea(
         }
 
         diary.trimmedVideoPath != null -> {
-            MediaPreView({
+            MediaPreViewComponent({
                 VideoPreviewComponent(diary.trimmedVideoPath!!.toUri())
             }) { onClickAddLocation() }
         }
@@ -339,7 +335,7 @@ private fun MediaContentArea(
 }
 
 @Composable
-private fun MediaPreView(
+private fun MediaPreViewComponent(
     content: @Composable () -> Unit,
     onClickAddLocation: () -> Unit,
 ) {

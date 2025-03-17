@@ -172,21 +172,32 @@ private fun HomeContent(
                     }
                 }
                 val successState = uiState as HomeUiState.Success
-                ListSection(
-                    diaryList = successState.diaryList,
-                    gridState = gridState,
-                    sharedTransitionScope = sharedTransitionScope,
-                    animatedVisibilityScope = animatedVisibilityScope,
-                    onDateClick = { index, diary ->
-                        viewModel.selectDiaryEvent(index, diary)
-                        navController.navigate(AppScreen.DiaryDetail.route)
-                    },
-                    onPlay = {
-                        navController.navigate(AppScreen.PlayBackRoute.route)
-                    },
-                    onCamera = {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Column {
+                        // 天気情報エリアを追加
+                        WeatherInfoSection(
+                            weather = WeatherType.SUNNY,
+                            temperature = "22°C",
+                            location = "現在地",
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+                        ListSection(
+                            diaryList = successState.diaryList,
+                            gridState = gridState,
+                            sharedTransitionScope = sharedTransitionScope,
+                            animatedVisibilityScope = animatedVisibilityScope,
+                            onDateClick = { index, diary ->
+                                viewModel.selectDiaryEvent(index, diary)
+                                navController.navigate(AppScreen.DiaryDetail.route)
+                            },
+                            onPlay = {
+                                navController.navigate(AppScreen.PlayBackRoute.route)
+                            },
+                            onCamera = {
+                            }
+                        )
                     }
-                )
+                }
             }
         }
     }

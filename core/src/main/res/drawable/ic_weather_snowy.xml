@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+android:width="24dp"
+android:height="24dp"
+android:viewportWidth="100"
+android:viewportHeight="100">
+<path
+    android:fillColor="@android:color/white"
+    android:pathData="M35,45 Q25,45 25,35 Q25,25 35,25 Q35,15 45,15 Q55,15 55,25 Q65,25 65,35 Q65,45 55,45 Z" />
+<path
+    android:fillColor="@android:color/white"
+    android:pathData="M75,55 Q65,55 65,45 Q65,35 75,35 Q75,25 85,25 Q95,25 95,35 Q105,35 105,45 Q105,55 95,55 Z" />
+<!-- Snowflakes -->
+<path
+    android:pathData="M45,65 L45,65 M42,65 L48,65 M45,62 L45,68"
+    android:strokeWidth="2"
+    android:strokeColor="@android:color/white"
+    android:strokeLineCap="round" />
+<path
+    android:pathData="M60,70 L60,70 M57,70 L63,70 M60,67 L60,73"
+    android:strokeWidth="2"
+    android:strokeColor="@android:color/white"
+    android:strokeLineCap="round" />
+<path
+    android:pathData="M75,65 L75,65 M72,65 L78,65 M75,62 L75,68"
+    android:strokeWidth="2"
+    android:strokeColor="@android:color/white"
+    android:strokeLineCap="round" />
+<path
+    android:pathData="M90,70 L90,70 M87,70 L93,70 M90,67 L90,73"
+    android:strokeWidth="2"
+    android:strokeColor="@android:color/white"
+    android:strokeLineCap="round" />
+</vector>

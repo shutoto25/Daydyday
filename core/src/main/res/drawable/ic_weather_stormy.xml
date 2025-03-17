@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+android:width="24dp"
+android:height="24dp"
+android:viewportWidth="100"
+android:viewportHeight="100">
+<path
+    android:fillColor="@android:color/white"
+    android:pathData="M35,45 Q25,45 25,35 Q25,25 35,25 Q35,15 45,15 Q55,15 55,25 Q65,25 65,35 Q65,45 55,45 Z" />
+<path
+    android:fillColor="@android:color/white"
+    android:pathData="M75,55 Q65,55 65,45 Q65,35 75,35 Q75,25 85,25 Q95,25 95,35 Q105,35 105,45 Q105,55 95,55 Z" />
+<!-- Lightning -->
+<path
+    android:fillColor="@android:color/white"
+    android:pathData="M65,50 L60,65 L70,63 L62,85 L67,85 L75,63 L65,65 Z" />
+<!-- Rain -->
+<path
+    android:pathData="M45,60 L40,70"
+    android:strokeWidth="2"
+    android:strokeColor="@android:color/white"
+    android:strokeLineCap="round" />
+<path
+    android:pathData="M85,65 L80,75"
+    android:strokeWidth="2"
+    android:strokeColor="@android:color/white"
+    android:strokeLineCap="round" />
+</vector>

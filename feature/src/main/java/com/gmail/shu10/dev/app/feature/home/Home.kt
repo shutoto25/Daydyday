@@ -171,6 +171,14 @@ private fun HomeContent(
                         viewModel.setMediaType(mediaType)
                     }
                 }
+
+                val context = LocalContext.current
+                val (launchCamera, cameraLauncher) = rememberCameraLauncher(
+                    context = context,
+                    viewModel = viewModel,
+                    onPhotoTaken = { photoUri -> }
+                )
+
                 val successState = uiState as HomeUiState.Success
                 Box(modifier = Modifier.fillMaxSize()) {
                     Column {

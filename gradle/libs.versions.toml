@@ -12,7 +12,7 @@ jvmTarget = "17"
 agp = "8.6.1"
 ## ------ jetbrains ------ ##
 kotlin = "2.0.20"
-dokka = "1.9.20"
+dokka = "2.0.0"
 ## ------ google ------ ##
 gms = "4.4.2"
 ksp = "2.1.0-1.0.29"

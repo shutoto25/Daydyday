@@ -39,7 +39,7 @@ espresso-core = "3.6.1"
 junit = "4.13.2"
 ## ------ google ------ ##
 mapsCompose = "6.4.4"
-firebase-bom = "33.9.0"
+firebase-bom = "33.11.0"
 ## ------ jetbrains ------ ##
 kotlinx-serialization-json = "1.6.0"
 ## ------ coil ------ ##

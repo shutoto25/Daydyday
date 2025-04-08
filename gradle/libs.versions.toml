@@ -44,6 +44,8 @@ firebase-bom = "33.9.0"
 kotlinx-serialization-json = "1.6.0"
 ## ------ coil ------ ##
 coil = "2.4.0"
+## ------ ffmpeg ------ ##
+ffmpeg-kit = "5.1"
 
 [plugins]
 ## ------ android ------ ##
@@ -105,6 +107,8 @@ firebase-messaging-ktx = { module = "com.google.firebase:firebase-messaging-ktx"
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
 ## ------ coil ------ ##
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
+## ------ ffmpeg ------ ##
+ffmpeg-kit-min = { module = "com.arthenica:ffmpeg-kit-min", version.ref = "ffmpeg-kit" }
 
 [bundles]
 

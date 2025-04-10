@@ -33,11 +33,11 @@ fun PlayBackRoute(
     val exoPlayer = remember { ExoPlayer.Builder(context).build() }
     val uri by viewModel.mergedVideoUri
 
-    PayBackScreen(viewModel, exoPlayer, uri)
+    PlayBackScreen(viewModel, exoPlayer, uri)
 }
 
 @Composable
-fun PayBackScreen(viewModel: PlayBackViewModel, exoPlayer: ExoPlayer, uri: Uri?) {
+fun PlayBackScreen(viewModel: PlayBackViewModel, exoPlayer: ExoPlayer, uri: Uri?) {
     val context = LocalContext.current
     viewModel.mergeVideos(context)
     Player(context, exoPlayer, uri)

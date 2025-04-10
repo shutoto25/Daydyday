@@ -44,7 +44,7 @@ kotlinx-serialization-json = "1.6.0"
 ## ------ coil ------ ##
 coil = "2.4.0"
 ## ------ ffmpeg ------ ##
-ffmpeg-kit = "5.1"
+ffmpeg-kit = "6.0"
 ## ------ ktlint ------ ##
 ktlint-plugin = "12.2.0"
 

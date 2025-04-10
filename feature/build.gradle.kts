@@ -80,6 +80,9 @@ dependencies {
     // ----- coil ----- //
     implementation(libs.coil.compose)
 
+    // ----- ffmpeg ----- //
+    implementation(libs.ffmpeg.kit.min)
+
     // ----- test ----- //
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)

@@ -47,6 +47,8 @@ coil = "2.4.0"
 ffmpeg-kit = "6.0"
 ## ------ ktlint ------ ##
 ktlint-plugin = "12.2.0"
+## ------ lint checks ------ ##
+lint-checks-compose = "1.4.2"
 
 [plugins]
 ## ------ android ------ ##
@@ -111,6 +113,8 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 ## ------ ffmpeg ------ ##
 ffmpeg-kit-min = { module = "com.arthenica:ffmpeg-kit-min", version.ref = "ffmpeg-kit" }
+## ------ lint checks ------ ##
+lint-checks-compose = { module = "com.slack.lint.compose:compose-lint-checks", version.ref = "lint-checks-compose" }
 
 [bundles]
 

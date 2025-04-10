@@ -83,6 +83,9 @@ dependencies {
     // ----- ffmpeg ----- //
     implementation(libs.ffmpeg.kit.min)
 
+    // ----- compose lint checks ----- //
+    lintChecks(libs.lint.checks.compose)
+
     // ----- test ----- //
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)

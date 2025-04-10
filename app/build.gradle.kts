@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.dokka) // TODO パッケージ構成についても書くようにしたい https://qiita.com/foxsal/items/6c4a0dfbc8f8e3000077
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.gms)
     alias(libs.plugins.dagger.hilt)

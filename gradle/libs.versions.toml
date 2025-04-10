@@ -12,7 +12,6 @@ jvmTarget = "17"
 agp = "8.6.1"
 ## ------ jetbrains ------ ##
 kotlin = "2.0.20"
-dokka = "2.0.0"
 ## ------ google ------ ##
 gms = "4.4.2"
 ksp = "2.1.0-1.0.29"
@@ -46,6 +45,8 @@ kotlinx-serialization-json = "1.6.0"
 coil = "2.4.0"
 ## ------ ffmpeg ------ ##
 ffmpeg-kit = "5.1"
+## ------ ktlint ------ ##
+ktlint-plugin = "12.2.0"
 
 [plugins]
 ## ------ android ------ ##
@@ -55,11 +56,12 @@ android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 ## ------ google ------ ##
 gms = { id = "com.google.gms.google-services", version.ref = "gms" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 dagger-hilt = { id = "com.google.dagger.hilt.android", version.ref = "dagger-hilt" }
+## ------ ffmpeg ------ ##
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint-plugin" }
 
 [libraries]
 ## ------ androidx ------ ##

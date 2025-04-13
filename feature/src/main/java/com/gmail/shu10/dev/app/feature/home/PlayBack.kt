@@ -33,14 +33,14 @@ fun PlayBackRoute(
     val exoPlayer = remember { ExoPlayer.Builder(context).build() }
     val uri by viewModel.mergedVideoUri
 
-    PlayBackScreen(viewModel, exoPlayer, uri)
+    PlayBackScreen(viewModel, uri)
 }
 
 @Composable
-fun PlayBackScreen(viewModel: PlayBackViewModel, exoPlayer: ExoPlayer, uri: Uri?) {
+fun PlayBackScreen(viewModel: PlayBackViewModel, uri: Uri?) {
     val context = LocalContext.current
     viewModel.mergeVideos(context)
-    Player(context, exoPlayer, uri)
+    Player(context, uri)
 }
 
 /**
@@ -52,22 +52,34 @@ fun PlayBackScreen(viewModel: PlayBackViewModel, exoPlayer: ExoPlayer, uri: Uri?
 @Composable
 fun Player(
     context: Context,
-    exoPlayer: ExoPlayer,
-    uri: Uri?,
+    uri: Uri?
 ) {
-    uri?.let {
-        DisposableEffect(Unit) {
+    // 画面ごとに新しいプレーヤーを作成
+    val exoPlayer = remember(uri) {
+        ExoPlayer.Builder(context).build()
+    }
+
+    DisposableEffect(uri) {
+        uri?.let {
             exoPlayer.apply {
                 setMediaItem(MediaItem.fromUri(uri))
                 prepare()
                 playWhenReady = false
             }
-            // 画面破棄のタイミングでPlayerを解放
-            onDispose { exoPlayer.release() }
         }
-        // PlayerViewとexpPlayerをAndroidView経由で統合
+
+        // 画面破棄のタイミングでPlayerを解放
+        onDispose {
+            exoPlayer.stop()
+            exoPlayer.clearMediaItems()
+            exoPlayer.release()
+        }
+    }
+
+    // PlayerViewとexpPlayerをAndroidView経由で統合
+    uri?.let {
         AndroidView(
-            factory = { PlayerView(context).apply { this.player = exoPlayer } },
+            factory = { PlayerView(context).apply { player = exoPlayer } },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(400.dp)

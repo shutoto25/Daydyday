@@ -6,17 +6,8 @@ import android.graphics.Matrix
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.util.Log
-import androidx.annotation.OptIn
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.media3.common.MediaItem
-import androidx.media3.common.MimeTypes
-import androidx.media3.common.util.UnstableApi
-import androidx.media3.transformer.Composition
-import androidx.media3.transformer.ExportException
-import androidx.media3.transformer.ExportResult
-import androidx.media3.transformer.Transformer
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -26,6 +17,8 @@ import java.io.File
  * 動画編集画面のViewModel
  */
 class VideoEditorViewModel : ViewModel() {
+
+    private val ffmpegProcessor = FFmpegVideoProcessor()
 
     /**
      * 動画からサムネイル（フレーム）を切り出す
@@ -100,7 +93,6 @@ class VideoEditorViewModel : ViewModel() {
             val matrix = Matrix().apply { postRotate(rotation.toFloat()) }
             Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
         }
-        // TODO 入れ替えないといけないのが本当にこれがいいのかわからんが一旦動きは正しい
         return Bitmap.createScaledBitmap(
             bitmap,
             if (rotation == 0) videoHeight else videoWidth,
@@ -110,54 +102,39 @@ class VideoEditorViewModel : ViewModel() {
     }
 
     /**
-     * 動画をトリミングする
+     * 動画をトリミングする（FFmpegを使用）
      */
-    @OptIn(UnstableApi::class)
     fun trimVideo(
         context: Context,
         inputUri: Uri,
         outputFile: File,
         startMs: Long,
-        onSuccess: (ExportResult) -> Unit,
-        onError: (ExportException) -> Unit,
+        onSuccess: () -> Unit,
+        onError: () -> Unit,
     ) {
-        val transformer = Transformer.Builder(context)
-            .setVideoMimeType(MimeTypes.VIDEO_H264)
-            .addListener(object : Transformer.Listener {
-                override fun onCompleted(composition: Composition, exportResult: ExportResult) {
-                    // トリミング成功
-                    onSuccess(exportResult)
+        viewModelScope.launch {
+            try {
+                val success = ffmpegProcessor.trimVideoToOneSecond(
+                    context,
+                    inputUri,
+                    outputFile,
+                    startMs
+                )
+
+                if (success) {
+                    withContext(Dispatchers.Main) { onSuccess() }
+                } else {
+                    withContext(Dispatchers.Main) { onError() }
                 }
-
-                override fun onError(
-                    composition: Composition,
-                    exportResult: ExportResult,
-                    exportException: ExportException,
-                ) {
-                    // トリミング失敗
-                    onError(exportException)
-                }
-            }).build()
-
-        val mediaItem = MediaItem.Builder()
-            .setUri(inputUri)
-            .setClippingConfiguration(
-                MediaItem.ClippingConfiguration.Builder()
-                    .setStartPositionMs(startMs)
-                    .setEndPositionMs(startMs + 1000)
-                    .build()
-            ).build()
-
-        // 出力ファイルの事前確認
-        if (outputFile.exists()) {
-            outputFile.delete()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                withContext(Dispatchers.Main) { onError() }
+            }
         }
-
-        transformer.start(mediaItem, outputFile.absolutePath)
     }
 
     /**
-     *
+     * 1秒動画のための出力ファイルを取得
      */
     fun targetFile(context: Context, date: String): File {
         val appDir = File(context.filesDir, "videos/1sec")
@@ -166,6 +143,9 @@ class VideoEditorViewModel : ViewModel() {
         return targetFile
     }
 
+    /**
+     * FFmpegを使った動画トリミング
+     */
     fun startReEncoding(
         context: Context,
         inputUri: Uri,
@@ -174,22 +154,7 @@ class VideoEditorViewModel : ViewModel() {
         onSuccess: () -> Unit,
         onError: () -> Unit,
     ) {
-        val reEncoder = VideoReEncoder(context, inputUri, outputFile)
-        // 必要に応じて、GlobalScope ではなく、適切なスコープ（例：ViewModelScopeなど）を利用してください
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                reEncoder.transcode(startMs)
-                // 成功時の処理はメインスレッドで行う
-                withContext(Dispatchers.Main) {
-                    onSuccess()
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                // エラー処理はメインスレッドで行う
-                withContext(Dispatchers.Main) {
-                    onError()
-                }
-            }
-        }
+        // trimVideoメソッドを再利用
+        trimVideo(context, inputUri, outputFile, startMs, onSuccess, onError)
     }
 }

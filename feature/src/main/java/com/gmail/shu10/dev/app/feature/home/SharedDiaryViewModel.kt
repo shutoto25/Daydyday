@@ -42,6 +42,8 @@ class SharedDiaryViewModel @Inject constructor(
     private val _detailUiState = MutableStateFlow<DiaryDetailUiState>(DiaryDetailUiState.Loading)
     val detailUiState: StateFlow<DiaryDetailUiState> = _detailUiState.asStateFlow()
 
+    private val ffmpegProcessor = FFmpegVideoProcessor()
+
     init {
         // roomからflowで日記リストを取得&同期
         syncDiaryList()
@@ -138,33 +140,55 @@ class SharedDiaryViewModel @Inject constructor(
     }
 
     /**
-     * 写真保存
+     * 写真保存（FFmpeg利用版）
      * @param context Context
      * @param uri Uri
      * @param date 日付
      */
     fun savePhotoToAppDir(context: Context, uri: Uri, date: String): File? {
-
         val inputStream = context.contentResolver.openInputStream(uri) ?: return null
 
+        // 画像ディレクトリの作成
         val appDir = File(context.filesDir, "images")
         if (!appDir.exists()) appDir.mkdirs()
 
-        val file = File(appDir, "$date.jpg")
+        // 写真を保存
+        val imageFile = File(appDir, "$date.jpg")
         inputStream.use { input ->
-            file.outputStream().use { output ->
+            imageFile.outputStream().use { output ->
                 input.copyTo(output)
             }
         }
-        createStillImageVideo(BitmapFactory.decodeFile(file.path), targetFile(context, date))
-        return file
+
+        // 静止画から動画を生成（非同期処理）
+        viewModelScope.launch {
+            try {
+                val targetVideoFile = targetFile(context, date)
+
+                // FFmpegを使って静止画から1秒動画を生成
+                val success = ffmpegProcessor.createVideoFromImage(
+                    context,
+                    imageFile,
+                    targetVideoFile
+                )
+
+                if (success) {
+                    Log.d("SharedDiaryViewModel", "静止画から動画への変換が成功しました: $date")
+                } else {
+                    Log.e("SharedDiaryViewModel", "静止画から動画への変換に失敗しました: $date")
+                }
+            } catch (e: Exception) {
+                Log.e("SharedDiaryViewModel", "静止画から動画への変換中にエラーが発生しました", e)
+            }
+        }
+
+        return imageFile
     }
 
     /**
      * 動画保存
      */
     fun saveVideoToAppDir(context: Context, uri: Uri, date: String): File? {
-
         val inputStream = context.contentResolver.openInputStream(uri) ?: return null
 
         val appDir = File(context.filesDir, "videos")
@@ -179,22 +203,13 @@ class SharedDiaryViewModel @Inject constructor(
         return file
     }
 
+    /**
+     * 動画出力用のターゲットファイルを取得
+     */
     private fun targetFile(context: Context, date: String): File {
         val appDir = File(context.filesDir, "videos/1sec")
         if (!appDir.exists()) appDir.mkdirs()
-        val targetFile = File(appDir, "$date.mp4")
-        return targetFile
-    }
-
-    private fun createStillImageVideo(
-        bitmap: Bitmap,
-        outputFile: File,
-        rotationDegrees: Float = 0f,
-    ) {
-        // 固定出力解像度 1920×1920 を使用するため、ここでは直接 1920,1920 を指定する
-        val encoder = ImageToVideoEncoder(outputFile.absolutePath, 1920, 1920, frameRate = 30)
-        encoder.encodeStillImage(bitmap, rotationDegrees)
-        Log.d("StillImageVideo", "動画生成完了: ${outputFile.absolutePath}")
+        return File(appDir, "$date.mp4")
     }
 }
 

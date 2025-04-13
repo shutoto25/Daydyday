@@ -56,7 +56,10 @@ class FFmpegVideoProcessor {
 
             // 1秒間の動画を切り出すFFmpegコマンド
             val startSeconds = startMs / 1000f
-            val command = "-y -i $inputPath -ss $startSeconds -t 1.0 -c:v mpeg4 ${outputFile.absolutePath}"
+            val command = "-y -i $inputPath -ss $startSeconds -t 1.0 " +
+                    "-vf scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2 " +
+                    "-c:v mpeg4 -q:v 2 -pix_fmt yuv420p " +
+                    "${outputFile.absolutePath}"
 
             Log.d("FFmpegVideoProcessor", "トリミングコマンド: $command")
 
@@ -88,8 +91,10 @@ class FFmpegVideoProcessor {
             outputFile.parentFile?.mkdirs()
 
             // 静止画→動画の最もシンプルなコマンド（最小限のオプション）
-            val command = "-y -loop 1 -i ${imageFile.absolutePath} -t 1 -c:v mpeg4 ${outputFile.absolutePath}"
-
+            val command = "-y -loop 1 -i ${imageFile.absolutePath} " +
+                    "-vf scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2 " +
+                    "-t 1 -c:v mpeg4 -q:v 2 -pix_fmt yuv420p " +
+                    "${outputFile.absolutePath}"
             Log.d("FFmpegVideoProcessor", "画像→動画変換コマンド: $command")
 
             // FFmpegコマンドを実行し、結果を待機
@@ -120,9 +125,16 @@ class FFmpegVideoProcessor {
 
             // 出力先の準備
             if (outputFile.exists()) {
-                outputFile.delete()
+                if (!outputFile.delete()) {
+                    Log.e("FFmpegVideoProcessor", "既存の出力ファイルを削除できませんでした")
+                    return@withContext false
+                }
             }
-            outputFile.parentFile?.mkdirs()
+
+            // 親ディレクトリが確実に存在するようにする
+            if (!outputFile.parentFile?.exists()!!) {
+                outputFile.parentFile?.mkdirs()
+            }
 
             // 入力ファイルリストの作成
             val listFile = File(context.cacheDir, "input_list.txt")
@@ -130,25 +142,50 @@ class FFmpegVideoProcessor {
                 listFile.delete()
             }
 
+            // 実際に存在するファイルのみをリストに追加
+            val validFiles = inputFiles.filter { it.exists() && it.length() > 0 }
+
+            if (validFiles.isEmpty()) {
+                Log.e("FFmpegVideoProcessor", "有効な入力ファイルがありません")
+                return@withContext false
+            }
+
             // ファイルリストの作成
             listFile.printWriter().use { writer ->
-                inputFiles.forEach { file ->
+                validFiles.forEach { file ->
                     writer.println("file '${file.absolutePath}'")
                 }
             }
 
             // 動画を結合するFFmpegコマンド
-            val command = "-y -f concat -safe 0 -i ${listFile.absolutePath} -c copy ${outputFile.absolutePath}"
+            val command = "-y -f concat -safe 0 -i ${listFile.absolutePath} " +
+                    "-vf scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2 " +
+                    "-c:v mpeg4 -q:v 2 " +
+                    "-pix_fmt yuv420p ${outputFile.absolutePath}"
             Log.d("FFmpegVideoProcessor", "結合コマンド: $command")
 
-            // 処理完了時に必ずフラグをリセット
-            val result = executeFFmpegCommand(command)
-            finishProcessing()
-            return@withContext result
+            try {
+                // FFmpegコマンドを実行
+                val result = executeFFmpegCommand(command)
+
+                // 結果の確認
+                if (result && outputFile.exists() && outputFile.length() > 0) {
+                    Log.d("FFmpegVideoProcessor", "動画結合成功: サイズ=${outputFile.length()} bytes")
+                    return@withContext true
+                } else {
+                    Log.e("FFmpegVideoProcessor", "動画結合失敗または出力ファイルが無効")
+                    return@withContext false
+                }
+            } catch (e: Exception) {
+                Log.e("FFmpegVideoProcessor", "FFmpeg実行中にエラー発生", e)
+                return@withContext false
+            }
         } catch (e: Exception) {
             Log.e("FFmpegVideoProcessor", "動画結合中にエラー発生", e)
-            finishProcessing()
             return@withContext false
+        } finally {
+            // 必ず処理中フラグをリセット
+            isProcessing.set(false)
         }
     }
 

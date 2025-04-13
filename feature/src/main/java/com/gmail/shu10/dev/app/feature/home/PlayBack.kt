@@ -2,18 +2,30 @@ package com.gmail.shu10.dev.app.feature.home
 
 import android.content.Context
 import android.net.Uri
+import androidx.annotation.OptIn
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.MediaItem
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import androidx.navigation.NavHostController
@@ -39,8 +51,37 @@ fun PlayBackRoute(
 @Composable
 fun PlayBackScreen(viewModel: PlayBackViewModel, uri: Uri?) {
     val context = LocalContext.current
-    viewModel.mergeVideos(context)
-    Player(context, uri)
+
+    // 初回のみ実行されるようにする
+    LaunchedEffect(Unit) {
+        viewModel.mergeVideos(context)
+    }
+
+    // 処理中表示
+    val isProcessing by viewModel.isProcessing
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (isProcessing) {
+            CircularProgressIndicator(
+                modifier = Modifier.align(Alignment.Center)
+            )
+        } else if (uri != null) {
+            Player(context, uri)
+        } else {
+            // 動画がない場合のUI
+            Column(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("動画の準備ができていません")
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = { viewModel.mergeVideos(context) }) {
+                    Text("再試行")
+                }
+            }
+        }
+    }
 }
 
 /**
@@ -49,40 +90,43 @@ fun PlayBackScreen(viewModel: PlayBackViewModel, uri: Uri?) {
  * @param exoPlayer 動画再生プレイヤー
  * @param uri 動画URI
  */
+@OptIn(UnstableApi::class)
 @Composable
 fun Player(
     context: Context,
     uri: Uri?
 ) {
-    // 画面ごとに新しいプレーヤーを作成
-    val exoPlayer = remember(uri) {
-        ExoPlayer.Builder(context).build()
-    }
+    // uri が null の場合は何も表示しない
+    if (uri == null) return
 
-    DisposableEffect(uri) {
-        uri?.let {
-            exoPlayer.apply {
+    // ExoPlayer の作成
+    val exoPlayer = remember {
+        ExoPlayer.Builder(context).build().apply {
+            try {
                 setMediaItem(MediaItem.fromUri(uri))
                 prepare()
-                playWhenReady = false
+                playWhenReady = true // 自動再生
+            } catch (e: Exception) {
             }
         }
+    }
 
-        // 画面破棄のタイミングでPlayerを解放
+    // 画面破棄時に ExoPlayer を解放
+    DisposableEffect(Unit) {
         onDispose {
-            exoPlayer.stop()
-            exoPlayer.clearMediaItems()
             exoPlayer.release()
         }
     }
 
-    // PlayerViewとexpPlayerをAndroidView経由で統合
-    uri?.let {
-        AndroidView(
-            factory = { PlayerView(context).apply { player = exoPlayer } },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(400.dp)
-        )
-    }
+    AndroidView(
+        factory = { ctx ->
+            PlayerView(ctx).apply {
+                player = exoPlayer
+                setShowBuffering(PlayerView.SHOW_BUFFERING_ALWAYS)
+            }
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(400.dp)
+    )
 }

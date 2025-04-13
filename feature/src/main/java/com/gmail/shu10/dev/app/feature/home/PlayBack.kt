@@ -51,23 +51,34 @@ fun PlayBackRoute(
 @Composable
 fun PlayBackScreen(viewModel: PlayBackViewModel, uri: Uri?) {
     val context = LocalContext.current
+    val isProcessing by viewModel.isProcessing
 
-    // 初回のみ実行されるようにする
+    // 初回のみ実行するよう修正
     LaunchedEffect(Unit) {
-        viewModel.mergeVideos(context)
+        if (!isProcessing && viewModel.mergedVideoUri.value == null) {
+            viewModel.mergeVideos(context)
+        }
     }
 
-    // 処理中表示
-    val isProcessing by viewModel.isProcessing
+    // 処理状態に応じたUI表示
     Box(modifier = Modifier.fillMaxSize()) {
         if (isProcessing) {
-            CircularProgressIndicator(
-                modifier = Modifier.align(Alignment.Center)
-            )
+            // 処理中表示
+            Column(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                CircularProgressIndicator()
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("動画を準備中...")
+            }
         } else if (uri != null) {
+            // 動画再生
             Player(context, uri)
         } else {
-            // 動画がない場合のUI
+            // エラー表示
             Column(
                 modifier = Modifier
                     .align(Alignment.Center)

@@ -18,18 +18,6 @@ import kotlin.coroutines.resume
  */
 class FFmpegVideoProcessor {
 
-    // AtomicBooleanで処理フラグを管理
-    private val isProcessing = AtomicBoolean(false)
-
-    // 処理開始前に呼び出し、既に処理中ならfalseを返す
-    private fun startProcessingIfNotBusy(): Boolean {
-        return isProcessing.compareAndSet(false, true)
-    }
-
-    // 処理完了時に呼び出す
-    private fun finishProcessing() {
-        isProcessing.set(false)
-    }
     /**
      * 動画を1秒間にトリミングする
      * @param context コンテキスト
@@ -93,8 +81,8 @@ class FFmpegVideoProcessor {
             // 静止画→動画の最もシンプルなコマンド（最小限のオプション）
             val command = "-y -loop 1 -i ${imageFile.absolutePath} " +
                     "-vf scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2 " +
-                    "-t 1 -c:v mpeg4 -q:v 2 -pix_fmt yuv420p " +
-                    "${outputFile.absolutePath}"
+                    "-t 1 -c:v mpeg4 -q:v 5 " +
+                    "-pix_fmt yuv420p ${outputFile.absolutePath}"
             Log.d("FFmpegVideoProcessor", "画像→動画変換コマンド: $command")
 
             // FFmpegコマンドを実行し、結果を待機
@@ -125,67 +113,55 @@ class FFmpegVideoProcessor {
 
             // 出力先の準備
             if (outputFile.exists()) {
-                if (!outputFile.delete()) {
-                    Log.e("FFmpegVideoProcessor", "既存の出力ファイルを削除できませんでした")
-                    return@withContext false
-                }
+                outputFile.delete()
+            }
+            outputFile.parentFile?.mkdirs()
+
+            // 存在するファイルのみ抽出
+            val validFiles = inputFiles.filter { it.exists() && it.length() > 0 }
+            Log.d("FFmpegVideoProcessor", "有効な動画ファイル数: ${validFiles.size}")
+
+            if (validFiles.isEmpty()) {
+                Log.e("FFmpegVideoProcessor", "有効な動画ファイルがありません")
+                return@withContext false
             }
 
-            // 親ディレクトリが確実に存在するようにする
-            if (!outputFile.parentFile?.exists()!!) {
-                outputFile.parentFile?.mkdirs()
-            }
-
-            // 入力ファイルリストの作成
+            // リストファイルの準備
             val listFile = File(context.cacheDir, "input_list.txt")
             if (listFile.exists()) {
                 listFile.delete()
             }
 
-            // 実際に存在するファイルのみをリストに追加
-            val validFiles = inputFiles.filter { it.exists() && it.length() > 0 }
-
-            if (validFiles.isEmpty()) {
-                Log.e("FFmpegVideoProcessor", "有効な入力ファイルがありません")
-                return@withContext false
-            }
-
-            // ファイルリストの作成
+            // ファイルリストの作成（存在確認済みのファイルのみ）
             listFile.printWriter().use { writer ->
                 validFiles.forEach { file ->
                     writer.println("file '${file.absolutePath}'")
+                    Log.d("FFmpegVideoProcessor", "リストに追加: ${file.absolutePath} (${file.length()} bytes)")
                 }
             }
 
-            // 動画を結合するFFmpegコマンド
+            // 動画を結合して同時に解像度変換するコマンド
             val command = "-y -f concat -safe 0 -i ${listFile.absolutePath} " +
-                    "-vf scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2 " +
-                    "-c:v mpeg4 -q:v 2 " +
-                    "-pix_fmt yuv420p ${outputFile.absolutePath}"
+                    "-vf scale=1280:720 " +
+                    "-c:v mpeg4 -q:v 5 " +
+                    "-pix_fmt yuv420p " +
+                    "${outputFile.absolutePath}"
+
             Log.d("FFmpegVideoProcessor", "結合コマンド: $command")
 
-            try {
-                // FFmpegコマンドを実行
-                val result = executeFFmpegCommand(command)
+            // FFmpegコマンドを実行し、結果を待機
+            val result = executeFFmpegCommand(command)
 
-                // 結果の確認
-                if (result && outputFile.exists() && outputFile.length() > 0) {
-                    Log.d("FFmpegVideoProcessor", "動画結合成功: サイズ=${outputFile.length()} bytes")
-                    return@withContext true
-                } else {
-                    Log.e("FFmpegVideoProcessor", "動画結合失敗または出力ファイルが無効")
-                    return@withContext false
-                }
-            } catch (e: Exception) {
-                Log.e("FFmpegVideoProcessor", "FFmpeg実行中にエラー発生", e)
+            if (result && outputFile.exists() && outputFile.length() > 0) {
+                Log.d("FFmpegVideoProcessor", "動画結合成功: サイズ=${outputFile.length()} bytes")
+                return@withContext true
+            } else {
+                Log.e("FFmpegVideoProcessor", "動画結合失敗または出力ファイルが無効")
                 return@withContext false
             }
         } catch (e: Exception) {
             Log.e("FFmpegVideoProcessor", "動画結合中にエラー発生", e)
             return@withContext false
-        } finally {
-            // 必ず処理中フラグをリセット
-            isProcessing.set(false)
         }
     }
 

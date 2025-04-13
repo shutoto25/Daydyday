@@ -32,9 +32,8 @@ class PlayBackViewModel @Inject constructor() : ViewModel() {
      * 1秒間の動画ファイルを連結して、ひとつの動画ファイルとして出力する。
      * 二重実行を防止
      */
-    // 結合処理の改善
     fun mergeVideos(context: Context) {
-        // 処理中フラグのチェックと設定を一箇所でアトミックに行う
+        // synchronized ブロックで排他制御
         synchronized(this) {
             if (_isProcessing.value) {
                 Log.d("VideoMerge", "すでに処理中です")
@@ -43,15 +42,15 @@ class PlayBackViewModel @Inject constructor() : ViewModel() {
             _isProcessing.value = true
         }
 
-        _mergedVideoUri.value = null  // リセット
+        _mergedVideoUri.value = null
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 // 入力ディレクトリから動画ファイル一覧を取得
                 val videoDir = File(context.filesDir, "videos/1sec")
                 if (!videoDir.exists() || !videoDir.isDirectory) {
-                    Log.e("VideoConcat", "動画ディレクトリが存在しません: ${videoDir.absolutePath}")
-                    _isProcessing.value = false
+                    Log.e("VideoMerge", "動画ディレクトリが存在しません: ${videoDir.absolutePath}")
+                    withContext(Dispatchers.Main) { _isProcessing.value = false }
                     return@launch
                 }
 
@@ -60,27 +59,16 @@ class PlayBackViewModel @Inject constructor() : ViewModel() {
                 }?.sortedBy { it.name } ?: emptyList()
 
                 if (videoFiles.isEmpty()) {
-                    Log.e("VideoConcat", "動画ファイルがありません")
-                    _isProcessing.value = false
+                    Log.e("VideoMerge", "動画ファイルがありません")
+                    withContext(Dispatchers.Main) { _isProcessing.value = false }
                     return@launch
                 }
 
                 // 出力先ファイル
                 val outputFile = File(context.filesDir, "videos/merged.mp4")
 
-                // 既存のファイルを確実に削除
-                if (outputFile.exists()) {
-                    if (!outputFile.delete()) {
-                        Log.e("VideoConcat", "既存の出力ファイルを削除できませんでした")
-                        _isProcessing.value = false
-                        return@launch
-                    }
-                }
+                Log.d("VideoMerge", "動画結合開始: ${videoFiles.size}ファイル")
 
-                // 出力ディレクトリの確認
-                outputFile.parentFile?.mkdirs()
-
-                // FFmpegを使用して動画を結合
                 val success = ffmpegProcessor.concatenateVideos(
                     context,
                     videoFiles,
@@ -89,9 +77,7 @@ class PlayBackViewModel @Inject constructor() : ViewModel() {
 
                 withContext(Dispatchers.Main) {
                     if (success && outputFile.exists() && outputFile.length() > 0) {
-                        // ファイルのメディアスキャンを実行してシステムに認識させる
-                        val contentUri = outputFile.toUri()
-                        _mergedVideoUri.value = contentUri
+                        _mergedVideoUri.value = outputFile.toUri()
                         Log.d("VideoMerge", "動画連結完了: ${outputFile.absolutePath}")
                     } else {
                         Log.e("VideoMerge", "動画連結に失敗しました")

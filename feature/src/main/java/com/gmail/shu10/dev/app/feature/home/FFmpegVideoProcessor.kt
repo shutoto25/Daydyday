@@ -42,17 +42,33 @@ class FFmpegVideoProcessor {
             }
             outputFile.parentFile?.mkdirs()
 
-            // 1秒間の動画を切り出すFFmpegコマンド
+            // 開始時間（秒単位）
             val startSeconds = startMs / 1000f
+
+            // 1秒間の動画を切り出すFFmpegコマンド
+            // - 解像度を1280x720に制限
+            // - フレームレートを30fpsに固定
+            // - 厳密に1秒間のみ出力する
             val command = "-y -i $inputPath -ss $startSeconds -t 1.0 " +
                     "-vf scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2 " +
-                    "-c:v mpeg4 -q:v 2 -pix_fmt yuv420p " +
+                    "-r 30 " +  // フレームレートを30fpsに固定
+                    "-c:v mpeg4 -q:v 5 " +
+                    "-an " +  // 音声を除去（必要なければ）
+                    "-pix_fmt yuv420p " +
                     "${outputFile.absolutePath}"
 
             Log.d("FFmpegVideoProcessor", "トリミングコマンド: $command")
 
             // FFmpegコマンドを実行し、結果を待機
-            return@withContext executeFFmpegCommand(command)
+            val success = executeFFmpegCommand(command)
+
+            if (success && outputFile.exists() && outputFile.length() > 0) {
+                Log.d("FFmpegVideoProcessor", "動画トリミング成功: ${outputFile.absolutePath}, サイズ=${outputFile.length()} bytes")
+                return@withContext true
+            } else {
+                Log.e("FFmpegVideoProcessor", "動画トリミング失敗")
+                return@withContext false
+            }
         } catch (e: Exception) {
             Log.e("FFmpegVideoProcessor", "トリミング中にエラーが発生しました", e)
             return@withContext false

@@ -322,9 +322,12 @@ private fun MediaContentSection(
             }) { onClickAddLocation() }
         }
 
-        diary.trimmedVideoPath != null -> {
+        diary.videoPath != null || diary.trimmedVideoPath != null -> {
+            // 動画パスまたはトリミング済み動画パスがある場合
+            val videoUri = diary.trimmedVideoPath?.toUri() ?: diary.videoPath?.toUri()
+
             MediaPreViewComponent({
-                VideoPreviewComponent(diary.trimmedVideoPath!!.toUri())
+                VideoPreviewComponent(videoUri!!)
             }) { onClickAddLocation() }
         }
 

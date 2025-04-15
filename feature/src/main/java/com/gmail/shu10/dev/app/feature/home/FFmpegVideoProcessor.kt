@@ -44,11 +44,13 @@ class FFmpegVideoProcessor {
             // 開始時間（秒単位）
             val startSeconds = startMs / 1000f
 
-            // 標準化された1秒動画切り出しコマンド（画像からの生成と同じ条件）
+            // 標準化された1秒動画切り出しコマンド - フレーム数を明示的に指定
             val command = "-y -i $inputPath -ss $startSeconds " +
-                    "-vf scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2 " +
+                    "-vf scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS " +
                     "-t 1.0 " +              // 正確に1秒
                     "-r 30 " +               // 30fpsに統一
+                    "-frames:v 30 " +        // 正確に30フレームを指定
+                    "-vsync cfr " +          // 一定フレームレートを強制
                     "-c:v mpeg4 " +          // mpeg4コーデック
                     "-q:v 5 " +              // 品質レベル
                     "-an " +                 // 音声なし
@@ -61,11 +63,13 @@ class FFmpegVideoProcessor {
             val success = executeFFmpegCommand(command)
 
             if (success && outputFile.exists() && outputFile.length() > 0) {
-                // 作成された動画の情報を確認
-                val infoCommand = "-i ${outputFile.absolutePath}"
-                executeFFmpegCommand(infoCommand) // 情報表示用なので結果は無視
+                // 作成された動画の詳細情報をログに記録
+                logVideoInfo(context, outputFile)
 
-                Log.d("FFmpegVideoProcessor", "動画トリミング成功: ${outputFile.absolutePath}, サイズ=${outputFile.length()} bytes")
+                Log.d(
+                    "FFmpegVideoProcessor",
+                    "動画トリミング成功: ${outputFile.absolutePath}, サイズ=${outputFile.length()} bytes"
+                )
                 return@withContext true
             } else {
                 Log.e("FFmpegVideoProcessor", "動画トリミング失敗")
@@ -103,11 +107,13 @@ class FFmpegVideoProcessor {
             }
             outputFile.parentFile?.mkdirs()
 
-            // 標準化された1秒動画生成コマンド
+            // 標準化された1秒動画生成コマンド - フレーム数を明示的に指定
             val command = "-y -loop 1 -i ${imageFile.absolutePath} " +
-                    "-vf scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2 " +
+                    "-vf scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS " +
                     "-t 1.0 " +              // 正確に1秒
                     "-r 30 " +               // 30fpsに統一
+                    "-frames:v 30 " +        // 正確に30フレームを指定
+                    "-vsync cfr " +          // 一定フレームレートを強制
                     "-c:v mpeg4 " +          // mpeg4コーデック
                     "-q:v 5 " +              // 品質レベル
                     "-an " +                 // 音声なし
@@ -120,11 +126,13 @@ class FFmpegVideoProcessor {
             val success = executeFFmpegCommand(command)
 
             if (success && outputFile.exists() && outputFile.length() > 0) {
-                // 作成された動画の情報を確認
-                val infoCommand = "-i ${outputFile.absolutePath}"
-                executeFFmpegCommand(infoCommand) // 情報表示用なので結果は無視
+                // 作成された動画の詳細情報をログに記録
+                logVideoInfo(context, outputFile)
 
-                Log.d("FFmpegVideoProcessor", "動画作成成功: ${outputFile.absolutePath}, サイズ=${outputFile.length()} bytes")
+                Log.d(
+                    "FFmpegVideoProcessor",
+                    "動画作成成功: ${outputFile.absolutePath}, サイズ=${outputFile.length()} bytes"
+                )
                 return@withContext true
             } else {
                 Log.e("FFmpegVideoProcessor", "動画作成失敗")
@@ -169,6 +177,11 @@ class FFmpegVideoProcessor {
                 return@withContext false
             }
 
+            // 各入力ファイルの情報をログに記録
+            validFiles.forEachIndexed { index, file ->
+                Log.d("FFmpegVideoProcessor", "入力ファイル $index: ${file.absolutePath}, サイズ=${file.length()} bytes")
+            }
+
             // リストファイルの準備
             val listFile = File(context.cacheDir, "input_list.txt")
             if (listFile.exists()) {
@@ -179,13 +192,17 @@ class FFmpegVideoProcessor {
             listFile.printWriter().use { writer ->
                 validFiles.forEach { file ->
                     writer.println("file '${file.absolutePath}'")
-                    Log.d("FFmpegVideoProcessor", "リストに追加: ${file.absolutePath} (${file.length()} bytes)")
+                    Log.d("FFmpegVideoProcessor", "リストに追加: ${file.absolutePath}")
                 }
             }
 
-            // 動画を結合するコマンド - 各ファイルが既に標準化されているため単純なコピーで良い
+            // 動画を結合するコマンド - 警告を修正
+            // -vsync 2 を削除し、必要なら -fps_mode cfr に変更
             val command = "-y -f concat -safe 0 -i ${listFile.absolutePath} " +
-                    "-c copy " +  // 既に標準化されているのでコピーだけで良い
+                    "-c:v mpeg4 " +          // mpeg4コーデック
+                    "-q:v 5 " +              // 品質レベル
+                    "-r 30 " +               // 30fpsに統一
+                    "-pix_fmt yuv420p " +    // 標準的なピクセルフォーマット
                     "${outputFile.absolutePath}"
 
             Log.d("FFmpegVideoProcessor", "結合コマンド: $command")
@@ -194,9 +211,11 @@ class FFmpegVideoProcessor {
             val result = executeFFmpegCommand(command)
 
             if (result && outputFile.exists() && outputFile.length() > 0) {
-                // 結合後の動画の情報を確認
-                val infoCommand = "-i ${outputFile.absolutePath}"
-                executeFFmpegCommand(infoCommand) // 情報表示用なので結果は無視
+                // 結合後の動画の情報をログに記録
+                Log.d("FFmpegVideoProcessor", "結合後の動画情報: ${outputFile.absolutePath}, サイズ=${outputFile.length()} bytes")
+
+                // 入力動画の数と期待される合計時間
+                Log.d("FFmpegVideoProcessor", "入力動画数: ${validFiles.size}, 期待される合計時間: ${validFiles.size}.0秒")
 
                 Log.d("FFmpegVideoProcessor", "動画結合成功: サイズ=${outputFile.length()} bytes")
                 return@withContext true
@@ -227,54 +246,41 @@ class FFmpegVideoProcessor {
                 continuation.resume(false)
             } else {
                 // エラーの詳細情報を取得
-                val output = session.output
-                val logs = session.logs
                 val failStackTrace = session.failStackTrace
+                Log.e("FFmpegVideoProcessor", "FFmpegエラー: ${returnCode.value}, 理由: ${failStackTrace}")
 
-                Log.e("FFmpeg", "エラー: ${returnCode}")
-                Log.e("FFmpeg", "出力: ${output}")
-                Log.e("FFmpeg", "ログ: ${logs}")
-                Log.e("FFmpeg", "スタックトレース: ${failStackTrace}")
-                continuation.resume(false)
+                // 情報取得コマンドの場合は特別扱い（成功として扱う）
+                if (command.trim().startsWith("-i ") && command.trim().split(" ").size <= 2) {
+                    Log.d("FFmpegVideoProcessor", "情報取得コマンドのため、エラーを無視します")
+                    continuation.resume(true)
+                } else {
+                    continuation.resume(false)
+                }
             }
         }, { log ->
+            // ログを出力（必要に応じて）
             Log.d("FFmpegVideoProcessor", log.message)
         }, { statistics ->
-            // 進捗状況の更新（必要に応じて）
+            // 進捗状況の更新
             val timeInMs = statistics.time
             Log.d("FFmpegVideoProcessor", "処理時間: $timeInMs ms")
         })
     }
-
+    /**
+     * 動画ファイルの詳細情報をログに記録する
+     */
     /**
      * 動画ファイルの詳細情報をログに記録する
      */
     private suspend fun logVideoInfo(context: Context, videoFile: File) {
-        // 一時ファイルを作成してFFmpeg出力を保存
-        val infoFile = File(context.cacheDir, "video_info.txt")
-        if (infoFile.exists()) infoFile.delete()
+        try {
+            // 動画情報を取得するコマンド（出力ファイルを使わない方法）
+            val infoCommand = "-i ${videoFile.absolutePath}"
+            executeFFmpegCommand(infoCommand)
 
-        val infoCommand = "-i ${videoFile.absolutePath} -hide_banner"
-        executeFFmpegCommand(infoCommand)  // 標準出力に情報を出力
-
-        // フレーム数を取得するコマンド
-        val frameCountCommand = "-i ${videoFile.absolutePath} -v error -select_streams v:0 -count_frames -show_entries stream=nb_read_frames -of csv=p=0"
-        val frameCountFile = File(context.cacheDir, "frame_count.txt")
-        if (frameCountFile.exists()) frameCountFile.delete()
-
-        executeFFmpegCommand("$frameCountCommand > ${frameCountFile.absolutePath}")
-
-        // フレーム数の読み取り
-        val frameCount = if (frameCountFile.exists()) {
-            try {
-                frameCountFile.readText().trim().toIntOrNull() ?: "不明"
-            } catch (e: Exception) {
-                "読み取りエラー"
-            }
-        } else {
-            "ファイルなし"
+            Log.d("VideoAnalysis", "ファイル: ${videoFile.name}, サイズ: ${videoFile.length()} bytes")
+        } catch (e: Exception) {
+            Log.e("VideoAnalysis", "動画情報の取得中にエラーが発生しました: ${e.message}")
         }
-
-        Log.d("VideoAnalysis", "ファイル: ${videoFile.name}, サイズ: ${videoFile.length()} bytes, フレーム数: $frameCount")
     }
 }

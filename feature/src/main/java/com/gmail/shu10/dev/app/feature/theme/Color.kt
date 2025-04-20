@@ -10,7 +10,7 @@ val LightOnSecondary = Color(0xFFFFFFFF)
 
 val LightBackground = Color(0xFFFAFAFA)
 val LightCard = Color(0xFFF0F0F0)
-val LightSurface = Color(0xFFFFFFFF)
+val LightSurface = Color(0xFFF5F5F5)
 
 val LightTextPrimary = Color(0xFF111111)
 val LightTextSecondary = Color(0xFF666666)
@@ -28,7 +28,7 @@ val DarkOnSecondary = Color(0xFF000000)
 
 val DarkBackground = Color(0xFF121212)
 val DarkCard = Color(0xFF1E1E1E)
-val DarkSurface = Color(0xFF1E1E1E)
+val DarkSurface = Color(0xFF2A2A2A)
 
 val DarkTextPrimary = Color(0xFFFFFFFF)
 val DarkTextSecondary = Color(0xFFBBBBBB)

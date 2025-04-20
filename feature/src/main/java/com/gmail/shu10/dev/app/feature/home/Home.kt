@@ -69,6 +69,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -353,7 +354,12 @@ private fun ListSection(
                 }
             },
             content = { innerPadding ->
-                Box(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background)
+                        .padding(innerPadding)
+                ) {
                     DateGridSection(
                         diaryList = diaryList,
                         gridState = gridState,
@@ -362,7 +368,7 @@ private fun ListSection(
                         onDateClick = onDateClick,
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(innerPadding)
+                            .padding(horizontal = 20.dp)
                     )
                 }
             }
@@ -450,16 +456,14 @@ private fun DateGridSection(
  * @param onClickItem アイテムクリック時の処理
  */
 @Composable
-private fun DateGridItemComponent(diary: Diary, modifier: Modifier, onClickItem: () -> Unit) {
+private fun DateGridItemComponent(diary: Diary, modifier: Modifier = Modifier, onClickItem: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(1f) // 1:1のアスペクト比(正方形)
+            .clip(RoundedCornerShape(6.dp))
+            .background(MaterialTheme.colorScheme.surface)
             .clickable { onClickItem() }
-            .border(
-                BorderStroke(1.dp, Color.Gray),
-                shape = RoundedCornerShape(4.dp)
-            )
     ) {
         if (diary.videoPath != null) {
             val context = LocalContext.current

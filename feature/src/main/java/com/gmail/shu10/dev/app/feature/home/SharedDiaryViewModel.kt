@@ -122,24 +122,6 @@ class SharedDiaryViewModel @Inject constructor(
     }
 
     /**
-     * メディアタイプを設定
-     * @param mediaType MediaType
-     */
-    fun setMediaType(mediaType: MediaType) {
-        setConfigUseCase.setMediaType(mediaType.name)
-    }
-
-    /**
-     * メディアタイプを取得
-     * @return MediaType(初回起動時はnull)
-     */
-    fun getMediaType(): MediaType? {
-        val mediaTypeStr = getConfigUseCase.getMediaType()
-        Log.d("TEST", "getMediaType() called $mediaTypeStr")
-        return if (mediaTypeStr.isBlank()) null else MediaType.valueOf(mediaTypeStr)
-    }
-
-    /**
      * 写真保存（FFmpeg利用版）
      * @param context Context
      * @param uri Uri
@@ -239,10 +221,4 @@ sealed class DiaryDetailUiState {
     ) : DiaryDetailUiState()
 
     data class Error(val message: String) : DiaryDetailUiState()
-}
-
-enum class MediaType {
-    PHOTO,
-    VIDEO,
-    PHOTO_AND_VIDEO // 現状使えないが使える様になったら課金対象にする
 }

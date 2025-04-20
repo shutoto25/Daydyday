@@ -25,7 +25,6 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun rememberCameraLauncher(
     context: Context,
-    viewModel: SharedDiaryViewModel,
     onPhotoTaken: (Uri) -> Unit
 ): Pair<() -> Unit, androidx.activity.result.ActivityResultLauncher<Uri>> {
     // 撮影した写真のURIを保持する状態

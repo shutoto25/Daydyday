@@ -11,13 +11,12 @@ import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -43,7 +42,6 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -70,7 +68,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -309,7 +306,7 @@ private fun ListSection(
     // 現在のシートオフセット（dp）を保持する状態
     var currentSheetOffsetDp by remember { mutableStateOf(sheetSeekHeight) }
     // FABのpaddingBottomを計算
-    val fabPaddingBottom = screenHeight - currentSheetOffsetDp
+//    val fabPaddingBottom = screenHeight - currentSheetOffsetDp
     LaunchedEffect(sheetState.bottomSheetState) {
         snapshotFlow {
             try {
@@ -321,7 +318,8 @@ private fun ListSection(
         }.collect { currentSheetOffsetDp = with(density) { it.toDp() } }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val fabPaddingBottom = this.maxHeight - currentSheetOffsetDp
         BottomSheetScaffold(
             scaffoldState = sheetState,
             sheetPeekHeight = sheetSeekHeight,

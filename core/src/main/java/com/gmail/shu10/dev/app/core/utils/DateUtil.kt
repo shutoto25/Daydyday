@@ -40,6 +40,17 @@ fun getDayOfWeek(date: String): String {
 /**
  * 日付から月を取得
  * @param date 日付（yyyy-MM-dd）
+ * @return 年
+ */
+fun getYear(date: String): String {
+    val formatter = DateTimeFormatter.ofPattern(DateFormatConstants.YYYY_MM_DD_HYPHEN)
+    val parsedDate = LocalDate.parse(date, formatter)
+    return parsedDate.year.toString()
+}
+
+/**
+ * 日付から月を取得
+ * @param date 日付（yyyy-MM-dd）
  * @return 月
  */
 fun getMonth(date: String): String {

@@ -84,8 +84,10 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.gmail.shu10.dev.app.core.utils.DateFormatConstants
-import com.gmail.shu10.dev.app.core.utils.convertDateFormat
+import com.gmail.shu10.dev.app.core.utils.getDay
+import com.gmail.shu10.dev.app.core.utils.getMonth
 import com.gmail.shu10.dev.app.core.utils.getToday
+import com.gmail.shu10.dev.app.core.utils.getYear
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 import kotlinx.coroutines.launch
@@ -425,6 +427,8 @@ private fun DateGridSection(
     onDateClick: (Int, Diary) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val groupedItems = remember(diaryList) { groupDiariesWithLabels(diaryList) }
+
     with(sharedTransitionScope) {
         LazyVerticalGrid(
             state = gridState,
@@ -442,6 +446,35 @@ private fun DateGridSection(
                         animatedVisibilityScope = animatedVisibilityScope
                     )
                 ) { onDateClick(index, diary) }
+                // TODO indexがずれてしまう問題の解消が必要
+//            itemsIndexed(groupedItems) { index, item ->
+//                when (item) {
+//                    is GridItem.DiaryItem -> {
+//                        DateGridItemComponent(
+//                            item.diary,
+//                            Modifier.sharedElement(
+//                                state = rememberSharedContentState(item.diary.date),
+//                                animatedVisibilityScope = animatedVisibilityScope
+//                            )
+//                        ) { onDateClick(index, item.diary) }
+//                    }
+//
+//                    is GridItem.LabelItem -> {
+//                        Box(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .padding(4.dp)
+//                                .height(40.dp)
+//                                .clip(RoundedCornerShape(8.dp)),
+//                            contentAlignment = Alignment.Center
+//                        ) {
+//                            Text(
+//                                text = item.label,
+//                                style = MaterialTheme.typography.bodyMedium,
+//                            )
+//                        }
+//                    }
+//                }
             }
         }
     }
@@ -454,14 +487,19 @@ private fun DateGridSection(
  * @param onClickItem アイテムクリック時の処理
  */
 @Composable
-private fun DateGridItemComponent(diary: Diary, modifier: Modifier = Modifier, onClickItem: () -> Unit) {
+private fun DateGridItemComponent(
+    diary: Diary,
+    modifier: Modifier = Modifier,
+    onClickItem: () -> Unit
+) {
     Box(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .aspectRatio(1f) // 1:1のアスペクト比(正方形)
             .clip(RoundedCornerShape(6.dp))
             .background(MaterialTheme.colorScheme.surface)
-            .clickable { onClickItem() }
+            .clickable { onClickItem() },
+        contentAlignment = Alignment.Center
     ) {
         if (diary.videoPath != null) {
             val context = LocalContext.current
@@ -485,12 +523,13 @@ private fun DateGridItemComponent(diary: Diary, modifier: Modifier = Modifier, o
                 contentDescription = "dairy's photo",
                 contentScale = ContentScale.Crop
             )
+        } else {
+            Text(
+                text = getDay(diary.date),
+                Modifier.padding(8.dp),
+                fontSize = 16.sp
+            )
         }
-        Text(
-            text = convertDateFormat(diary.date),
-            Modifier.padding(8.dp),
-            fontSize = 16.sp
-        )
     }
 }
 
@@ -518,4 +557,27 @@ private fun InfiniteDateListPreview() {
             LoadingSection()
         }
     }
+}
+
+
+fun groupDiariesWithLabels(diaryList: List<Diary>): List<GridItem> {
+    if (diaryList.isEmpty()) return emptyList()
+
+    val result = mutableListOf<GridItem>()
+    var currentYearMonth: String? = null
+
+    for (diary in diaryList) {
+        val yearMonth = "${getYear(diary.date)}年 ${getMonth(diary.date)}月"
+        if (yearMonth != currentYearMonth) {
+            result.add(GridItem.LabelItem(yearMonth))
+            currentYearMonth = yearMonth
+        }
+        result.add(GridItem.DiaryItem(diary))
+    }
+    return result
+}
+
+sealed class GridItem {
+    data class DiaryItem(val diary: Diary) : GridItem()
+    data class LabelItem(val label: String) : GridItem()
 }

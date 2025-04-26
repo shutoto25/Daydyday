@@ -22,7 +22,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.camera.rememberCameraLauncher
@@ -66,10 +65,6 @@ sealed class DiaryDetailUiState {
     ) : DiaryDetailUiState()
 
     data class Error(val message: String) : DiaryDetailUiState()
-}
-
-fun NavController.navigateToTimetableItemDetailScreen(){
-    this.navigate("timetable_item_detail")
 }
 
 /**

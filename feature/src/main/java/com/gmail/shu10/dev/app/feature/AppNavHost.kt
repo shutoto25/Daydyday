@@ -19,11 +19,15 @@ import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.main.DiaryDetailSection
 import com.gmail.shu10.dev.app.feature.main.DiaryDetailScreenRoute
 import com.gmail.shu10.dev.app.feature.main.HomeScreen
+import com.gmail.shu10.dev.app.feature.main.HomeScreenRoute
 import com.gmail.shu10.dev.app.feature.main.SharedDiaryViewModel
 import com.gmail.shu10.dev.app.feature.playback.PlayBackRoute
 import com.gmail.shu10.dev.app.feature.playback.PlayBackScreenRoute
 import com.gmail.shu10.dev.app.feature.videoeditor.VideoEditorRoute
+import com.gmail.shu10.dev.app.feature.videoeditor.VideoEditorScreenRoute
 import kotlinx.serialization.json.Json
+
+private const val MainGraphRoute = "mainGraph"
 
 /**
  * 画面遷移ホスト
@@ -56,15 +60,15 @@ fun AppNavHost(
     SharedTransitionLayout {
         NavHost(
             navController = navController,
-            startDestination = "mainGraph"
+            startDestination = MainGraphRoute
         ) {
-            navigation(startDestination = AppScreen.Home.route, route = "mainGraph") {
+            navigation(startDestination = HomeScreenRoute, route = MainGraphRoute) {
                 // ホーム画面
-                composable(AppScreen.Home.route) { navBackStackEntry ->
+                composable(HomeScreenRoute) { navBackStackEntry ->
                     // コンストラクタのViewModelと同じViewModelStoreOwner(Activity scope)を使って
                     // ViewModelを取得するため同じインスタンスのViewModelが取得できる
                     val parentEntry = remember(navBackStackEntry) {
-                        navController.getBackStackEntry("mainGraph")
+                        navController.getBackStackEntry(MainGraphRoute)
                     }
                     HomeScreen(
                         navController = navController,
@@ -77,7 +81,7 @@ fun AppNavHost(
                 // 日付詳細画面
                 composable(DiaryDetailScreenRoute) { navBackStackEntry ->
                     val parentEntry = remember(navBackStackEntry) {
-                        navController.getBackStackEntry("mainGraph")
+                        navController.getBackStackEntry(MainGraphRoute)
                     }
                     DiaryDetailSection(
                         navController = navController,
@@ -88,7 +92,7 @@ fun AppNavHost(
                     )
                 }
                 // 動画編集画面
-                composable(AppScreen.VideoEditor("{diaryJson}").route) { navBackStackEntry ->
+                composable(VideoEditorScreenRoute) { navBackStackEntry ->
                     VideoEditorRoute(
                         navController,
                         getDiaryFromNavBackStackEntry(navBackStackEntry)
@@ -110,24 +114,4 @@ private fun getDiaryFromNavBackStackEntry(navBackStackEntry: NavBackStackEntry):
     val json = navBackStackEntry.arguments?.getString("diaryJson") ?: ""
     val diary = Json.decodeFromString<Diary>(Uri.decode(json))
     return diary
-}
-
-/**
- * 画面遷移一覧
- */
-sealed class AppScreen(val route: String) {
-    data object Home : AppScreen("home")
-    data class VideoEditor(val diaryJson: String) : AppScreen("videoEditor/{diaryJson}")
-}
-
-/**
- * 画面遷移ルーティング拡張関数
- */
-fun AppScreen.createRoute(): String {
-    return when (this) {
-        // ホーム画面へ遷移
-        is AppScreen.Home -> route
-        // 動画編集画面へ遷移
-        is AppScreen.VideoEditor -> "videoEditor/${Uri.encode(diaryJson)}"
-    }
 }

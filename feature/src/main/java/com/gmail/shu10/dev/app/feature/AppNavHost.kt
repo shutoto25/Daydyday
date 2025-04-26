@@ -16,7 +16,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.gmail.shu10.dev.app.domain.Diary
-import com.gmail.shu10.dev.app.feature.main.DiaryDetailSection
+import com.gmail.shu10.dev.app.feature.main.DiaryDetailScreen
 import com.gmail.shu10.dev.app.feature.main.DiaryDetailScreenRoute
 import com.gmail.shu10.dev.app.feature.main.HomeScreen
 import com.gmail.shu10.dev.app.feature.main.HomeScreenRoute
@@ -83,7 +83,7 @@ fun AppNavHost(
                     val parentEntry = remember(navBackStackEntry) {
                         navController.getBackStackEntry(MainGraphRoute)
                     }
-                    DiaryDetailSection(
+                    DiaryDetailScreen(
                         navController = navController,
                         sharedTransitionScope = this@SharedTransitionLayout,
                         animatedVisibilityScope = this,

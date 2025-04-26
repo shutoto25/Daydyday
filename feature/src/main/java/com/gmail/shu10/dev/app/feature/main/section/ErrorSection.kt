@@ -13,10 +13,15 @@ import androidx.compose.ui.Modifier
  * エラー画面
  * @param message エラーメッセージ
  * @param onReload リロード処理
+ * @param modifier Modifier
  */
 @Composable
-fun ErrorSection(message: String, onReload: () -> Unit) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+fun ErrorSection(
+    message: String,
+    onReload: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(text = message)
             Button(onClick = onReload) {

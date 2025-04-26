@@ -60,21 +60,6 @@ sealed class HomeUiState {
 }
 
 /**
- * 日記詳細画面のUI状態
- */
-sealed class DiaryDetailUiState {
-    object Loading : DiaryDetailUiState()
-
-    data class Success(
-        val diaryList: List<Diary>,
-        val index: Int,
-        val diary: Diary?,
-    ) : DiaryDetailUiState()
-
-    data class Error(val message: String) : DiaryDetailUiState()
-}
-
-/**
  * ホーム画面(日付リスト)
  * @param navController NavController
  * @param sharedTransitionScope SharedTransitionScope
@@ -134,7 +119,8 @@ private fun HomeContent(
             // エラー
             is HomeUiState.Error -> ErrorSection(
                 message = uiState.message,
-                onReload = { onReload }
+                onReload = { onReload },
+                modifier = Modifier.fillMaxSize()
             )
             // 通常画面
             is HomeUiState.Success -> {
@@ -233,7 +219,8 @@ private fun HomeScreenErrorPreview() {
         ) {
             ErrorSection(
                 message = "エラーが発生しました",
-                onReload = {}
+                onReload = {},
+                modifier = Modifier.fillMaxSize()
             )
         }
     }

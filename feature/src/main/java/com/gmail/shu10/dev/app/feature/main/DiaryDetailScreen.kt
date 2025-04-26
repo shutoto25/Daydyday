@@ -173,17 +173,16 @@ fun DetailContent(
                 modifier = Modifier.fillMaxSize()
             ) { page ->
                 uiState.diaryList[page].let { diary ->
-                    var selectedDiary by remember { mutableStateOf(diary) }
                     // メディア選択ロジック（画像・動画の選択後の処理）
                     val phonePickerLauncher = rememberPhonePickerLauncher(
                         contentResolver = contentResolver,
-                        onSavePhoto = { uri -> onSavePhoto(uri, selectedDiary) },
-                        onSaveVideo = { uri -> onSaveVideo(uri, selectedDiary) },
+                        onSavePhoto = { uri -> onSavePhoto(uri, diary) },
+                        onSaveVideo = { uri -> onSaveVideo(uri, diary) },
                     )
 
                     DiaryDetailSection(
                         modifier = modifier.fillMaxSize(),
-                        tempDiary = selectedDiary,
+                        tempDiary = diary,
                         sharedTransitionScope = sharedTransitionScope,
                         animatedVisibilityScope = animatedVisibilityScope,
                         onClickAddPhotoOrVideo = {

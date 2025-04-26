@@ -8,56 +8,32 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Text
-import androidx.compose.material3.Icon
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.media3.common.MediaItem
-import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.ui.PlayerView
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import com.gmail.shu10.dev.app.core.utils.convertDateFormat
-import com.gmail.shu10.dev.app.core.utils.getDayOfWeek
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.SharedDiaryViewModel
+import com.gmail.shu10.dev.app.feature.diarydetail.component.MemoComponent
+import com.gmail.shu10.dev.app.feature.diarydetail.section.DiaryDetailSection
+import com.gmail.shu10.dev.app.feature.diarydetail.section.HeaderSection
+import com.gmail.shu10.dev.app.feature.diarydetail.section.MediaContentSection
 import com.gmail.shu10.dev.app.feature.main.section.ErrorSection
 import com.gmail.shu10.dev.app.feature.main.section.LoadingSection
 import com.gmail.shu10.dev.app.feature.utils.toContentUri
@@ -225,237 +201,4 @@ private fun rememberPhonePickerLauncher(
             }
         }
     }
-}
-
-@OptIn(ExperimentalSharedTransitionApi::class)
-@Composable
-fun DiaryDetailSection(
-    tempDiary: Diary,
-    sharedTransitionScope: SharedTransitionScope,
-    animatedVisibilityScope: AnimatedVisibilityScope,
-    onClickAddPhotoOrVideo: () -> Unit,
-    onClickAddLocation: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-    ) {
-        HeaderSection(date = tempDiary.date)
-        MediaContentSection(
-            diary = tempDiary,
-            sharedTransitionScope = sharedTransitionScope,
-            animatedVisibilityScope = animatedVisibilityScope,
-            onClickAddPhotoOrVideo = { onClickAddPhotoOrVideo() },
-            onClickAddLocation = { onClickAddLocation() }
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        MemoComponent(
-            modifier = Modifier.fillMaxWidth(),
-            diary = tempDiary,
-            onContentChange = { /* あとで */ }
-        )
-    }
-
-}
-
-/**
- * 日付タイトル
- */
-@Composable
-private fun HeaderSection(date: String) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 28.dp, horizontal = 16.dp)
-    ) {
-        Text(
-            text = convertDateFormat(date),
-            fontSize = 28.sp
-        )
-        Text(
-            text = getDayOfWeek(date),
-            fontSize = 20.sp,
-        )
-    }
-}
-
-/**
- * メディア表示
- */
-@OptIn(ExperimentalSharedTransitionApi::class)
-@Composable
-private fun MediaContentSection(
-    diary: Diary,
-    sharedTransitionScope: SharedTransitionScope,
-    animatedVisibilityScope: AnimatedVisibilityScope,
-    onClickAddPhotoOrVideo: () -> Unit,
-    onClickAddLocation: () -> Unit,
-) {
-    when {
-        diary.photoPath != null -> {
-            MediaPreViewComponent({
-                PhotoImageComponent(
-                    diary,
-                    sharedTransitionScope,
-                    animatedVisibilityScope,
-                    onClickAddPhotoOrVideo
-                )
-            }) { onClickAddLocation() }
-        }
-
-        diary.videoPath != null || diary.trimmedVideoPath != null -> {
-            // 動画パスまたはトリミング済み動画パスがある場合
-            val videoUri = diary.trimmedVideoPath?.toUri() ?: diary.videoPath?.toUri()
-
-            MediaPreViewComponent({
-                VideoPreviewComponent(videoUri!!)
-            }) { onClickAddLocation() }
-        }
-
-        else -> {
-            NoMediaViewComponent(onClickAddPhotoOrVideo)
-        }
-    }
-}
-
-@Composable
-private fun MediaPreViewComponent(
-    content: @Composable () -> Unit,
-    onClickAddLocation: () -> Unit,
-) {
-    content()
-    LocationSettingComponent { onClickAddLocation() }
-}
-
-/**
- * メディアがない場合のビュー（追加ボタン）
- * @param onClickAddPhotoOrVideo 写真/動画追加ボタンクリックコールバック
- */
-@Composable
-private fun NoMediaViewComponent(onClickAddPhotoOrVideo: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(150.dp)
-            .background(Color.Gray)
-            .clickable { onClickAddPhotoOrVideo() },
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Icon(
-            imageVector = Icons.Default.Add,
-            contentDescription = "add",
-            modifier = Modifier.size(48.dp)
-        )
-        Text("写真/動画を追加")
-    }
-}
-
-/**
- * 位置情報設定
- * @param onClickAddLocation 位置情報追加ボタンクリックコールバック
- */
-@Composable
-private fun LocationSettingComponent(onClickAddLocation: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(48.dp)
-            .clickable { onClickAddLocation() },
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = Icons.Default.LocationOn,
-            contentDescription = "add",
-            modifier = Modifier
-                .padding(8.dp)
-                .size(24.dp)
-        )
-        Text("位置情報を追加")
-    }
-}
-
-/**
- * 写真プレビュー
- */
-@OptIn(ExperimentalSharedTransitionApi::class)
-@Composable
-private fun PhotoImageComponent(
-    diary: Diary,
-    sharedTransitionScope: SharedTransitionScope,
-    animatedVisibilityScope: AnimatedVisibilityScope,
-    onRefreshClick: () -> Unit,
-) {
-    with(sharedTransitionScope) {
-        Box {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(diary.photoPath)
-                    .crossfade(true)
-                    .placeholderMemoryCacheKey(diary.date)
-                    .memoryCacheKey(diary.date)
-                    .build(),
-                contentDescription = "dairy's photo",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .sharedElement(
-                        state = rememberSharedContentState(diary.date),
-                        animatedVisibilityScope = animatedVisibilityScope
-                    ),
-            )
-            Icon(
-                imageVector = Icons.Default.Refresh,
-                contentDescription = "change",
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(12.dp)
-                    .size(40.dp)
-                    .clickable { onRefreshClick() }
-            )
-        }
-    }
-}
-
-/**
- * 動画プレビュー
- * @param uri 動画URI
- */
-@Composable
-private fun VideoPreviewComponent(uri: Uri) {
-    val context = LocalContext.current
-    val expPlayer = remember {
-        ExoPlayer.Builder(context).build().apply {
-            setMediaItem(MediaItem.fromUri(uri))
-            prepare()
-            playWhenReady = false
-        }
-    }
-    AndroidView(
-        factory = { PlayerView(context).apply { player = expPlayer } },
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(200.dp)
-    )
-    DisposableEffect(Unit) {
-        onDispose { expPlayer.release() }
-    }
-}
-
-/**
- * 内容入力欄
- */
-@Composable
-private fun MemoComponent(
-    diary: Diary,
-    onContentChange: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    TextField(
-        value = diary.content,
-        onValueChange = onContentChange,
-        label = { Text("内容") },
-        modifier = modifier,
-        maxLines = Int.MAX_VALUE,
-        singleLine = false
-    )
 }

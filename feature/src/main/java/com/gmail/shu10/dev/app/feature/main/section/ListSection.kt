@@ -69,6 +69,7 @@ fun ListSection(
     onDateClick: (Int, Diary) -> Unit,
     onPlay: () -> Unit,
     onCamera: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val coroutineScope = rememberCoroutineScope()
     val sheetState = rememberBottomSheetScaffoldState()
@@ -90,7 +91,7 @@ fun ListSection(
         }.collect { currentSheetOffsetDp = with(density) { it.toDp() } }
     }
 
-    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+    BoxWithConstraints(modifier = modifier) {
         // FABのpaddingBottomを計算
         val fabPaddingBottom = this.maxHeight - currentSheetOffsetDp
         BottomSheetScaffold(

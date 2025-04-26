@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.diarydetail.component.MemoComponent
@@ -33,13 +35,11 @@ fun DiaryDetailSection(
     onClickAddLocation: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier
-    ) {
+    Column(modifier = modifier) {
         HeaderSection(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(vertical = 32.dp),
             date = diary.date
         )
         MediaContentSection(
@@ -48,7 +48,7 @@ fun DiaryDetailSection(
             animatedVisibilityScope = animatedVisibilityScope,
             onClickAddPhotoOrVideo = onClickAddPhotoOrVideo,
             onClickAddLocation = onClickAddLocation,
-            modifier = Modifier.fillMaxWidth().height(48.dp)
+            modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(16.dp))
         MemoComponent(

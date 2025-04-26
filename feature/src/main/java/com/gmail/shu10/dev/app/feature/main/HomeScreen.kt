@@ -139,9 +139,10 @@ private fun HomeContent(
                             weather = WeatherType.SUNNY,
                             temperature = "22°C",
                             location = "現在地",
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
                         )
                         ListSection(
+                            modifier = Modifier.fillMaxSize(),
                             diaryList = uiState.diaryList,
                             gridState = gridState,
                             sharedTransitionScope = sharedTransitionScope,

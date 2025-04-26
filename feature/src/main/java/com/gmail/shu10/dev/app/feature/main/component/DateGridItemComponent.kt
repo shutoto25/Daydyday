@@ -50,7 +50,7 @@ fun DateGridItemComponent(
         modifier = Modifier
             .fillMaxSize()
             .aspectRatio(1f) // 1:1のアスペクト比(正方形)
-            .clip(RoundedCornerShape(6.dp))
+            .clip(RoundedCornerShape(8.dp))
             .background(MaterialTheme.colorScheme.surface)
             .clickable { onClickItem() },
         contentAlignment = Alignment.Center

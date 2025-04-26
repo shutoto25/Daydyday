@@ -13,7 +13,7 @@ import com.gmail.shu10.dev.app.core.CoreDrawable
 import com.gmail.shu10.dev.app.core.constants.NotificationConstant.DEFAULT_MY_CHANNEL_ID
 import com.gmail.shu10.dev.app.core.utils.createDefaultChannel
 import com.gmail.shu10.dev.app.core.utils.hasPermission
-import com.gmail.shu10.dev.app.feature.main.MainActivity
+import com.gmail.shu10.dev.app.feature.MainActivity
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 

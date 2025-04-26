@@ -35,6 +35,8 @@ import com.gmail.shu10.dev.app.feature.main.section.DrawerSection
 import com.gmail.shu10.dev.app.feature.main.section.ErrorSection
 import com.gmail.shu10.dev.app.feature.main.section.ListSection
 import com.gmail.shu10.dev.app.feature.main.section.LoadingSection
+import com.gmail.shu10.dev.app.feature.main.section.WeatherInfoSection
+import com.gmail.shu10.dev.app.feature.main.section.WeatherType
 import com.gmail.shu10.dev.app.feature.playback.navigateToPlayBackScreen
 
 /*

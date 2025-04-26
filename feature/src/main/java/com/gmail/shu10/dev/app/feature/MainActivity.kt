@@ -1,4 +1,4 @@
-package com.gmail.shu10.dev.app.feature.main
+package com.gmail.shu10.dev.app.feature
 
 import android.Manifest
 import android.content.Intent
@@ -10,7 +10,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
-import com.gmail.shu10.dev.app.feature.AppNavHost
 import com.gmail.shu10.dev.app.feature.notification.scheduleDailyNotification
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -50,7 +49,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             DaydydayTheme {
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.Companion.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
                     AppNavHost(currentIntent)

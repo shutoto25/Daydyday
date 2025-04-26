@@ -1,4 +1,4 @@
-package com.gmail.shu10.dev.app.feature.main
+package com.gmail.shu10.dev.app.feature.main.section
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

@@ -1,4 +1,4 @@
-package com.gmail.shu10.dev.app.feature.main
+package com.gmail.shu10.dev.app.feature
 
 import android.content.Context
 import android.util.Log

@@ -39,7 +39,7 @@
 
         <!-- activity -->
         <activity
-            android:name="com.gmail.shu10.dev.app.feature.main.MainActivity"
+            android:name="com.gmail.shu10.dev.app.feature.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.Daydyday">
             <!-- アプリ用 -->

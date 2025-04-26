@@ -59,7 +59,9 @@ class SharedDiaryViewModel @Inject constructor(
         val saveData = updatedDiary.copy(uuid = updatedDiary.uuid.ifEmpty {
             UUID.randomUUID().toString() /* 初回保存時 */
         })
-        saveDiaryToLocal(saveData)
+        viewModelScope.launch {
+            saveDiaryUseCase(saveData)
+        }
     }
 
     /**
@@ -110,16 +112,6 @@ class SharedDiaryViewModel @Inject constructor(
     }
 
     /**
-     * 内部DBへ日記を保存
-     * @param diary 日記
-     */
-    private fun saveDiaryToLocal(diary: Diary) {
-        viewModelScope.launch {
-            saveDiaryUseCase(diary)
-        }
-    }
-
-    /**
      * 写真保存（FFmpeg利用版）
      * @param context Context
      * @param uri Uri
@@ -143,7 +135,9 @@ class SharedDiaryViewModel @Inject constructor(
         // 静止画から動画を生成（非同期処理）
         viewModelScope.launch {
             try {
-                val targetVideoFile = targetFile(context, date)
+                val appDir = File(context.filesDir, "videos/1sec")
+                if (!appDir.exists()) appDir.mkdirs()
+                val targetVideoFile = File(appDir, "$date.mp4")
 
                 // FFmpegを使って静止画から1秒動画を生成
                 val success = ffmpegProcessor.createVideoFromImage(
@@ -161,7 +155,6 @@ class SharedDiaryViewModel @Inject constructor(
                 Log.e("SharedDiaryViewModel", "静止画から動画への変換中にエラーが発生しました", e)
             }
         }
-
         return imageFile
     }
 
@@ -182,41 +175,4 @@ class SharedDiaryViewModel @Inject constructor(
         }
         return file
     }
-
-    /**
-     * 動画出力用のターゲットファイルを取得
-     */
-    private fun targetFile(context: Context, date: String): File {
-        val appDir = File(context.filesDir, "videos/1sec")
-        if (!appDir.exists()) appDir.mkdirs()
-        return File(appDir, "$date.mp4")
-    }
-}
-
-/**
- * ホーム画面のUI状態
- */
-sealed class HomeUiState {
-    object Loading : HomeUiState()
-
-    data class Success(
-        val diaryList: List<Diary>,
-    ) : HomeUiState()
-
-    data class Error(val message: String) : HomeUiState()
-}
-
-/**
- * 日記詳細画面のUI状態
- */
-sealed class DiaryDetailUiState {
-    object Loading : DiaryDetailUiState()
-
-    data class Success(
-        val diaryList: List<Diary>,
-        val index: Int,
-        val diary: Diary?,
-    ) : DiaryDetailUiState()
-
-    data class Error(val message: String) : DiaryDetailUiState()
 }

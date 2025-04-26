@@ -38,6 +38,33 @@ import com.gmail.shu10.dev.app.feature.main.section.LoadingSection
 　Section：画面幅いっぱいの要素
 　Component：セクションより小さな要素
  */
+/**
+ * ホーム画面のUI状態
+ */
+sealed class HomeUiState {
+    object Loading : HomeUiState()
+
+    data class Success(
+        val diaryList: List<Diary>,
+    ) : HomeUiState()
+
+    data class Error(val message: String) : HomeUiState()
+}
+
+/**
+ * 日記詳細画面のUI状態
+ */
+sealed class DiaryDetailUiState {
+    object Loading : DiaryDetailUiState()
+
+    data class Success(
+        val diaryList: List<Diary>,
+        val index: Int,
+        val diary: Diary?,
+    ) : DiaryDetailUiState()
+
+    data class Error(val message: String) : DiaryDetailUiState()
+}
 
 /**
  * ホーム画面(日付リスト)
@@ -98,7 +125,7 @@ private fun HomeContent(
             is HomeUiState.Loading -> LoadingSection()
             // エラー
             is HomeUiState.Error -> ErrorSection(
-                message = (uiState as HomeUiState.Error).message,
+                message = uiState.message,
                 onReload = { onReload }
             )
             // 通常画面
@@ -109,7 +136,6 @@ private fun HomeContent(
                     onPhotoTaken = { photoUri -> }
                 )
 
-                val successState = uiState as HomeUiState.Success
                 Box(modifier = Modifier.fillMaxSize()) {
                     Column {
                         // 天気情報エリアを追加
@@ -120,7 +146,7 @@ private fun HomeContent(
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                         )
                         ListSection(
-                            diaryList = successState.diaryList,
+                            diaryList = uiState.diaryList,
                             gridState = gridState,
                             sharedTransitionScope = sharedTransitionScope,
                             animatedVisibilityScope = animatedVisibilityScope,

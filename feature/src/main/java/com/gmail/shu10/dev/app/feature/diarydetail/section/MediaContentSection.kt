@@ -3,11 +3,14 @@ package com.gmail.shu10.dev.app.feature.diarydetail.section
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,64 +41,48 @@ fun MediaContentSection(
     onClickAddLocation: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    when {
-        diary.photoPath != null -> {
-            MediaPreViewComponent(
-                modifier = modifier,
-                content = {
-                    PhotoComponent(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(RoundedCornerShape(8.dp)),
-                        diary = diary,
-                        sharedTransitionScope = sharedTransitionScope,
-                        animatedVisibilityScope = animatedVisibilityScope,
-                        onRefreshClick = onClickAddPhotoOrVideo
-                    )
-                },
-                onClickAddLocation = onClickAddLocation
-            )
-        }
-
-        diary.videoPath != null || diary.trimmedVideoPath != null -> {
-            // 動画パスまたはトリミング済み動画パスがある場合
-            val videoUri = diary.trimmedVideoPath?.toUri() ?: diary.videoPath?.toUri()
-
-            MediaPreViewComponent(
-                modifier = modifier,
-                content = {
-                    VideoPreviewComponent(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp),
-                        uri = videoUri!!
-                    )
-                },
-                onClickAddLocation = onClickAddLocation
-            )
-        }
-
-        else -> {
-            NoMediaComponent(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp)
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                onClickAddPhotoOrVideo = onClickAddPhotoOrVideo
-            )
-        }
-    }
-}
-
-@Composable
-private fun MediaPreViewComponent(
-    content: @Composable () -> Unit,
-    onClickAddLocation: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    content()
-    LocationSettingComponent(
+    Column(
         modifier = modifier,
-        onClickAddLocation = onClickAddLocation
-    )
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        when {
+            diary.photoPath != null -> {
+                PhotoComponent(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp)),
+                    diary = diary,
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedVisibilityScope = animatedVisibilityScope,
+                    onRefreshClick = onClickAddPhotoOrVideo
+                )
+            }
+
+            diary.videoPath != null || diary.trimmedVideoPath != null -> {
+                // 動画パスまたはトリミング済み動画パスがある場合
+                val videoUri = diary.trimmedVideoPath?.toUri() ?: diary.videoPath?.toUri()
+
+                VideoPreviewComponent(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp)),
+                    uri = videoUri!!
+                )
+            }
+
+            else -> {
+                NoMediaComponent(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(150.dp),
+                    onClickAddPhotoOrVideo = onClickAddPhotoOrVideo
+                )
+            }
+        }
+
+        LocationSettingComponent(
+            modifier = Modifier.fillMaxWidth(),
+            onClickAddLocation = onClickAddLocation
+        )
+    }
 } 

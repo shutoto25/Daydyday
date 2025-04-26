@@ -38,7 +38,7 @@ fun PhotoComponent(
     modifier: Modifier = Modifier
 ) {
     with(sharedTransitionScope) {
-        Box(modifier =modifier) {
+        Box(modifier = modifier) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(diary.photoPath)

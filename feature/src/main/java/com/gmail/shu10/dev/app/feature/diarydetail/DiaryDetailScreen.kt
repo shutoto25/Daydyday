@@ -152,7 +152,7 @@ fun DetailContent(
                     DiaryDetailSection(
                         modifier = modifier
                             .fillMaxSize()
-                            .padding(horizontal = 16.dp),
+                            .padding(horizontal = 20.dp),
                         diary = diary,
                         sharedTransitionScope = sharedTransitionScope,
                         animatedVisibilityScope = animatedVisibilityScope,

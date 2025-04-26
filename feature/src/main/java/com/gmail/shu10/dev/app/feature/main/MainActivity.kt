@@ -1,4 +1,4 @@
-package com.gmail.shu10.dev.app.feature.home
+package com.gmail.shu10.dev.app.feature.main
 
 import android.Manifest
 import android.content.Intent

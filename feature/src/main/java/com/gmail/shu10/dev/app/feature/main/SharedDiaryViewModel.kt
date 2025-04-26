@@ -1,8 +1,6 @@
-package com.gmail.shu10.dev.app.feature.home
+package com.gmail.shu10.dev.app.feature.main
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel

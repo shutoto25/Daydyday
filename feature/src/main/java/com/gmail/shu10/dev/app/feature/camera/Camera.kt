@@ -1,9 +1,10 @@
-package com.gmail.shu10.dev.app.feature.home
+package com.gmail.shu10.dev.app.feature.camera
 
 import android.Manifest
 import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,7 +27,7 @@ import java.time.format.DateTimeFormatter
 fun rememberCameraLauncher(
     context: Context,
     onPhotoTaken: (Uri) -> Unit
-): Pair<() -> Unit, androidx.activity.result.ActivityResultLauncher<Uri>> {
+): Pair<() -> Unit, ActivityResultLauncher<Uri>> {
     // 撮影した写真のURIを保持する状態
     var photoUri by remember { mutableStateOf<Uri?>(null) }
 
@@ -77,7 +78,7 @@ fun rememberCameraLauncher(
  */
 private fun launchCamera(
     context: Context,
-    cameraLauncher: androidx.activity.result.ActivityResultLauncher<Uri>,
+    cameraLauncher: ActivityResultLauncher<Uri>,
     onUriCreated: (Uri) -> Unit
 ) {
     try {

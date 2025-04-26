@@ -1,4 +1,4 @@
-package com.gmail.shu10.dev.app.feature.home
+package com.gmail.shu10.dev.app.feature.main
 
 data class DiaryUIModel(
     /** ID（更新時にのみ使用）*/

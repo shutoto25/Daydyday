@@ -1,4 +1,4 @@
-package com.gmail.shu10.dev.app.feature.home
+package com.gmail.shu10.dev.app.feature.main
 
 import android.content.Intent
 import android.net.Uri
@@ -16,6 +16,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.gmail.shu10.dev.app.domain.Diary
+import com.gmail.shu10.dev.app.feature.playback.PlayBackRoute
+import com.gmail.shu10.dev.app.feature.videoeditor.VideoEditorRoute
 import kotlinx.serialization.json.Json
 
 /**

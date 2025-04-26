@@ -1,4 +1,4 @@
-package com.gmail.shu10.dev.app.feature.home
+package com.gmail.shu10.dev.app.feature.main
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -90,6 +90,7 @@ import com.gmail.shu10.dev.app.core.utils.getMonthName
 import com.gmail.shu10.dev.app.core.utils.getToday
 import com.gmail.shu10.dev.app.core.utils.getYear
 import com.gmail.shu10.dev.app.domain.Diary
+import com.gmail.shu10.dev.app.feature.camera.rememberCameraLauncher
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 import kotlinx.coroutines.launch
 

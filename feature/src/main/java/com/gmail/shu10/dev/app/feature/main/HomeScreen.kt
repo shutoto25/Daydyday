@@ -128,7 +128,7 @@ private fun HomeContent(
     ) {
         when (uiState) {
             // ローディング
-            is HomeUiState.Loading -> LoadingSection()
+            is HomeUiState.Loading -> LoadingSection(Modifier.fillMaxSize())
             // エラー
             is HomeUiState.Error -> ErrorSection(
                 message = uiState.message,
@@ -173,24 +173,7 @@ private fun HomeContent(
     }
 }
 
-@Preview(
-    name = "Home Screen - Loading",
-    showBackground = true,
-    showSystemUi = true,
-    device = Devices.PIXEL_4
-)
-@Composable
-private fun HomeScreenLoadingPreview() {
-    DaydydayTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            LoadingSection()
-        }
-    }
-}
-
+/* -------------------------- Preview ----------------------------- */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Preview(
     name = "Home Screen - Success",

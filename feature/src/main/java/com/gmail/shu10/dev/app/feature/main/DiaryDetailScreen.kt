@@ -2,6 +2,7 @@ package com.gmail.shu10.dev.app.feature.main
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -54,17 +55,26 @@ import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.gmail.shu10.dev.app.core.utils.convertDateFormat
 import com.gmail.shu10.dev.app.core.utils.getDayOfWeek
 import com.gmail.shu10.dev.app.domain.Diary
+import com.gmail.shu10.dev.app.feature.AppScreen
+import com.gmail.shu10.dev.app.feature.createRoute
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 import com.gmail.shu10.dev.app.feature.utils.toContentUri
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+
+const val DiaryDetailScreenRoute = "detail"
+
+fun NavController.navigateToDiaryDetailScreen() {
+    navigate(DiaryDetailScreenRoute)
+}
 
 /**
  * 日記詳細画面

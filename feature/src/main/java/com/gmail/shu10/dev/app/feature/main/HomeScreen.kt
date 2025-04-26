@@ -22,6 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.camera.rememberCameraLauncher
@@ -30,6 +31,7 @@ import com.gmail.shu10.dev.app.feature.main.section.DrawerSection
 import com.gmail.shu10.dev.app.feature.main.section.ErrorSection
 import com.gmail.shu10.dev.app.feature.main.section.ListSection
 import com.gmail.shu10.dev.app.feature.main.section.LoadingSection
+import com.gmail.shu10.dev.app.feature.playback.navigateToPlayBackScreen
 
 /*
 　画面構成方針
@@ -64,6 +66,10 @@ sealed class DiaryDetailUiState {
     ) : DiaryDetailUiState()
 
     data class Error(val message: String) : DiaryDetailUiState()
+}
+
+fun NavController.navigateToTimetableItemDetailScreen(){
+    this.navigate("timetable_item_detail")
 }
 
 /**
@@ -152,10 +158,10 @@ private fun HomeContent(
                             animatedVisibilityScope = animatedVisibilityScope,
                             onDateClick = { index, diary ->
                                 onSelectDiaryEvent(index, diary)
-                                navController.navigate(AppScreen.DiaryDetail.route)
+                                navController.navigateToDiaryDetailScreen()
                             },
                             onPlay = {
-                                navController.navigate(AppScreen.PlayBackRoute.route)
+                                navController.navigateToPlayBackScreen()
                             },
                             onCamera = {
                             }

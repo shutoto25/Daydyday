@@ -1,4 +1,4 @@
-package com.gmail.shu10.dev.app.feature.main
+package com.gmail.shu10.dev.app.feature
 
 import android.content.Intent
 import android.net.Uri
@@ -16,7 +16,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.gmail.shu10.dev.app.domain.Diary
+import com.gmail.shu10.dev.app.feature.main.DiaryDetailSection
+import com.gmail.shu10.dev.app.feature.main.DiaryDetailScreenRoute
+import com.gmail.shu10.dev.app.feature.main.HomeScreen
+import com.gmail.shu10.dev.app.feature.main.SharedDiaryViewModel
 import com.gmail.shu10.dev.app.feature.playback.PlayBackRoute
+import com.gmail.shu10.dev.app.feature.playback.PlayBackScreenRoute
 import com.gmail.shu10.dev.app.feature.videoeditor.VideoEditorRoute
 import kotlinx.serialization.json.Json
 
@@ -43,7 +48,7 @@ fun AppNavHost(
             if (date != null) {
                 // 日記詳細画面へ遷移
 //                viewModel.selectedDiary // TODO 今のままだと落ちると思う
-                navController.navigate(AppScreen.DiaryDetail.route)
+                navController.navigate(DiaryDetailScreenRoute)
             }
         }
     }
@@ -70,7 +75,7 @@ fun AppNavHost(
                     )
                 }
                 // 日付詳細画面
-                composable(AppScreen.DiaryDetail.route) { navBackStackEntry ->
+                composable(DiaryDetailScreenRoute) { navBackStackEntry ->
                     val parentEntry = remember(navBackStackEntry) {
                         navController.getBackStackEntry("mainGraph")
                     }
@@ -90,7 +95,7 @@ fun AppNavHost(
                     )
                 }
                 // 再生画面
-                composable(AppScreen.PlayBackRoute.route) { PlayBackRoute(navController) }
+                composable(PlayBackScreenRoute) { PlayBackRoute(navController) }
             }
         }
     }
@@ -112,9 +117,7 @@ private fun getDiaryFromNavBackStackEntry(navBackStackEntry: NavBackStackEntry):
  */
 sealed class AppScreen(val route: String) {
     data object Home : AppScreen("home")
-    data object DiaryDetail : AppScreen("detail")
     data class VideoEditor(val diaryJson: String) : AppScreen("videoEditor/{diaryJson}")
-    data object PlayBackRoute : AppScreen("playBack")
 }
 
 /**
@@ -124,11 +127,7 @@ fun AppScreen.createRoute(): String {
     return when (this) {
         // ホーム画面へ遷移
         is AppScreen.Home -> route
-        // 日付詳細画面へ遷移
-        is AppScreen.DiaryDetail -> route
         // 動画編集画面へ遷移
         is AppScreen.VideoEditor -> "videoEditor/${Uri.encode(diaryJson)}"
-        // 再生画面へ遷移
-        is AppScreen.PlayBackRoute -> route
     }
 }

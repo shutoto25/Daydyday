@@ -8,6 +8,9 @@ import com.gmail.shu10.dev.app.domain.Diary
 
 /**
  * 内容入力欄
+ * @param diary 日記
+ * @param onContentChange 内容変更コールバック
+ * @param modifier Modifier
  */
 @Composable
 fun MemoComponent(
@@ -16,10 +19,10 @@ fun MemoComponent(
     modifier: Modifier = Modifier,
 ) {
     TextField(
+        modifier = modifier,
         value = diary.content,
         onValueChange = onContentChange,
         label = { Text("内容") },
-        modifier = modifier,
         maxLines = Int.MAX_VALUE,
         singleLine = false
     )

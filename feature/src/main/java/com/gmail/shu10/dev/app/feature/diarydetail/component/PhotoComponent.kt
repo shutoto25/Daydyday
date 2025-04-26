@@ -22,6 +22,11 @@ import com.gmail.shu10.dev.app.domain.Diary
 
 /**
  * 写真プレビュー
+ * @param diary 日記
+ * @param sharedTransitionScope SharedTransitionScope
+ * @param animatedVisibilityScope AnimatedVisibilityScope
+ * @param onRefreshClick 写真/動画追加ボタンクリックコールバック
+ * @param modifier Modifier
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -30,9 +35,10 @@ fun PhotoComponent(
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
     onRefreshClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     with(sharedTransitionScope) {
-        Box {
+        Box(modifier =modifier) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(diary.photoPath)

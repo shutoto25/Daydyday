@@ -2,8 +2,6 @@ package com.gmail.shu10.dev.app.feature.diarydetail.component
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -18,14 +16,15 @@ import androidx.compose.ui.unit.dp
 /**
  * 位置情報設定
  * @param onClickAddLocation 位置情報追加ボタンクリックコールバック
+ * @param modifier Modifier
  */
 @Composable
-fun LocationSettingComponent(onClickAddLocation: () -> Unit) {
+fun LocationSettingComponent(
+    onClickAddLocation: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(48.dp)
-            .clickable { onClickAddLocation() },
+        modifier = modifier.clickable { onClickAddLocation() },
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(

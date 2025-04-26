@@ -8,11 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -23,17 +19,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.SharedDiaryViewModel
-import com.gmail.shu10.dev.app.feature.diarydetail.component.MemoComponent
 import com.gmail.shu10.dev.app.feature.diarydetail.section.DiaryDetailSection
-import com.gmail.shu10.dev.app.feature.diarydetail.section.HeaderSection
-import com.gmail.shu10.dev.app.feature.diarydetail.section.MediaContentSection
 import com.gmail.shu10.dev.app.feature.main.section.ErrorSection
 import com.gmail.shu10.dev.app.feature.main.section.LoadingSection
 import com.gmail.shu10.dev.app.feature.utils.toContentUri
@@ -157,7 +149,7 @@ fun DetailContent(
 
                     DiaryDetailSection(
                         modifier = modifier.fillMaxSize(),
-                        tempDiary = diary,
+                        diary = diary,
                         sharedTransitionScope = sharedTransitionScope,
                         animatedVisibilityScope = animatedVisibilityScope,
                         onClickAddPhotoOrVideo = {

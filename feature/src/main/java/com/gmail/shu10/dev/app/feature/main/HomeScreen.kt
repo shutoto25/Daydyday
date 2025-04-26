@@ -1,13 +1,16 @@
 package com.gmail.shu10.dev.app.feature.main
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalNavigationDrawer
@@ -16,8 +19,10 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -168,15 +173,83 @@ private fun HomeContent(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(
+    name = "Home Screen - Loading",
+    showBackground = true,
+    showSystemUi = true,
+    device = Devices.PIXEL_4
+)
 @Composable
-private fun InfiniteDateListPreview() {
+private fun HomeScreenLoadingPreview() {
     DaydydayTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
             LoadingSection()
+        }
+    }
+}
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Preview(
+    name = "Home Screen - Success",
+    showBackground = true,
+    showSystemUi = true,
+    device = Devices.PIXEL_4
+)
+@Composable
+private fun HomeScreenSuccessPreview() {
+    val mockDiaryList = remember {
+        List(10) { index ->
+            Diary(
+                date = "2024-04-${index + 1}",
+                photoPath = if (index % 2 == 0) "test_photo_path" else null,
+                videoPath = if (index % 3 == 0) "test_video_path" else null
+            )
+        }
+    }
+
+    DaydydayTheme {
+        SharedTransitionLayout {
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colorScheme.background
+            ) {
+                val gridState = rememberLazyGridState()
+                AnimatedVisibility(visible = true) {
+                    ListSection(
+                        diaryList = mockDiaryList,
+                        gridState = gridState,
+                        sharedTransitionScope = this@SharedTransitionLayout,
+                        animatedVisibilityScope = this,
+                        onDateClick = { _, _ -> },
+                        onPlay = {},
+                        onCamera = {}
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Preview(
+    name = "Home Screen - Error",
+    showBackground = true,
+    showSystemUi = true,
+    device = Devices.PIXEL_4
+)
+@Composable
+private fun HomeScreenErrorPreview() {
+    DaydydayTheme {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            ErrorSection(
+                message = "エラーが発生しました",
+                onReload = {}
+            )
         }
     }
 }

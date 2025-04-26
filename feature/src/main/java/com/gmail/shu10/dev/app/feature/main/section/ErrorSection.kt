@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 fun ErrorSection(message: String, onReload: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = "エラーが発生しました")
             Text(text = message)
             Button(onClick = onReload) {
                 Text(text = "リトライ")

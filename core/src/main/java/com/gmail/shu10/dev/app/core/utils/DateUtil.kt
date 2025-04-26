@@ -42,10 +42,10 @@ fun getDayOfWeek(date: String): String {
  * @param date 日付（yyyy-MM-dd）
  * @return 年
  */
-fun getYear(date: String): String {
+fun getYear(date: String): Int {
     val formatter = DateTimeFormatter.ofPattern(DateFormatConstants.YYYY_MM_DD_HYPHEN)
     val parsedDate = LocalDate.parse(date, formatter)
-    return parsedDate.year.toString()
+    return parsedDate.year
 }
 
 /**
@@ -53,7 +53,18 @@ fun getYear(date: String): String {
  * @param date 日付（yyyy-MM-dd）
  * @return 月
  */
-fun getMonth(date: String): String {
+fun getMonth(date: String): Int {
+    val formatter = DateTimeFormatter.ofPattern(DateFormatConstants.YYYY_MM_DD_HYPHEN)
+    val parsedDate = LocalDate.parse(date, formatter)
+    return parsedDate.monthValue
+}
+
+/**
+ * 日付から月（文字列）を取得
+ * @param date 日付（yyyy-MM-dd）
+ * @return 月
+ */
+fun getMonthName(date: String): String {
     val formatter = DateTimeFormatter.ofPattern(DateFormatConstants.YYYY_MM_DD_HYPHEN)
     val parsedDate = LocalDate.parse(date, formatter)
     return parsedDate.month.toString()
@@ -64,8 +75,8 @@ fun getMonth(date: String): String {
  * @param date 日付（yyyy-MM-dd）
  * @return 日
  */
-fun getDay(date: String): String {
+fun getDay(date: String): Int {
     val formatter = DateTimeFormatter.ofPattern(DateFormatConstants.YYYY_MM_DD_HYPHEN)
     val parsedDate = LocalDate.parse(date, formatter)
-    return parsedDate.dayOfMonth.toString()
+    return parsedDate.dayOfMonth
 }

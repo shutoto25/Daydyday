@@ -29,7 +29,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import com.gmail.shu10.dev.app.domain.Diary
+import com.gmail.shu10.dev.app.feature.SharedDiaryViewModel
 import com.gmail.shu10.dev.app.feature.camera.rememberCameraLauncher
+import com.gmail.shu10.dev.app.feature.diarydetail.navigateToDiaryDetailScreen
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
 import com.gmail.shu10.dev.app.feature.main.section.DrawerSection
 import com.gmail.shu10.dev.app.feature.main.section.ErrorSection

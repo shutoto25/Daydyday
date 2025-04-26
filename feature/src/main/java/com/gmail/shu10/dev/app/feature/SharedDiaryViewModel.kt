@@ -1,4 +1,4 @@
-package com.gmail.shu10.dev.app.feature.main
+package com.gmail.shu10.dev.app.feature
 
 import android.content.Context
 import android.net.Uri
@@ -10,6 +10,9 @@ import com.gmail.shu10.dev.app.domain.GetConfigUseCase
 import com.gmail.shu10.dev.app.domain.GetDiaryUseCase
 import com.gmail.shu10.dev.app.domain.SaveDiaryUseCase
 import com.gmail.shu10.dev.app.domain.SetConfigUseCase
+import com.gmail.shu10.dev.app.feature.diarydetail.DiaryDetailUiState
+import com.gmail.shu10.dev.app.feature.main.FFmpegVideoProcessor
+import com.gmail.shu10.dev.app.feature.main.HomeUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

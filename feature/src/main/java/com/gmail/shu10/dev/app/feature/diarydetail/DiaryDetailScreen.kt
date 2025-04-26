@@ -1,4 +1,4 @@
-package com.gmail.shu10.dev.app.feature.main
+package com.gmail.shu10.dev.app.feature.diarydetail
 
 import android.content.ContentResolver
 import android.net.Uri
@@ -35,10 +35,8 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,6 +57,7 @@ import coil.request.ImageRequest
 import com.gmail.shu10.dev.app.core.utils.convertDateFormat
 import com.gmail.shu10.dev.app.core.utils.getDayOfWeek
 import com.gmail.shu10.dev.app.domain.Diary
+import com.gmail.shu10.dev.app.feature.SharedDiaryViewModel
 import com.gmail.shu10.dev.app.feature.main.section.ErrorSection
 import com.gmail.shu10.dev.app.feature.main.section.LoadingSection
 import com.gmail.shu10.dev.app.feature.utils.toContentUri
@@ -241,7 +240,7 @@ fun DiaryDetailSection(
     Column(
         modifier = modifier
     ) {
-        DateTitleSection(date = tempDiary.date)
+        HeaderSection(date = tempDiary.date)
         MediaContentSection(
             diary = tempDiary,
             sharedTransitionScope = sharedTransitionScope,
@@ -250,7 +249,7 @@ fun DiaryDetailSection(
             onClickAddLocation = { onClickAddLocation() }
         )
         Spacer(modifier = Modifier.height(16.dp))
-        DiaryContentInput(
+        MemoComponent(
             modifier = Modifier.fillMaxWidth(),
             diary = tempDiary,
             onContentChange = { /* あとで */ }
@@ -263,7 +262,7 @@ fun DiaryDetailSection(
  * 日付タイトル
  */
 @Composable
-private fun DateTitleSection(date: String) {
+private fun HeaderSection(date: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -325,7 +324,7 @@ private fun MediaPreViewComponent(
     onClickAddLocation: () -> Unit,
 ) {
     content()
-    LocationSetting { onClickAddLocation() }
+    LocationSettingComponent { onClickAddLocation() }
 }
 
 /**
@@ -357,7 +356,7 @@ private fun NoMediaViewComponent(onClickAddPhotoOrVideo: () -> Unit) {
  * @param onClickAddLocation 位置情報追加ボタンクリックコールバック
  */
 @Composable
-private fun LocationSetting(onClickAddLocation: () -> Unit) {
+private fun LocationSettingComponent(onClickAddLocation: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -446,7 +445,7 @@ private fun VideoPreviewComponent(uri: Uri) {
  * 内容入力欄
  */
 @Composable
-private fun DiaryContentInput(
+private fun MemoComponent(
     diary: Diary,
     onContentChange: (String) -> Unit,
     modifier: Modifier = Modifier,

@@ -16,11 +16,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.gmail.shu10.dev.app.domain.Diary
-import com.gmail.shu10.dev.app.feature.main.DiaryDetailScreen
-import com.gmail.shu10.dev.app.feature.main.DiaryDetailScreenRoute
+import com.gmail.shu10.dev.app.feature.diarydetail.DiaryDetailScreen
+import com.gmail.shu10.dev.app.feature.diarydetail.DiaryDetailScreenRoute
 import com.gmail.shu10.dev.app.feature.main.HomeScreen
 import com.gmail.shu10.dev.app.feature.main.HomeScreenRoute
-import com.gmail.shu10.dev.app.feature.main.SharedDiaryViewModel
 import com.gmail.shu10.dev.app.feature.playback.PlayBackRoute
 import com.gmail.shu10.dev.app.feature.playback.PlayBackScreenRoute
 import com.gmail.shu10.dev.app.feature.videoeditor.VideoEditorRoute

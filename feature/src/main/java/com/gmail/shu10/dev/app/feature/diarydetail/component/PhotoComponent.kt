@@ -25,7 +25,7 @@ import com.gmail.shu10.dev.app.domain.Diary
  * @param diary 日記
  * @param sharedTransitionScope SharedTransitionScope
  * @param animatedVisibilityScope AnimatedVisibilityScope
- * @param onRefreshClick 写真/動画追加ボタンクリックコールバック
+ * @param onClickChange 写真/動画追加ボタンクリックコールバック
  * @param modifier Modifier
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -34,7 +34,7 @@ fun PhotoComponent(
     diary: Diary,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
-    onRefreshClick: () -> Unit,
+    onClickChange: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     with(sharedTransitionScope) {
@@ -61,7 +61,7 @@ fun PhotoComponent(
                     .align(Alignment.TopEnd)
                     .padding(12.dp)
                     .size(40.dp)
-                    .clickable { onRefreshClick() }
+                    .clickable { onClickChange() }
             )
         }
     }

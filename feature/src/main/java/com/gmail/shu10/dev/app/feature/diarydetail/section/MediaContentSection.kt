@@ -3,14 +3,11 @@ package com.gmail.shu10.dev.app.feature.diarydetail.section
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,7 +24,7 @@ import com.gmail.shu10.dev.app.feature.diarydetail.component.VideoPreviewCompone
  * @param diary 日記
  * @param sharedTransitionScope SharedTransitionScope
  * @param animatedVisibilityScope AnimatedVisibilityScope
- * @param onClickAddPhotoOrVideo 写真/動画追加ボタンクリックコールバック
+ * @param saveContent 写真/動画追加ボタンクリックコールバック
  * @param onClickAddLocation 位置情報追加ボタンクリックコールバック
  * @param modifier Modifier
  */
@@ -37,7 +34,7 @@ fun MediaContentSection(
     diary: Diary,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
-    onClickAddPhotoOrVideo: () -> Unit,
+    saveContent: () -> Unit,
     onClickAddLocation: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -54,7 +51,7 @@ fun MediaContentSection(
                     diary = diary,
                     sharedTransitionScope = sharedTransitionScope,
                     animatedVisibilityScope = animatedVisibilityScope,
-                    onRefreshClick = onClickAddPhotoOrVideo
+                    onClickChange = saveContent
                 )
             }
 
@@ -75,7 +72,7 @@ fun MediaContentSection(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(150.dp),
-                    onClickAddPhotoOrVideo = onClickAddPhotoOrVideo
+                    onClickAddContent = saveContent
                 )
             }
         }

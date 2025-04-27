@@ -15,16 +15,16 @@ import androidx.compose.ui.unit.dp
 
 /**
  * メディアがない場合のビュー（追加ボタン）
- * @param onClickAddPhotoOrVideo 写真/動画追加ボタンクリックコールバック
+ * @param onClickAddContent 写真/動画追加ボタンクリックコールバック
  * @param modifier Modifier
  */
 @Composable
 fun NoMediaComponent(
-    onClickAddPhotoOrVideo: () -> Unit,
+    onClickAddContent: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier.clickable { onClickAddPhotoOrVideo() },
+        modifier = modifier.clickable { onClickAddContent() },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {

@@ -156,7 +156,7 @@ fun DetailContent(
                         diary = diary,
                         sharedTransitionScope = sharedTransitionScope,
                         animatedVisibilityScope = animatedVisibilityScope,
-                        onClickAddPhotoOrVideo = {
+                        saveContent = {
                             phonePickerLauncher.launch(
                                 PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
                             )

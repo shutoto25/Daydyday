@@ -8,10 +8,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.gmail.shu10.dev.app.domain.Diary
 import com.gmail.shu10.dev.app.feature.diarydetail.component.MemoComponent
@@ -21,7 +19,7 @@ import com.gmail.shu10.dev.app.feature.diarydetail.component.MemoComponent
  * @param diary 日記
  * @param sharedTransitionScope SharedTransitionScope
  * @param animatedVisibilityScope AnimatedVisibilityScope
- * @param onClickAddPhotoOrVideo 写真/動画追加ボタンクリックコールバック
+ * @param saveContent 写真/動画追加ボタンクリックコールバック
  * @param onClickAddLocation 位置情報追加ボタンクリックコールバック
  * @param modifier Modifier
  */
@@ -31,7 +29,7 @@ fun DiaryDetailSection(
     diary: Diary,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
-    onClickAddPhotoOrVideo: () -> Unit,
+    saveContent: () -> Unit,
     onClickAddLocation: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -46,7 +44,7 @@ fun DiaryDetailSection(
             diary = diary,
             sharedTransitionScope = sharedTransitionScope,
             animatedVisibilityScope = animatedVisibilityScope,
-            onClickAddPhotoOrVideo = onClickAddPhotoOrVideo,
+            saveContent = saveContent,
             onClickAddLocation = onClickAddLocation,
             modifier = Modifier.fillMaxWidth()
         )

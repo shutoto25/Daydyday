@@ -72,7 +72,7 @@ fun DiaryDetailScreen(
         contentResolver = contentResolver,
         gridState = gridState,
         onSavePhoto = { uri, diary ->
-            val file = viewModel.savePhotoToAppDir(context, uri, diary.date)
+            val file = viewModel.save1secFromPhoto(context, uri, diary.date)
             // キャッシュバスティング用にクエリパラメータを追加
             val newPhotoUri = file?.toContentUri(context)?.let {
                 "$it?ts=${System.currentTimeMillis()}"

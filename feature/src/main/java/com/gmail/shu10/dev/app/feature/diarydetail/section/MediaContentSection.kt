@@ -43,7 +43,7 @@ fun MediaContentSection(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         when {
-            diary.photoPath != null -> {
+            diary.photoPath != null -> { // photoパスいらないかも消してもいいかも
                 PhotoComponent(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -55,7 +55,7 @@ fun MediaContentSection(
                 )
             }
 
-            diary.videoPath != null || diary.trimmedVideoPath != null -> {
+            diary.videoPath != null || diary.trimmedVideoPath != null -> { // trimmedで統一して
                 // 動画パスまたはトリミング済み動画パスがある場合
                 val videoUri = diary.trimmedVideoPath?.toUri() ?: diary.videoPath?.toUri()
 

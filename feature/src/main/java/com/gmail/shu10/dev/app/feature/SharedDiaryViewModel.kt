@@ -50,6 +50,11 @@ class SharedDiaryViewModel @Inject constructor(
         syncDiaryList()
     }
 
+    /**
+     * 日記リストのアイテムを選択
+     * @param index 選択した日記のインデックス
+     * @param selectedDiary 選択した日記
+     */
     fun selectDiaryEvent(index: Int, selectedDiary: Diary) {
         _detailUiState.value = DiaryDetailUiState.Success(
             diaryList = _diaryList.value,
@@ -58,6 +63,10 @@ class SharedDiaryViewModel @Inject constructor(
         )
     }
 
+    /**
+     * 日記リストのアイテムを更新
+     * @param updatedDiary 更新対象日記
+     */
     fun updateDiaryListItem(updatedDiary: Diary) {
         val saveData = updatedDiary.copy(uuid = updatedDiary.uuid.ifEmpty {
             UUID.randomUUID().toString() /* 初回保存時 */
@@ -115,50 +124,63 @@ class SharedDiaryViewModel @Inject constructor(
     }
 
     /**
-     * 写真保存（FFmpeg利用版）
+     * 写真を1秒動画に変換して保存
      * @param context Context
      * @param uri Uri
      * @param date 日付
+     * @return File? 生成した動画ファイル
      */
-    fun savePhotoToAppDir(context: Context, uri: Uri, date: String): File? {
-        val inputStream = context.contentResolver.openInputStream(uri) ?: return null
+    fun save1secFromPhoto(context: Context, uri: Uri, date: String): File? {
+        // 動画格納用ディレクトリ作成
+        val videoDir = File(context.filesDir, "videos/1sec")
+        if (!videoDir.exists()) videoDir.mkdirs()
 
-        // 画像ディレクトリの作成
-        val appDir = File(context.filesDir, "images")
-        if (!appDir.exists()) appDir.mkdirs()
+        // 出力先の動画ファイル
+        val targetVideoFile = File(videoDir, "$date.mp4")
 
-        // 写真を保存
-        val imageFile = File(appDir, "$date.jpg")
-        inputStream.use { input ->
-            imageFile.outputStream().use { output ->
-                input.copyTo(output)
-            }
-        }
+        // 一時ディレクトリ作成
+        val tempDir = File(context.cacheDir, "temp_images")
+        if (!tempDir.exists()) tempDir.mkdirs()
 
-        // 静止画から動画を生成（非同期処理）
-        viewModelScope.launch {
-            try {
-                val appDir = File(context.filesDir, "videos/1sec")
-                if (!appDir.exists()) appDir.mkdirs()
-                val targetVideoFile = File(appDir, "$date.mp4")
+        // 一時的な画像ファイル
+        val tempImageFile = File(tempDir, "${date}_temp.jpg")
 
-                // FFmpegを使って静止画から1秒動画を生成
-                val success = ffmpegProcessor.createVideoFromImage(
-                    context,
-                    imageFile,
-                    targetVideoFile
-                )
-
-                if (success) {
-                    Log.d("SharedDiaryViewModel", "静止画から動画への変換が成功しました: $date")
-                } else {
-                    Log.e("SharedDiaryViewModel", "静止画から動画への変換に失敗しました: $date")
+        try {
+            // 画像を一時ファイルとして保存
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                tempImageFile.outputStream().use { output ->
+                    input.copyTo(output)
                 }
-            } catch (e: Exception) {
-                Log.e("SharedDiaryViewModel", "静止画から動画への変換中にエラーが発生しました", e)
+            } ?: return null
+
+            // 非同期処理で画像から動画を生成
+            viewModelScope.launch {
+                try {
+                    // FFmpegを使って静止画から1秒動画を生成
+                    val success = ffmpegProcessor.createVideoFromImage(
+                        context,
+                        tempImageFile,
+                        targetVideoFile
+                    )
+                    Log.d("SharedDiaryViewModel", "　${date}を静止画から動画へ変換した結果:$success")
+                } catch (e: Exception) {
+                    Log.e("SharedDiaryViewModel", "静止画から動画への変換中にエラーが発生しました", e)
+                } finally {
+                    // 処理完了後、一時ファイルを削除
+                    if (tempImageFile.exists()) {
+                        tempImageFile.delete()
+                    }
+                }
             }
+            return targetVideoFile
+        } catch (e: Exception) {
+            Log.e("SharedDiaryViewModel", "画像の保存中にエラーが発生しました", e)
+            // エラー時は一時ファイルを削除
+            if (tempImageFile.exists()) {
+                tempImageFile.delete()
+            }
+            return null
         }
-        return imageFile
     }
 
     /**

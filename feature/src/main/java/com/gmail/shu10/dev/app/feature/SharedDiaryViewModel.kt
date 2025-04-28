@@ -138,17 +138,17 @@ class SharedDiaryViewModel @Inject constructor(
         // 出力先の動画ファイル
         val targetVideoFile = File(videoDir, "$date.mp4")
 
-        // 一時ディレクトリ作成
-        val tempDir = File(context.cacheDir, "temp_images")
-        if (!tempDir.exists()) tempDir.mkdirs()
+        // 画像ディレクトリの作成
+        val appDir = File(context.filesDir, "images")
+        if (!appDir.exists()) appDir.mkdirs()
 
-        // 一時的な画像ファイル
-        val tempImageFile = File(tempDir, "${date}_temp.jpg")
+        // 出力先の画像ファイル
+        val imageFile = File(appDir, "$date.jpg")
 
         try {
             // 画像を一時ファイルとして保存
             context.contentResolver.openInputStream(uri)?.use { input ->
-                tempImageFile.outputStream().use { output ->
+                imageFile.outputStream().use { output ->
                     input.copyTo(output)
                 }
             } ?: return null
@@ -159,26 +159,17 @@ class SharedDiaryViewModel @Inject constructor(
                     // FFmpegを使って静止画から1秒動画を生成
                     val success = ffmpegProcessor.createVideoFromImage(
                         context,
-                        tempImageFile,
+                        imageFile,
                         targetVideoFile
                     )
                     Log.d("SharedDiaryViewModel", "　${date}を静止画から動画へ変換した結果:$success")
                 } catch (e: Exception) {
                     Log.e("SharedDiaryViewModel", "静止画から動画への変換中にエラーが発生しました", e)
-                } finally {
-                    // 処理完了後、一時ファイルを削除
-                    if (tempImageFile.exists()) {
-                        tempImageFile.delete()
-                    }
                 }
             }
-            return targetVideoFile
+            return imageFile
         } catch (e: Exception) {
             Log.e("SharedDiaryViewModel", "画像の保存中にエラーが発生しました", e)
-            // エラー時は一時ファイルを削除
-            if (tempImageFile.exists()) {
-                tempImageFile.delete()
-            }
             return null
         }
     }

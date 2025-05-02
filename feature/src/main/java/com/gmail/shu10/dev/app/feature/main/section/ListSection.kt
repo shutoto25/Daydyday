@@ -1,31 +1,14 @@
 package com.gmail.shu10.dev.app.feature.main.section
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.LazyGridState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -35,8 +18,7 @@ import androidx.compose.ui.unit.sp
 import com.gmail.shu10.dev.app.core.utils.DateFormatConstants
 import com.gmail.shu10.dev.app.core.utils.getToday
 import com.gmail.shu10.dev.app.domain.Diary
-import com.gmail.shu10.dev.app.feature.main.FloatingAppBar
-import com.gmail.shu10.dev.app.feature.main.HorizontalFloatingAppBar
+import com.gmail.shu10.dev.app.feature.main.CustomFloatingAppMenuBar
 import androidx.navigation.compose.rememberNavController
 
 /**
@@ -83,14 +65,14 @@ fun ListSection(
         }
 
         // カスタムFloatingAppBarを追加
-        HorizontalFloatingAppBar(
+        CustomFloatingAppMenuBar(
             navController = rememberNavController(),
             onPlay = onPlay,
             onCamera = onCamera,
             onSettings = { /* 設定画面への遷移を実装 */ },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 16.dp)
+                .padding(bottom = 32.dp)
         )
     }
 } 

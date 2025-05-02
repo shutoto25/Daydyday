@@ -2,13 +2,11 @@ package com.gmail.shu10.dev.app.feature.main
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColor
-import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,15 +16,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Favorite
-import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,43 +32,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.glance.text.Text
 import androidx.navigation.NavController
-import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.delay
 
 @Composable
-fun FloatingAppBar() {
-    val navController = rememberNavController()
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        NavHost(
-            navController = navController,
-            startDestination = "home",
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // 他の画面
-        }
-
-        HorizontalFloatingAppBar(
-            navController = navController,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 16.dp)
-        )
-    }
-}
-
-@Composable
-fun HorizontalFloatingAppBar(
+fun CustomFloatingAppMenuBar(
     navController: NavController,
+    modifier: Modifier = Modifier,
     onPlay: () -> Unit = {},
     onCamera: () -> Unit = {},
     onSettings: () -> Unit = {},
-    modifier: Modifier = Modifier
 ) {
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     var showBottomBar by remember { mutableStateOf(currentRoute != "detail") }
@@ -86,7 +55,7 @@ fun HorizontalFloatingAppBar(
             animateBottomBar = false
         } else {
             showBottomBar = true
-            delay(2000) // 2秒後にスライドイン
+            delay(500) 
             animateBottomBar = true
         }
     }
@@ -153,10 +122,6 @@ fun NavItem(
     ) {
         val transition = updateTransition(targetState = selected, label = "NavItemTransition")
 
-        val iconSize by transition.animateDp(label = "IconSize") { isSelected ->
-            if (isSelected) 28.dp else 24.dp
-        }
-
         val iconColor by transition.animateColor(label = "IconColor") { isSelected ->
             if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
         }
@@ -166,19 +131,13 @@ fun NavItem(
             contentDescription = label,
             tint = iconColor,
         )
-
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = iconColor
-        )
     }
 }
 
 @Preview
 @Composable
 private fun FloatingAppBarPreview() {
-    HorizontalFloatingAppBar(
+    CustomFloatingAppMenuBar(
         navController = rememberNavController(),
         onPlay = {},
         onCamera = {},

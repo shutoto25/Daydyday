@@ -11,11 +11,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Surface
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -33,7 +30,6 @@ import com.gmail.shu10.dev.app.feature.SharedDiaryViewModel
 import com.gmail.shu10.dev.app.feature.camera.rememberCameraLauncher
 import com.gmail.shu10.dev.app.feature.diarydetail.navigateToDiaryDetailScreen
 import com.gmail.shu10.dev.app.feature.theme.DaydydayTheme
-import com.gmail.shu10.dev.app.feature.main.section.DrawerSection
 import com.gmail.shu10.dev.app.feature.main.section.ErrorSection
 import com.gmail.shu10.dev.app.feature.main.section.ListSection
 import com.gmail.shu10.dev.app.feature.main.section.LoadingSection
@@ -111,53 +107,48 @@ private fun HomeContent(
     onReload: () -> Unit,
     onSelectDiaryEvent: (Int, Diary) -> Unit,
 ) {
-    ModalNavigationDrawer(
-        drawerState = rememberDrawerState(initialValue = DrawerValue.Closed),
-        drawerContent = { DrawerSection() }
-    ) {
-        when (uiState) {
-            // ローディング
-            is HomeUiState.Loading -> LoadingSection(Modifier.fillMaxSize())
-            // エラー
-            is HomeUiState.Error -> ErrorSection(
-                message = uiState.message,
-                onReload = { onReload },
-                modifier = Modifier.fillMaxSize()
+    when (uiState) {
+        // ローディング
+        is HomeUiState.Loading -> LoadingSection(Modifier.fillMaxSize())
+        // エラー
+        is HomeUiState.Error -> ErrorSection(
+            message = uiState.message,
+            onReload = { onReload },
+            modifier = Modifier.fillMaxSize()
+        )
+        // 通常画面
+        is HomeUiState.Success -> {
+            val context = LocalContext.current
+            val (launchCamera, cameraLauncher) = rememberCameraLauncher(
+                context = context,
+                onPhotoTaken = { photoUri -> }
             )
-            // 通常画面
-            is HomeUiState.Success -> {
-                val context = LocalContext.current
-                val (launchCamera, cameraLauncher) = rememberCameraLauncher(
-                    context = context,
-                    onPhotoTaken = { photoUri -> }
-                )
 
-                Box(modifier = Modifier.fillMaxSize()) {
-                    Column {
-                        // 天気情報エリアを追加
-                        WeatherInfoSection(
-                            weather = WeatherType.SUNNY,
-                            temperature = "22°C",
-                            location = "現在地",
-                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
-                        )
-                        ListSection(
-                            modifier = Modifier.fillMaxSize(),
-                            diaryList = uiState.diaryList,
-                            gridState = gridState,
-                            sharedTransitionScope = sharedTransitionScope,
-                            animatedVisibilityScope = animatedVisibilityScope,
-                            onDateClick = { index, diary ->
-                                onSelectDiaryEvent(index, diary)
-                                navController.navigateToDiaryDetailScreen()
-                            },
-                            onPlay = {
-                                navController.navigateToPlayBackScreen()
-                            },
-                            onCamera = {
-                            }
-                        )
-                    }
+            Box(modifier = Modifier.fillMaxSize()) {
+                Column {
+                    // 天気情報エリアを追加
+                    WeatherInfoSection(
+                        weather = WeatherType.SUNNY,
+                        temperature = "22°C",
+                        location = "現在地",
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                    )
+                    ListSection(
+                        modifier = Modifier.fillMaxSize(),
+                        diaryList = uiState.diaryList,
+                        gridState = gridState,
+                        sharedTransitionScope = sharedTransitionScope,
+                        animatedVisibilityScope = animatedVisibilityScope,
+                        onDateClick = { index, diary ->
+                            onSelectDiaryEvent(index, diary)
+                            navController.navigateToDiaryDetailScreen()
+                        },
+                        onPlay = {
+                            navController.navigateToPlayBackScreen()
+                        },
+                        onCamera = {
+                        }
+                    )
                 }
             }
         }

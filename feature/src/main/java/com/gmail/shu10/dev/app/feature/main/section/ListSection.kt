@@ -35,6 +35,9 @@ import androidx.compose.ui.unit.sp
 import com.gmail.shu10.dev.app.core.utils.DateFormatConstants
 import com.gmail.shu10.dev.app.core.utils.getToday
 import com.gmail.shu10.dev.app.domain.Diary
+import com.gmail.shu10.dev.app.feature.main.FloatingAppBar
+import com.gmail.shu10.dev.app.feature.main.HorizontalFloatingAppBar
+import androidx.navigation.compose.rememberNavController
 
 /**
  * 日記リスト
@@ -56,60 +59,38 @@ fun ListSection(
     onCamera: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Scaffold(
-        floatingActionButton = {
-            Row(
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Text(
+                text = getToday(DateFormatConstants.YYYY_MM_DD_SLASH),
+                fontSize = 24.sp,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                FloatingActionButton(
-                    onClick = { onPlay() }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = "PLAY"
-                    )
-                }
-                FloatingActionButton(
-                    onClick = { onCamera() }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "ADD"
-                    )
-                }
-            }
+                    .padding(16.dp)
+            )
+            DateGridSection(
+                diaryList = diaryList,
+                gridState = gridState,
+                sharedTransitionScope = sharedTransitionScope,
+                animatedVisibilityScope = animatedVisibilityScope,
+                onDateClick = onDateClick,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp)
+            )
         }
-    ) { innerPadding ->
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(innerPadding)
-        ) {
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Text(
-                    text = getToday(DateFormatConstants.YYYY_MM_DD_SLASH),
-                    fontSize = 24.sp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                )
-                DateGridSection(
-                    diaryList = diaryList,
-                    gridState = gridState,
-                    sharedTransitionScope = sharedTransitionScope,
-                    animatedVisibilityScope = animatedVisibilityScope,
-                    onDateClick = onDateClick,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 20.dp)
-                )
-            }
-        }
+
+        // カスタムFloatingAppBarを追加
+        HorizontalFloatingAppBar(
+            navController = rememberNavController(),
+            onPlay = onPlay,
+            onCamera = onCamera,
+            onSettings = { /* 設定画面への遷移を実装 */ },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 16.dp)
+        )
     }
 } 

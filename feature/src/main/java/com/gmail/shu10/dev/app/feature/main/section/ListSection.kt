@@ -3,7 +3,6 @@ package com.gmail.shu10.dev.app.feature.main.section
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,8 +33,6 @@ fun ListSection(
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
     onDateClick: (Int, Diary) -> Unit,
-    onPlay: () -> Unit,
-    onCamera: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(

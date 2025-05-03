@@ -119,19 +119,20 @@ fun DetailContent(
                         coroutineScope.launch {
                             // 現在表示されているアイテムの範囲を取得
                             val visibleItems = gridState.layoutInfo.visibleItemsInfo
-                            val firstVisible = visibleItems.firstOrNull()?.index ?: 0
-                            val lastVisible = visibleItems.lastOrNull()?.index ?: 0
+                            if (visibleItems.isEmpty()) return@launch
+
+                            val firstVisible = visibleItems.first().index
+                            val lastVisible = visibleItems.last().index
 
                             // ターゲットページが現在表示されている範囲外の場合のみスクロール
                             if (page < firstVisible || page > lastVisible) {
                                 // 必要最小限のスクロールを行う
                                 val scrollToPosition = when {
                                     page < firstVisible -> page
-                                    else -> page - visibleItems.size + 1 // 表示領域の末尾にくるように
+                                    else -> maxOf(0, page - visibleItems.size + 1)
                                 }
-                                gridState.scrollToItem(scrollToPosition)
+                                gridState.animateScrollToItem(scrollToPosition)
                             }
-                            // 表示範囲内の場合はスクロールしない
                         }
                     }
             }

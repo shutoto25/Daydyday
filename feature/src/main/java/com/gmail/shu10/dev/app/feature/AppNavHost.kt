@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -19,7 +18,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavBackStackEntry
@@ -34,7 +32,6 @@ import com.gmail.shu10.dev.app.feature.main.CustomFloatingAppMenuBar
 import com.gmail.shu10.dev.app.feature.main.HomeScreen
 import com.gmail.shu10.dev.app.feature.main.HomeScreenRoute
 import com.gmail.shu10.dev.app.feature.playback.PlayBackRoute
-import com.gmail.shu10.dev.app.feature.playback.PlayBackScreenRoute
 import com.gmail.shu10.dev.app.feature.setting.SettingScreen
 import com.gmail.shu10.dev.app.feature.videoeditor.VideoEditorRoute
 import com.gmail.shu10.dev.app.feature.videoeditor.VideoEditorScreenRoute
@@ -87,7 +84,8 @@ fun AppNavHost(
                         HorizontalPager(
                             state = pagerState,
                             modifier = Modifier.fillMaxSize(),
-                            pageSpacing = 0.dp
+                            pageSpacing = 16.dp,
+                            key = { it }
                         ) { page ->
                             when (page) {
                                 0 -> HomeScreen(
@@ -161,8 +159,6 @@ fun AppNavHost(
                         getDiaryFromNavBackStackEntry(navBackStackEntry)
                     )
                 }
-                // 再生画面
-                composable(PlayBackScreenRoute) { PlayBackRoute(navController) }
             }
         }
     }

@@ -35,15 +35,7 @@ import com.gmail.shu10.dev.app.feature.main.section.ListSection
 import com.gmail.shu10.dev.app.feature.main.section.LoadingSection
 import com.gmail.shu10.dev.app.feature.main.section.WeatherInfoSection
 import com.gmail.shu10.dev.app.feature.main.section.WeatherType
-import com.gmail.shu10.dev.app.feature.playback.navigateToPlayBackScreen
 
-/*
-　画面構成方針
-　Screen：画面 viewmodelのアクセスはここのみ
-　Content：スクリーン直下
-　Section：画面幅いっぱいの要素
-　Component：セクションより小さな要素
- */
 /**
  * ホーム画面のUI状態
  */
@@ -145,11 +137,6 @@ private fun HomeContent(
                     onDateClick = { index, diary ->
                         onSelectDiaryEvent(index, diary)
                         navController.navigateToDiaryDetailScreen()
-                    },
-                    onPlay = {
-                        navController.navigateToPlayBackScreen()
-                    },
-                    onCamera = {
                     }
                 )
             }
@@ -191,8 +178,6 @@ private fun HomeScreenSuccessPreview() {
                         sharedTransitionScope = this@SharedTransitionLayout,
                         animatedVisibilityScope = this,
                         onDateClick = { _, _ -> },
-                        onPlay = {},
-                        onCamera = {}
                     )
                 }
             }

@@ -15,7 +15,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,12 +31,13 @@ import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.gmail.shu10.dev.app.core.utils.DateFormatConstants
 import com.gmail.shu10.dev.app.core.utils.getDay
 import com.gmail.shu10.dev.app.core.utils.getMonth
 import com.gmail.shu10.dev.app.core.utils.getMonthName
 import com.gmail.shu10.dev.app.core.utils.getYear
 import com.gmail.shu10.dev.app.domain.Diary
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * 日付アイテム
@@ -44,6 +49,7 @@ import com.gmail.shu10.dev.app.domain.Diary
 fun DateGridItemComponent(
     diary: Diary,
     modifier: Modifier = Modifier,
+    context: Context = LocalContext.current,
     onClickItem: () -> Unit
 ) {
     Box(
@@ -56,13 +62,27 @@ fun DateGridItemComponent(
         contentAlignment = Alignment.Center
     ) {
         if (diary.videoPath != null) {
-            val context = LocalContext.current
-            val thumbnail = remember { getVideoThumbnail(context, diary.videoPath!!.toUri()) }
+            var thumbnail by remember { mutableStateOf<Bitmap?>(null) }
+            
+            LaunchedEffect(diary.videoPath) {
+                thumbnail = withContext(Dispatchers.IO) {
+                    getVideoThumbnail(context, diary.videoPath!!.toUri())
+                }
+            }
+
             thumbnail?.let {
                 Image(
                     bitmap = it.asImageBitmap(),
                     contentDescription = "Diary's video",
+                    modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
+                )
+            } ?: run {
+                // サムネイル生成中または失敗時の表示
+                Text(
+                    text = "動画",
+                    modifier = Modifier.padding(8.dp),
+                    fontSize = 16.sp
                 )
             }
         } else if (diary.photoPath != null) {
@@ -87,16 +107,24 @@ fun DateGridItemComponent(
     }
 }
 
-private fun getVideoThumbnail(context: Context, videoUri: Uri): Bitmap? {
-    val retriever = MediaMetadataRetriever()
-    return try {
-        retriever.setDataSource(context, videoUri)
-        retriever.getFrameAtTime(0) // 1秒目のフレームを取得
-    } catch (e: Exception) {
-        e.printStackTrace()
-        null
-    } finally {
-        retriever.release()
+/**
+ * 動画のサムネイルを取得する
+ * @param context Context
+ * @param videoUri 動画のURI
+ * @return サムネイル画像
+ */
+private suspend fun getVideoThumbnail(context: Context, videoUri: Uri): Bitmap? {
+    return withContext(Dispatchers.IO) {
+        val retriever = MediaMetadataRetriever()
+        try {
+            retriever.setDataSource(context, videoUri)
+            retriever.getFrameAtTime(0) // 1秒目のフレームを取得
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        } finally {
+            retriever.release()
+        }
     }
 }
 

@@ -35,7 +35,7 @@ import com.gmail.shu10.dev.app.feature.main.HomeScreen
 import com.gmail.shu10.dev.app.feature.playback.PlayBackRoute
 import com.gmail.shu10.dev.app.feature.setting.SettingScreen
 import com.gmail.shu10.dev.app.feature.videoeditor.VIDEO_EDITOR_SCREEN_ROUTE
-import com.gmail.shu10.dev.app.feature.videoeditor.VideoEditorRoute
+import com.gmail.shu10.dev.app.feature.videoeditor.VideoEditorScreen
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
@@ -155,7 +155,7 @@ fun AppNavHost(
                 }
                 // 動画編集画面
                 composable(VIDEO_EDITOR_SCREEN_ROUTE) { navBackStackEntry ->
-                    VideoEditorRoute(
+                    VideoEditorScreen(
                         navController,
                         getDiaryFromNavBackStackEntry(navBackStackEntry)
                     )

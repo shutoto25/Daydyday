@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,8 +20,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -63,7 +60,7 @@ import kotlinx.serialization.json.Json
  * @param viewModel VideoEditorViewModel
  */
 @Composable
-fun VideoEditorRoute(
+fun VideoEditorScreen(
     navHostController: NavHostController,
     diary: Diary,
     viewModel: VideoEditorViewModel = hiltViewModel()
@@ -76,9 +73,8 @@ fun VideoEditorRoute(
     // 動画再生位置
     var position by remember { mutableLongStateOf(0L) }
 
-    ViewEditScreen(
+    ViewEditContent(
         context = context,
-        viewModel = viewModel,
         exoPlayer = exoPlayer,
         videoUri = diary.videoPath?.toUri(),
         thumbnails = thumbnails,
@@ -87,25 +83,6 @@ fun VideoEditorRoute(
         onPreview = { /* プレビュー */ },
         onTrim = {
             diary.videoPath?.toUri()?.let {
-//                viewModel.trimVideo(
-//                    context = context,
-//                    inputUri = it,
-//                    outputFile = viewModel.targetFile(context, diary.date),
-//                    startMs = position,
-//                    onSuccess = {
-//                        // トリミング成功
-//                        Log.d("TEST", "ViewEditScreenContent() called trim success")
-//                        val saveData =
-//                            diary.copy(trimmedVideoPath = viewModel.targetFile(context, diary.date).toContentUri(context).toString())
-//                        val json = Json.encodeToString(saveData)
-//                        navHostController.previousBackStackEntry?.savedStateHandle?.set("updateDiaryWithTrimmedVideo", json)
-//                        navHostController.popBackStack()
-//                    },
-//                    onError = {
-//                        // トリミング失敗
-//                        Log.d("TEST", "ViewEditScreenContent() called trim error")
-//                    }
-//                )
                 viewModel.startReEncoding(
                     context,
                     it,
@@ -115,9 +92,15 @@ fun VideoEditorRoute(
                         // トリミング成功
                         Log.d("TEST", "ViewEditScreenContent() called trim success")
                         val saveData =
-                            diary.copy(trimmedVideoPath = viewModel.targetFile(context, diary.date).toContentUri(context).toString())
+                            diary.copy(
+                                trimmedVideoPath = viewModel.targetFile(context, diary.date)
+                                    .toContentUri(context).toString()
+                            )
                         val json = Json.encodeToString(saveData)
-                        navHostController.previousBackStackEntry?.savedStateHandle?.set("updateDiaryWithTrimmedVideo", json)
+                        navHostController.previousBackStackEntry?.savedStateHandle?.set(
+                            "updateDiaryWithTrimmedVideo",
+                            json
+                        )
                         navHostController.popBackStack()
                     },
                     onError = {
@@ -134,9 +117,8 @@ fun VideoEditorRoute(
  * 動画編集画面コンテンツ
  */
 @Composable
-fun ViewEditScreen(
+fun ViewEditContent(
     context: Context,
-    viewModel: VideoEditorViewModel,
     exoPlayer: ExoPlayer,
     videoUri: Uri?,
     thumbnails: List<Bitmap>,
@@ -144,16 +126,19 @@ fun ViewEditScreen(
     position: Long,
     onPreview: () -> Unit,
     onTrim: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column {
-        VideoPlayer(
+        VideoPlayerSection(
             context = context,
             startPositionMs = position,
             exoPlayer = exoPlayer,
             uri = videoUri
         )
-        ThumbnailTimeline(thumbnails = thumbnails) { startMs -> onTimeline(startMs) }
-        VideoControlButtons(
+        ThumbnailTimelineSection(
+            thumbnails = thumbnails,
+            onTrimRangeChanged = { startMs -> onTimeline(startMs) })
+        VideoControlButtonsComponent(
             onPreview = { onPreview() },
             onTrim = { onTrim() }
         )
@@ -167,11 +152,12 @@ fun ViewEditScreen(
  * @param uri 動画URI
  */
 @Composable
-fun VideoPlayer(
+fun VideoPlayerSection(
     context: Context,
     startPositionMs: Long,
     exoPlayer: ExoPlayer,
     uri: Uri?,
+    modifier: Modifier = Modifier
 ) {
     uri?.let {
         DisposableEffect(Unit) {
@@ -201,9 +187,10 @@ fun VideoPlayer(
  * @param thumbnails サムネイルリスト
  */
 @Composable
-fun ThumbnailTimeline(
+fun ThumbnailTimelineSection(
     thumbnails: List<Bitmap>,
     onTrimRangeChanged: (startMs: Long) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var offset by remember { mutableStateOf(0.dp) }
     val listState = rememberLazyListState()
@@ -224,10 +211,10 @@ fun ThumbnailTimeline(
             contentPadding = PaddingValues(start = offset, end = offset)
         ) {
             items(thumbnails) { thumbnail ->
-                ThumbnailItem(bitmap = thumbnail, height = timelineHeight)
+                ThumbnailItemComponent(bitmap = thumbnail, height = timelineHeight)
             }
         }
-        TrimIndicator(
+        TrimIndicatorComponent(
             modifier = Modifier
                 .align(Alignment.Center)
                 .height(timelineHeight)
@@ -259,7 +246,7 @@ fun ThumbnailTimeline(
  * @param height 高さ
  */
 @Composable
-fun ThumbnailItem(bitmap: Bitmap, height: Dp) {
+fun ThumbnailItemComponent(bitmap: Bitmap, height: Dp, modifier: Modifier = Modifier) {
     Image(
         bitmap = bitmap.asImageBitmap(),
         contentDescription = "Thumbnail",
@@ -273,7 +260,7 @@ fun ThumbnailItem(bitmap: Bitmap, height: Dp) {
  * @param modifier Modifier
  */
 @Composable
-fun TrimIndicator(modifier: Modifier) {
+fun TrimIndicatorComponent(modifier: Modifier = Modifier) {
     Box(modifier = modifier.border(2.dp, Color.Yellow))
 }
 
@@ -298,9 +285,10 @@ fun calculateTrimWidth(thumbnail: Bitmap, targetHeight: Dp): Dp {
  * @param onTrim トリミングボタンクリック時のコールバック
  */
 @Composable
-fun VideoControlButtons(
+fun VideoControlButtonsComponent(
     onPreview: () -> Unit,
     onTrim: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -315,18 +303,5 @@ fun VideoControlButtons(
             onClick = onTrim,
             colors = ButtonDefaults.buttonColors(containerColor = Color.Yellow)
         ) { Text("Trim") }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun VideoEditScreenPreview() {
-    DaydydayTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-//            VideoEditorScreen(rememberNavController())
-        }
     }
 }

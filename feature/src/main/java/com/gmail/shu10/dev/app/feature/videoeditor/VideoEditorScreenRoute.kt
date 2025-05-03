@@ -9,5 +9,6 @@ const val VIDEO_EDITOR_SCREEN_ROUTE = "videoEditor/{diaryJson}"
 
 fun NavController.navigateToVideoEditorScreen(diary: Diary) {
     val json = Json.encodeToString(Diary.serializer(), diary)
-    navigate("videoEditor/${Uri.encode(json)}")
+    navigate(VIDEO_EDITOR_SCREEN_ROUTE.replace("{diaryJson}", Uri.encode(json)))
 }
+

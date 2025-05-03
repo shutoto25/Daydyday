@@ -24,27 +24,31 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.gmail.shu10.dev.app.feature.videoeditor.component.ThumbnailItemComponent
 import com.gmail.shu10.dev.app.feature.videoeditor.component.TrimIndicatorComponent
+import com.google.common.collect.ImmutableList
 
 /**
  * サムネイルタイムライン
  * @param thumbnails サムネイルリスト
+ * @param onTrimRangeChanged トリム範囲変更時のコールバック
+ * @param modifier Modifier
  */
 @Composable
 fun ThumbnailTimelineSection(
-    thumbnails: List<Bitmap>,
+    thumbnails: ImmutableList<Bitmap>,
     onTrimRangeChanged: (startMs: Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    if (thumbnails.isEmpty()) return
+
     var offset by remember { mutableStateOf(0.dp) }
     val listState = rememberLazyListState()
     val density = LocalDensity.current
     val timelineHeight = 100.dp
     val thumbnailWidth = calculateTrimWidth(thumbnails[0], timelineHeight)
     val trimWidth = thumbnailWidth * 2 // 1秒分
+
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .onSizeChanged { size ->
+        modifier = modifier.onSizeChanged { size ->
                 offset = with(density) { (size.width).toDp() / 2 - thumbnailWidth }
             }
     ) {
@@ -87,6 +91,7 @@ fun ThumbnailTimelineSection(
  * サムネイル高さからクロップ幅を計算
  * @param thumbnail サムネイル画像
  * @param targetHeight ターゲット高さ
+ * @return クロップ幅
  */
 @Composable
 private fun calculateTrimWidth(thumbnail: Bitmap, targetHeight: Dp): Dp {

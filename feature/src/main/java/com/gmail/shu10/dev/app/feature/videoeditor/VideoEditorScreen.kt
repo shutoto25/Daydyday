@@ -1,17 +1,20 @@
 package com.gmail.shu10.dev.app.feature.videoeditor
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.exoplayer.ExoPlayer
@@ -21,6 +24,7 @@ import com.gmail.shu10.dev.app.feature.utils.toContentUri
 import com.gmail.shu10.dev.app.feature.videoeditor.section.VideoControlButtonsSection
 import com.gmail.shu10.dev.app.feature.videoeditor.section.ThumbnailTimelineSection
 import com.gmail.shu10.dev.app.feature.videoeditor.section.VideoPlayerSection
+import com.google.common.collect.ImmutableList
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -34,22 +38,25 @@ import kotlinx.serialization.json.Json
 fun VideoEditorScreen(
     navHostController: NavHostController,
     diary: Diary,
+    modifier: Modifier = Modifier,
     viewModel: VideoEditorViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    // 動画再生プレイヤー
-    val exoPlayer = remember { ExoPlayer.Builder(context).build() }
-    // サムネイルリスト
-    val thumbnails = remember { viewModel.extractThumbnails(context, diary.videoPath?.toUri()) }
-    // 動画再生位置
-    var position by remember { mutableLongStateOf(0L) }
+    val thumbnails by viewModel.thumbnails.collectAsState()
+    val position by viewModel.position.collectAsState()
+
+    // ExoPlayerの初期化
+    LaunchedEffect(Unit) {
+        viewModel.initializePlayer(context)
+        viewModel.extractThumbnails(context, diary.videoPath?.toUri())
+    }
 
     ViewEditContent(
-        context = context,
-        exoPlayer = exoPlayer,
+        modifier = modifier,
+        exoPlayer = viewModel.exoPlayer,
         videoUri = diary.videoPath?.toUri(),
         thumbnails = thumbnails,
-        onTimeline = { startMs -> position = startMs },
+        onTimeline = { startMs -> viewModel.updatePosition(startMs) },
         position = position,
         onPreview = { /* プレビュー */ },
         onTrim = {
@@ -89,30 +96,33 @@ fun VideoEditorScreen(
  */
 @Composable
 private fun ViewEditContent(
-    context: Context,
-    exoPlayer: ExoPlayer,
+    exoPlayer: ExoPlayer?,
     videoUri: Uri?,
-    thumbnails: List<Bitmap>,
+    thumbnails: ImmutableList<Bitmap>,
     onTimeline: (Long) -> Unit,
     position: Long,
     onPreview: () -> Unit,
     onTrim: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column {
+    Column(modifier = modifier) {
         VideoPlayerSection(
-            context = context,
             startPositionMs = position,
             exoPlayer = exoPlayer,
-            uri = videoUri
+            uri = videoUri,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(400.dp)
         )
         ThumbnailTimelineSection(
             thumbnails = thumbnails,
-            onTrimRangeChanged = { startMs -> onTimeline(startMs) }
+            onTrimRangeChanged = { startMs -> onTimeline(startMs) },
+            modifier = Modifier.fillMaxWidth()
         )
         VideoControlButtonsSection(
             onPreview = { onPreview() },
-            onTrim = { onTrim() }
+            onTrim = { onTrim() },
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
         )
     }
 }

@@ -156,8 +156,9 @@ fun AppNavHost(
                 // 動画編集画面
                 composable(VIDEO_EDITOR_SCREEN_ROUTE) { navBackStackEntry ->
                     VideoEditorScreen(
-                        navController,
-                        getDiaryFromNavBackStackEntry(navBackStackEntry)
+                        navHostController = navController,
+                        diary = getDiaryFromNavBackStackEntry(navBackStackEntry),
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
             }

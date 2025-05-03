@@ -116,17 +116,23 @@ fun AppNavHost(
                             pagerState = pagerState,
                             onHome = {
                                 coroutineScope.launch {
-                                    pagerState.animateScrollToPage(0)
+                                    if (pagerState.currentPage != 0) {
+                                        pagerState.animateScrollToPage(0)
+                                    }
                                 }
                             },
                             onPlay = {
                                 coroutineScope.launch {
-                                    pagerState.animateScrollToPage(1)
+                                    if (pagerState.currentPage != 1) {
+                                        pagerState.animateScrollToPage(1)
+                                    }
                                 }
                             },
                             onSettings = {
                                 coroutineScope.launch {
-                                    pagerState.animateScrollToPage(2)
+                                    if (pagerState.currentPage != 2) {
+                                        pagerState.animateScrollToPage(2)
+                                    }
                                 }
                             },
                             modifier = Modifier

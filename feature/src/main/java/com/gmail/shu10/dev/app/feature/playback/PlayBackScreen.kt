@@ -53,13 +53,6 @@ fun PlayBackScreen(viewModel: PlayBackViewModel, uri: Uri?) {
     val context = LocalContext.current
     val isProcessing by viewModel.isProcessing
 
-    // 初回のみ実行するよう修正
-    LaunchedEffect(Unit) {
-        if (!isProcessing && viewModel.mergedVideoUri.value == null) {
-            viewModel.mergeVideos(context)
-        }
-    }
-
     // 処理状態に応じたUI表示
     Box(modifier = Modifier.fillMaxSize()) {
         if (isProcessing) {
@@ -78,7 +71,7 @@ fun PlayBackScreen(viewModel: PlayBackViewModel, uri: Uri?) {
             // 動画再生
             Player(context, uri)
         } else {
-            // エラー表示
+            // マージ開始ボタン表示
             Column(
                 modifier = Modifier
                     .align(Alignment.Center)
@@ -88,7 +81,7 @@ fun PlayBackScreen(viewModel: PlayBackViewModel, uri: Uri?) {
                 Text("動画の準備ができていません")
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(onClick = { viewModel.mergeVideos(context) }) {
-                    Text("再試行")
+                    Text("動画をマージする")
                 }
             }
         }

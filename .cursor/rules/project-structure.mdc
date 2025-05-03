@@ -1,0 +1,30 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# プロジェクト構成ガイド
+
+このプロジェクトはマルチモジュール構成を採用しています。
+
+## 主なディレクトリとファイルの役割
+
+- [app/](mdc:app): アプリケーションのエントリーポイントや主要な実装が含まれます。
+- [core/](mdc:core): コア機能や共通ロジックが格納されています。
+- [data/](mdc:data): データ管理やリポジトリ関連のコードが含まれます。
+- [domain/](mdc:domain): ドメイン層のビジネスロジックが配置されています。
+- [feature/](mdc:feature): 機能ごとの実装が格納されています。
+- [gradle/](mdc:gradle): Gradleビルド関連の設定ファイルが含まれます。
+- [build.gradle.kts](mdc:build.gradle.kts): プロジェクト全体のGradleビルド設定ファイルです。
+- [settings.gradle.kts](mdc:settings.gradle.kts): Gradleの設定ファイルで、サブプロジェクトの定義などを行います。
+- [README.md](mdc:README.md): プロジェクトの概要やセットアップ手順が記載されています。
+
+## モジュール依存関係
+
+- `app` モジュールは `core`、`data`、`domain`、`feature` に依存します。
+- `feature` モジュールは `domain`、`core` に依存します。
+- `data` モジュールは `domain`、`core` に依存します。
+- `domain` モジュールは `core` に依存します。
+- `core` モジュールは他のモジュールに依存しません（共通基盤）。
+
+各ディレクトリやファイルの詳細は、該当するリンク先を参照してください。

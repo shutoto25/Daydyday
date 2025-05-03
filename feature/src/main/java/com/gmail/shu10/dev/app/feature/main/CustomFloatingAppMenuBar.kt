@@ -6,6 +6,7 @@ import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,18 +15,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,6 +34,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -45,9 +46,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 sealed class TabItem(val icon: ImageVector, val label: String) {
-    object Home : TabItem(Icons.Rounded.Home, "ホーム")
-    object Play : TabItem(Icons.Rounded.PlayArrow, "再生")
-    object Settings : TabItem(Icons.Rounded.Settings, "設定")
+    object Home : TabItem(Icons.Default.Home, "ホーム")
+    object Play : TabItem(Icons.Default.PlayArrow, "再生")
+    object Settings : TabItem(Icons.Default.Settings, "設定")
 
     companion object {
         fun tabs() = listOf(Home, Play, Settings)
@@ -95,70 +96,52 @@ fun CustomFloatingAppMenuBar(
         exit = slideOutVertically(targetOffsetY = { it }),
         modifier = modifier
     ) {
-        Surface(
+        Card(
             modifier = Modifier
-                .height(64.dp)
-                .fillMaxWidth(0.85f),
-            shape = RoundedCornerShape(32.dp),
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 8.dp,
-            shadowElevation = 8.dp
+                .clip(RoundedCornerShape(24.dp))
+                .background(MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
         ) {
             Row(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TabItem.tabs().forEachIndexed { index, tab ->
-                    NavItem(
-                        icon = tab.icon,
-                        label = tab.label,
-                        selected = pagerState.currentPage == index,
-                        onClick = {
-                            coroutineScope.launch {
-                                pagerState.animateScrollToPage(index)
-                            }
-                        }
+                IconButton(
+                    onClick = { coroutineScope.launch { pagerState.animateScrollToPage(0) } },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Home,
+                        contentDescription = "ホーム",
+                        tint = if (pagerState.currentPage == 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                IconButton(
+                    onClick = { coroutineScope.launch { pagerState.animateScrollToPage(1) } },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = "再生",
+                        tint = if (pagerState.currentPage == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                IconButton(
+                    onClick = { coroutineScope.launch { pagerState.animateScrollToPage(2) } },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "設定",
+                        tint = if (pagerState.currentPage == 2) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
         }
-    }
-}
-
-@Composable
-fun NavItem(
-    icon: ImageVector,
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier
-            .clickable(onClick = onClick)
-            .padding(vertical = 8.dp, horizontal = 12.dp)
-    ) {
-        val transition = updateTransition(targetState = selected, label = "NavItemTransition")
-
-        val iconColor by transition.animateColor(label = "IconColor") { isSelected ->
-            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-        }
-
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = iconColor,
-        )
-
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = iconColor
-        )
     }
 }
 

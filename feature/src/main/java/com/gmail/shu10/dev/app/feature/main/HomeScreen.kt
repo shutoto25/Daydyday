@@ -5,7 +5,7 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -62,10 +62,11 @@ sealed class HomeUiState {
  * @param navController NavController
  * @param sharedTransitionScope SharedTransitionScope
  * @param animatedVisibilityScope AnimatedVisibilityScope
+ * @param gridState LazyGridState
  * @param navBackStackEntry NavBackStackEntry
  * @param viewModel SharedDiaryViewModel
  */
-@OptIn(ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     navController: NavHostController,
@@ -73,6 +74,7 @@ fun HomeScreen(
     animatedVisibilityScope: AnimatedVisibilityScope,
     gridState: LazyGridState,
     navBackStackEntry: NavBackStackEntry,
+    modifier: Modifier = Modifier,
     viewModel: SharedDiaryViewModel = hiltViewModel(navBackStackEntry),
 ) {
     val uiState by viewModel.homeUiState.collectAsState()
@@ -85,6 +87,7 @@ fun HomeScreen(
         uiState = uiState,
         onReload = { viewModel.syncDiaryList() },
         onSelectDiaryEvent = { index, diary -> viewModel.selectDiaryEvent(index, diary) },
+        modifier = modifier
     )
 }
 
@@ -106,6 +109,7 @@ private fun HomeContent(
     uiState: HomeUiState,
     onReload: () -> Unit,
     onSelectDiaryEvent: (Int, Diary) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     when (uiState) {
         // ローディング
@@ -124,32 +128,30 @@ private fun HomeContent(
                 onPhotoTaken = { photoUri -> }
             )
 
-            Box(modifier = Modifier.fillMaxSize()) {
-                Column {
-                    // 天気情報エリアを追加
-                    WeatherInfoSection(
-                        weather = WeatherType.SUNNY,
-                        temperature = "22°C",
-                        location = "現在地",
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
-                    )
-                    ListSection(
-                        modifier = Modifier.fillMaxSize(),
-                        diaryList = uiState.diaryList,
-                        gridState = gridState,
-                        sharedTransitionScope = sharedTransitionScope,
-                        animatedVisibilityScope = animatedVisibilityScope,
-                        onDateClick = { index, diary ->
-                            onSelectDiaryEvent(index, diary)
-                            navController.navigateToDiaryDetailScreen()
-                        },
-                        onPlay = {
-                            navController.navigateToPlayBackScreen()
-                        },
-                        onCamera = {
-                        }
-                    )
-                }
+            Column(modifier = modifier) {
+                // 天気情報エリアを追加
+                WeatherInfoSection(
+                    weather = WeatherType.SUNNY,
+                    temperature = "22°C",
+                    location = "現在地",
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                )
+                ListSection(
+                    modifier = Modifier.fillMaxSize(),
+                    diaryList = uiState.diaryList,
+                    gridState = gridState,
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedVisibilityScope = animatedVisibilityScope,
+                    onDateClick = { index, diary ->
+                        onSelectDiaryEvent(index, diary)
+                        navController.navigateToDiaryDetailScreen()
+                    },
+                    onPlay = {
+                        navController.navigateToPlayBackScreen()
+                    },
+                    onCamera = {
+                    }
+                )
             }
         }
     }

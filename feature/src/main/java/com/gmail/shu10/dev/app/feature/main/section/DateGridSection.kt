@@ -44,10 +44,13 @@ fun DateGridSection(
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            itemsIndexed(diaryList) { index, diary ->
+            itemsIndexed(
+                items = diaryList,
+                key = { _, diary -> diary.date }
+            ) { index, diary ->
                 DateGridItemComponent(
-                    diary,
-                    Modifier.sharedElement(
+                    diary = diary,
+                    modifier = Modifier.sharedElement(
                         state = rememberSharedContentState(diary.date),
                         animatedVisibilityScope = animatedVisibilityScope
                     )

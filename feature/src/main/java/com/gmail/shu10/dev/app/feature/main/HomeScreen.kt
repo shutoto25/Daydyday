@@ -71,12 +71,25 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.homeUiState.collectAsState()
 
+    // 天気情報をメモ化
+    val weatherInfo: @Composable () -> Unit = remember {
+        {
+            WeatherInfoSection(
+                weather = WeatherType.SUNNY,
+                temperature = "22°C",
+                location = "現在地",
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+            )
+        }
+    }
+
     HomeContent(
         navController = navController,
         sharedTransitionScope = sharedTransitionScope,
         animatedVisibilityScope = animatedVisibilityScope,
         gridState = gridState,
         uiState = uiState,
+        weatherInfo = weatherInfo,
         onReload = { viewModel.syncDiaryList() },
         onSelectDiaryEvent = { index, diary -> viewModel.selectDiaryEvent(index, diary) },
         modifier = modifier
@@ -99,6 +112,7 @@ private fun HomeContent(
     animatedVisibilityScope: AnimatedVisibilityScope,
     gridState: LazyGridState,
     uiState: HomeUiState,
+    weatherInfo: @Composable () -> Unit,
     onReload: () -> Unit,
     onSelectDiaryEvent: (Int, Diary) -> Unit,
     modifier: Modifier = Modifier
@@ -109,25 +123,15 @@ private fun HomeContent(
         // エラー
         is HomeUiState.Error -> ErrorSection(
             message = uiState.message,
-            onReload = { onReload },
+            onReload = { onReload() },
             modifier = Modifier.fillMaxSize()
         )
         // 通常画面
         is HomeUiState.Success -> {
-            val context = LocalContext.current
-            val (launchCamera, cameraLauncher) = rememberCameraLauncher(
-                context = context,
-                onPhotoTaken = { photoUri -> }
-            )
-
             Column(modifier = modifier) {
-                // 天気情報エリアを追加
-                WeatherInfoSection(
-                    weather = WeatherType.SUNNY,
-                    temperature = "22°C",
-                    location = "現在地",
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
-                )
+                // 天気情報エリアセクション
+                weatherInfo()
+                // リストセクション
                 ListSection(
                     modifier = Modifier.fillMaxSize(),
                     diaryList = uiState.diaryList,

@@ -5,16 +5,11 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.LazyGridState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.gmail.shu10.dev.app.core.utils.DateFormatConstants
-import com.gmail.shu10.dev.app.core.utils.getToday
 import com.gmail.shu10.dev.app.domain.Diary
 
 /**
@@ -38,13 +33,7 @@ fun ListSection(
     Column(
         modifier = modifier.fillMaxSize()
     ) {
-        Text(
-            text = getToday(DateFormatConstants.YYYY_MM_DD_SLASH),
-            fontSize = 24.sp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        )
+        // グリッドセクション
         DateGridSection(
             diaryList = diaryList,
             gridState = gridState,

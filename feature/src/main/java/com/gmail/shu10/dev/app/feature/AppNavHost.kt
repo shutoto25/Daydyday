@@ -26,19 +26,20 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.gmail.shu10.dev.app.domain.Diary
+import com.gmail.shu10.dev.app.feature.diarydetail.DIARY_DETAIL_SCREEN_ROUTE
 import com.gmail.shu10.dev.app.feature.diarydetail.DiaryDetailScreen
-import com.gmail.shu10.dev.app.feature.diarydetail.DiaryDetailScreenRoute
+import com.gmail.shu10.dev.app.feature.diarydetail.navigateToDiaryDetailScreen
 import com.gmail.shu10.dev.app.feature.main.CustomFloatingAppMenuBar
+import com.gmail.shu10.dev.app.feature.main.HOME_SCREEN_ROUTE
 import com.gmail.shu10.dev.app.feature.main.HomeScreen
-import com.gmail.shu10.dev.app.feature.main.HomeScreenRoute
 import com.gmail.shu10.dev.app.feature.playback.PlayBackRoute
 import com.gmail.shu10.dev.app.feature.setting.SettingScreen
+import com.gmail.shu10.dev.app.feature.videoeditor.VIDEO_EDITOR_SCREEN_ROUTE
 import com.gmail.shu10.dev.app.feature.videoeditor.VideoEditorRoute
-import com.gmail.shu10.dev.app.feature.videoeditor.VideoEditorScreenRoute
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
-private const val MainGraphRoute = "mainGraph"
+private const val MAIN_GRAPH_ROUTE = "mainGraph"
 
 /**
  * 画面遷移ホスト
@@ -62,7 +63,7 @@ fun AppNavHost(
         intent.value?.data?.let {
             val date = it.getQueryParameter("date")
             if (date != null) {
-                navController.navigate(DiaryDetailScreenRoute)
+                navController.navigateToDiaryDetailScreen()
             }
         }
     }
@@ -70,15 +71,15 @@ fun AppNavHost(
     SharedTransitionLayout {
         NavHost(
             navController = navController,
-            startDestination = MainGraphRoute
+            startDestination = MAIN_GRAPH_ROUTE
         ) {
-            navigation(startDestination = HomeScreenRoute, route = MainGraphRoute) {
+            navigation(startDestination = HOME_SCREEN_ROUTE, route = MAIN_GRAPH_ROUTE) {
                 // ホーム画面
-                composable(HomeScreenRoute) { navBackStackEntry ->
+                composable(HOME_SCREEN_ROUTE) { navBackStackEntry ->
                     // コンストラクタのViewModelと同じViewModelStoreOwner(Activity scope)を使って
                     // ViewModelを取得するため同じインスタンスのViewModelが取得できる
                     val parentEntry = remember(navBackStackEntry) {
-                        navController.getBackStackEntry(MainGraphRoute)
+                        navController.getBackStackEntry(MAIN_GRAPH_ROUTE)
                     }
                     Box(modifier = Modifier.fillMaxSize()) {
                         HorizontalPager(
@@ -140,9 +141,9 @@ fun AppNavHost(
                     }
                 }
                 // 日付詳細画面
-                composable(DiaryDetailScreenRoute) { navBackStackEntry ->
+                composable(DIARY_DETAIL_SCREEN_ROUTE) { navBackStackEntry ->
                     val parentEntry = remember(navBackStackEntry) {
-                        navController.getBackStackEntry(MainGraphRoute)
+                        navController.getBackStackEntry(MAIN_GRAPH_ROUTE)
                     }
                     DiaryDetailScreen(
                         navController = navController,
@@ -153,7 +154,7 @@ fun AppNavHost(
                     )
                 }
                 // 動画編集画面
-                composable(VideoEditorScreenRoute) { navBackStackEntry ->
+                composable(VIDEO_EDITOR_SCREEN_ROUTE) { navBackStackEntry ->
                     VideoEditorRoute(
                         navController,
                         getDiaryFromNavBackStackEntry(navBackStackEntry)

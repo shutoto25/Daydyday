@@ -46,7 +46,7 @@ fun PhotoComponent(
                     .placeholderMemoryCacheKey(diary.date)
                     .memoryCacheKey(diary.date)
                     .build(),
-                contentDescription = "dairy's photo",
+                contentDescription = "日記の写真",
                 modifier = Modifier
                     .fillMaxWidth()
                     .sharedElement(
@@ -56,7 +56,7 @@ fun PhotoComponent(
             )
             Icon(
                 imageVector = Icons.Default.Refresh,
-                contentDescription = "change",
+                contentDescription = "写真を変更",
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(12.dp)

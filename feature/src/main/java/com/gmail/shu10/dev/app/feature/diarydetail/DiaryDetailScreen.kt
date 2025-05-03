@@ -102,7 +102,6 @@ fun DetailContent(
     onSaveVideo: (Uri, Diary) -> Unit,
     modifier: Modifier = Modifier
 ) {
-
     when (uiState) {
         is DiaryDetailUiState.Loading -> {
             LoadingSection(Modifier.fillMaxSize())
@@ -121,14 +120,14 @@ fun DetailContent(
                             val visibleItems = gridState.layoutInfo.visibleItemsInfo
                             if (visibleItems.isEmpty()) return@launch
 
-                            val firstVisible = visibleItems.first().index
-                            val lastVisible = visibleItems.last().index
+                            val firstVisibleIndex = visibleItems.first().index
+                            val lastVisibleIndex = visibleItems.last().index
 
                             // ターゲットページが現在表示されている範囲外の場合のみスクロール
-                            if (page < firstVisible || page > lastVisible) {
+                            if (page < firstVisibleIndex || page > lastVisibleIndex) {
                                 // 必要最小限のスクロールを行う
                                 val scrollToPosition = when {
-                                    page < firstVisible -> page
+                                    page < firstVisibleIndex -> page
                                     else -> maxOf(0, page - visibleItems.size + 1)
                                 }
                                 gridState.animateScrollToItem(scrollToPosition)
@@ -144,7 +143,7 @@ fun DetailContent(
             ) { page ->
                 uiState.diaryList[page].let { diary ->
                     // メディア選択ロジック（画像・動画の選択後の処理）
-                    val phonePickerLauncher = rememberPhonePickerLauncher(
+                    val mediaPickerLauncher = rememberMediaPickerLauncher(
                         contentResolver = contentResolver,
                         onSavePhoto = { uri -> onSavePhoto(uri, diary) },
                         onSaveVideo = { uri -> onSaveVideo(uri, diary) },
@@ -158,7 +157,7 @@ fun DetailContent(
                         sharedTransitionScope = sharedTransitionScope,
                         animatedVisibilityScope = animatedVisibilityScope,
                         saveContent = {
-                            phonePickerLauncher.launch(
+                            mediaPickerLauncher.launch(
                                 PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
                             )
                         },
@@ -175,11 +174,11 @@ fun DetailContent(
 }
 
 /**
- * PhonePickerLauncherを生成するComposable
- * 内部で選択されたメディアのMIMEタイプに応じた処理をhandleMediaSelection()に委譲
+ * メディア選択ランチャーを生成するComposable
+ * 内部で選択されたメディアのMIMEタイプに応じた処理を実行
  */
 @Composable
-private fun rememberPhonePickerLauncher(
+private fun rememberMediaPickerLauncher(
     contentResolver: ContentResolver,
     onSavePhoto: (Uri) -> Unit,
     onSaveVideo: (Uri) -> Unit,

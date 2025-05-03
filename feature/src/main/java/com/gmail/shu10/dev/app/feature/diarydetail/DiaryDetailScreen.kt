@@ -79,13 +79,22 @@ fun DiaryDetailScreen(
             }
             viewModel.updateDiaryListItem((diary.copy(photoPath = newPhotoUri)))
         },
+        // TODO 一旦無理くり実装しているので後で修正したい
         onSaveVideo = { uri, diary ->
-            val file = viewModel.saveVideoToAppDir(context, uri, diary.date)
-            val newVideoUri = file?.toContentUri(context)?.let {
-                "$it?ts=${System.currentTimeMillis()}"
+            viewModel.saveThumbnails(context, uri, diary.date) { thumbnail ->
+                val file = viewModel.saveVideoToAppDir(context, uri, diary.date)
+                val newVideoUri = file?.toContentUri(context)?.let {
+                    "$it?ts=${System.currentTimeMillis()}"
+                }
+                viewModel.updateDiaryListItem(
+                    diary.copy(
+                        videoPath = newVideoUri,
+                        photoPath = thumbnail?.toContentUri(context)
+                            .toString()
+                    )
+                )
+                navController.navigateToVideoEditorScreen(diary.copy(videoPath = newVideoUri))
             }
-            viewModel.updateDiaryListItem(diary.copy(videoPath = newVideoUri))
-            navController.navigateToVideoEditorScreen(diary.copy(videoPath = newVideoUri))
         }
     )
 }

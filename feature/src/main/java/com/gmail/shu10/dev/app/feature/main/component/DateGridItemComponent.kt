@@ -61,31 +61,7 @@ fun DateGridItemComponent(
             .clickable { onClickItem() },
         contentAlignment = Alignment.Center
     ) {
-        if (diary.videoPath != null) {
-            var thumbnail by remember { mutableStateOf<Bitmap?>(null) }
-            
-            LaunchedEffect(diary.videoPath) {
-                thumbnail = withContext(Dispatchers.IO) {
-                    getVideoThumbnail(context, diary.videoPath!!.toUri())
-                }
-            }
-
-            thumbnail?.let {
-                Image(
-                    bitmap = it.asImageBitmap(),
-                    contentDescription = "Diary's video",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
-            } ?: run {
-                // サムネイル生成中または失敗時の表示
-                Text(
-                    text = "動画",
-                    modifier = Modifier.padding(8.dp),
-                    fontSize = 16.sp
-                )
-            }
-        } else if (diary.photoPath != null) {
+        if (diary.photoPath != null) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(diary.photoPath)
@@ -103,27 +79,6 @@ fun DateGridItemComponent(
                 Modifier.padding(8.dp),
                 fontSize = 16.sp
             )
-        }
-    }
-}
-
-/**
- * 動画のサムネイルを取得する
- * @param context Context
- * @param videoUri 動画のURI
- * @return サムネイル画像
- */
-private suspend fun getVideoThumbnail(context: Context, videoUri: Uri): Bitmap? {
-    return withContext(Dispatchers.IO) {
-        val retriever = MediaMetadataRetriever()
-        try {
-            retriever.setDataSource(context, videoUri)
-            retriever.getFrameAtTime(0) // 1秒目のフレームを取得
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        } finally {
-            retriever.release()
         }
     }
 }

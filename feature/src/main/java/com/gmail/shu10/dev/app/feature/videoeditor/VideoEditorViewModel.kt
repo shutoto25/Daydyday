@@ -87,7 +87,10 @@ class VideoEditorViewModel @Inject constructor() : ViewModel() {
                 val thumbnails = (0 until count).mapNotNull { i ->
                     // ミリ秒変換して、指定した時間に一番近いフレームを取得
                     val frame =
-                        retriever.getFrameAtTime(i * interval * 1000, MediaMetadataRetriever.OPTION_CLOSEST)
+                        retriever.getFrameAtTime(
+                            i * interval * 1000,
+                            MediaMetadataRetriever.OPTION_CLOSEST
+                        )
                     frame?.let {
                         cropToAspectRatio(it, videoHeight, videoWidth, rotation)
                     }

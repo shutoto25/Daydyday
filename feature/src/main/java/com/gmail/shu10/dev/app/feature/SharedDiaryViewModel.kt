@@ -1,6 +1,8 @@
 package com.gmail.shu10.dev.app.feature
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -14,11 +16,13 @@ import com.gmail.shu10.dev.app.feature.diarydetail.DiaryDetailUiState
 import com.gmail.shu10.dev.app.feature.main.FFmpegVideoProcessor
 import com.gmail.shu10.dev.app.feature.main.HomeUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -146,7 +150,6 @@ class SharedDiaryViewModel @Inject constructor(
         val imageFile = File(appDir, "$date.jpg")
 
         try {
-            // 画像を一時ファイルとして保存
             context.contentResolver.openInputStream(uri)?.use { input ->
                 imageFile.outputStream().use { output ->
                     input.copyTo(output)
@@ -164,7 +167,11 @@ class SharedDiaryViewModel @Inject constructor(
                     )
                     Log.d("SharedDiaryViewModel", "　${date}を静止画から動画へ変換した結果:$success")
                 } catch (e: Exception) {
-                    Log.e("SharedDiaryViewModel", "静止画から動画への変換中にエラーが発生しました", e)
+                    Log.e(
+                        "SharedDiaryViewModel",
+                        "静止画から動画への変換中にエラーが発生しました",
+                        e
+                    )
                 }
             }
             return imageFile
@@ -190,5 +197,51 @@ class SharedDiaryViewModel @Inject constructor(
             }
         }
         return file
+    }
+
+    /**
+     * 動画からサムネイルを取得して保存
+     */
+    fun saveThumbnails(context: Context, uri: Uri, date: String, onComplete: (File?) -> Unit) {
+        viewModelScope.launch {
+            val result = getVideoThumbnail(context, uri)?.let { bitmap ->
+                // 画像ディレクトリの作成
+                val appDir = File(context.filesDir, "images")
+                if (!appDir.exists()) appDir.mkdirs()
+
+                // 出力先の画像ファイル
+                val imageFile = File(appDir, "$date.jpg")
+
+                // ビットマップをJPEGとして保存
+                imageFile.outputStream().use { output ->
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, output)
+                }
+
+                imageFile
+            }
+
+            onComplete(result)
+        }
+    }
+
+    /**
+     * 動画からサムネイルを取得
+     * @param context Context
+     * @param videoUri 動画のURI
+     * @return サムネイル画像
+     */
+    private suspend fun getVideoThumbnail(context: Context, videoUri: Uri): Bitmap? {
+        return withContext(Dispatchers.IO) {
+            val retriever = MediaMetadataRetriever()
+            try {
+                retriever.setDataSource(context, videoUri)
+                retriever.getFrameAtTime(0) // 最初のフレームを取得
+            } catch (e: Exception) {
+                e.printStackTrace()
+                null
+            } finally {
+                retriever.release()
+            }
+        }
     }
 }

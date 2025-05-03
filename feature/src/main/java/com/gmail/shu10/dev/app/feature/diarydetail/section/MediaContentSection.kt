@@ -43,6 +43,17 @@ fun MediaContentSection(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         when {
+            diary.videoPath != null  -> {
+                val videoUri = diary.videoPath?.toUri()
+
+                VideoPreviewComponent(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp)),
+                    uri = videoUri!!
+                )
+            }
+
             diary.photoPath != null -> {
                 PhotoComponent(
                     modifier = Modifier
@@ -52,18 +63,6 @@ fun MediaContentSection(
                     sharedTransitionScope = sharedTransitionScope,
                     animatedVisibilityScope = animatedVisibilityScope,
                     onClickChange = saveContent
-                )
-            }
-
-            diary.videoPath != null || diary.trimmedVideoPath != null -> {
-                // 動画パスまたはトリミング済み動画パスがある場合
-                val videoUri = diary.trimmedVideoPath?.toUri() ?: diary.videoPath?.toUri()
-
-                VideoPreviewComponent(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp)),
-                    uri = videoUri!!
                 )
             }
 

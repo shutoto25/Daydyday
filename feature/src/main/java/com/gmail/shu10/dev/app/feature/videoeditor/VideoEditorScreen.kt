@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -20,13 +19,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.navigation.NavHostController
 import com.gmail.shu10.dev.app.domain.Diary
-import com.gmail.shu10.dev.app.feature.utils.toContentUri
 import com.gmail.shu10.dev.app.feature.videoeditor.section.VideoControlButtonsSection
 import com.gmail.shu10.dev.app.feature.videoeditor.section.ThumbnailTimelineSection
 import com.gmail.shu10.dev.app.feature.videoeditor.section.VideoPlayerSection
 import com.google.common.collect.ImmutableList
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
 /**
  * 動画編集画面
@@ -69,16 +65,6 @@ fun VideoEditorScreen(
                     onSuccess = {
                         // トリミング成功
                         Log.d("TEST", "ViewEditScreenContent() called trim success")
-                        val saveData =
-                            diary.copy(
-                                trimmedVideoPath = viewModel.targetFile(context, diary.date)
-                                    .toContentUri(context).toString()
-                            )
-                        val json = Json.encodeToString(saveData)
-                        navHostController.previousBackStackEntry?.savedStateHandle?.set(
-                            "updateDiaryWithTrimmedVideo",
-                            json
-                        )
                         navHostController.popBackStack()
                     },
                     onError = {

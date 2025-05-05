@@ -50,8 +50,8 @@ fun DateGridSection(
             ) { index, diary ->
                 DateGridItemComponent(
                     diary = diary,
-                    modifier = Modifier.sharedElement(
-                        state = rememberSharedContentState(diary.date),
+                    modifier = Modifier.sharedBounds(
+                        sharedContentState = rememberSharedContentState(diary.date),
                         animatedVisibilityScope = animatedVisibilityScope
                     )
                 ) { onDateClick(index, diary) }

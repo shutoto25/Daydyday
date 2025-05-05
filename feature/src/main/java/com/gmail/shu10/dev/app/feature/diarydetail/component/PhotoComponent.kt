@@ -49,8 +49,8 @@ fun PhotoComponent(
                 contentDescription = "日記の写真",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .sharedElement(
-                        state = rememberSharedContentState(diary.date),
+                    .sharedBounds(
+                        sharedContentState = rememberSharedContentState(diary.date),
                         animatedVisibilityScope = animatedVisibilityScope
                     ),
             )

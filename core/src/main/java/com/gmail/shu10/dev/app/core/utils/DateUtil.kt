@@ -3,11 +3,19 @@ package com.gmail.shu10.dev.app.core.utils
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+/**
+ * 日付フォーマット定数
+ */
 object DateFormatConstants {
     const val YYYY_MM_DD_SLASH = "yyyy/MM/dd"
     const val YYYY_MM_DD_HYPHEN = "yyyy-MM-dd"
 }
 
+/**
+ * 今日の日付を指定されたフォーマットで取得
+ * @param pattern 日付フォーマットパターン
+ * @return フォーマットされた日付文字列
+ */
 fun getToday(pattern: String): String {
     val date = LocalDate.now()
     val formatter = DateTimeFormatter.ofPattern(pattern)
@@ -38,7 +46,7 @@ fun getDayOfWeek(date: String): String {
 }
 
 /**
- * 日付から月を取得
+ * 日付から年を取得
  * @param date 日付（yyyy-MM-dd）
  * @return 年
  */

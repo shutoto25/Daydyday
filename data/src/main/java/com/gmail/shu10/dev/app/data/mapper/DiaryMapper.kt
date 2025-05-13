@@ -4,7 +4,8 @@ import com.gmail.shu10.dev.app.data.database.DiaryEntity
 import com.gmail.shu10.dev.app.domain.Diary
 
 /**
- * entity -> domain
+ * DiaryEntityをDiaryドメインモデルに変換
+ * @return 変換されたDiaryドメインモデル
  */
 fun DiaryEntity.toDomain(): Diary {
     return Diary(
@@ -21,7 +22,8 @@ fun DiaryEntity.toDomain(): Diary {
 }
 
 /**
- * domain -> entity
+ * DiaryドメインモデルをDiaryEntityに変換
+ * @return 変換されたDiaryEntity
  */
 fun Diary.toEntity(): DiaryEntity {
     return DiaryEntity(

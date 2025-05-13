@@ -5,8 +5,8 @@ import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 
 /**
- * 権限があるかどうか
- * @param context Context
+ * 権限があるかどうかをチェック
+ * @param context コンテキスト
  * @param permission 権限チェックをしたいパーミッション名
  * @return 権限がある場合はtrue
  */

@@ -5,7 +5,8 @@ import android.app.NotificationManager
 import com.gmail.shu10.dev.app.core.constants.NotificationConstant.DEFAULT_MY_CHANNEL_ID
 
 /**
- * デフォルトチャンネル作成
+ * デフォルト通知チャンネルを作成
+ * @return 作成された通知チャンネル
  */
 fun createDefaultChannel(): NotificationChannel {
     // 通知チャンネルの作成

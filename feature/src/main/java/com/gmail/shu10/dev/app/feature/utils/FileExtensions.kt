@@ -6,7 +6,9 @@ import androidx.core.content.FileProvider
 import java.io.File
 
 /**
- * file -> fileProviderを利用したcontentのuri
+ * FileをFileProviderを利用したContent URIに変換
+ * @param context コンテキスト
+ * @return Content URI
  */
 fun File.toContentUri(context: Context): Uri {
     return FileProvider.getUriForFile(

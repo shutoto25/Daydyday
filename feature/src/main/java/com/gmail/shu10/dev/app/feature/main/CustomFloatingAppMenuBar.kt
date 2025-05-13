@@ -45,16 +45,46 @@ import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+/**
+ * タブアイテムを表すシールドクラス
+ * @property icon タブのアイコン
+ * @property label タブのラベル
+ */
 sealed class TabItem(val icon: ImageVector, val label: String) {
+    /**
+     * ホームタブ
+     */
     object Home : TabItem(Icons.Default.Home, "ホーム")
+
+    /**
+     * 再生タブ
+     */
     object Play : TabItem(Icons.Default.PlayArrow, "再生")
+
+    /**
+     * 設定タブ
+     */
     object Settings : TabItem(Icons.Default.Settings, "設定")
 
     companion object {
+        /**
+         * 全タブのリストを取得
+         * @return タブのリスト
+         */
         fun tabs() = listOf(Home, Play, Settings)
     }
 }
 
+/**
+ * カスタムフローティングアプリメニューバー
+ * 画面下部に表示されるナビゲーションメニュー
+ * @param navController ナビゲーションコントローラー
+ * @param pagerState ページャーの状態
+ * @param modifier モディファイア
+ * @param onHome ホームタブが選択された時のコールバック
+ * @param onPlay 再生タブが選択された時のコールバック
+ * @param onSettings 設定タブが選択された時のコールバック
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CustomFloatingAppMenuBar(

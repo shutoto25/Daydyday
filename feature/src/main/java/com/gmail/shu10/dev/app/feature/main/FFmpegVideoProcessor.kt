@@ -14,6 +14,7 @@ import kotlin.coroutines.resume
 
 /**
  * FFmpegを利用した動画処理ユーティリティクラス
+ * 動画のトリミングや編集などの処理を行う
  */
 class FFmpegVideoProcessor {
 

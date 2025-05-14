@@ -105,8 +105,10 @@ dagger-hilt-android = { module = "com.google.dagger:hilt-android", version.ref =
 dagger-hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "dagger-hilt" }
 maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "mapsCompose" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
-firebase-analytics-ktx = { module = "com.google.firebase:firebase-analytics-ktx" }
-firebase-messaging-ktx = { module = "com.google.firebase:firebase-messaging-ktx" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
+firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
+
 ## ------ jetbrains ------ ##
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
 ## ------ coil ------ ##

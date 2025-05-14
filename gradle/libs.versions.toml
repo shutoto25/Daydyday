@@ -39,6 +39,7 @@ junit = "4.13.2"
 ## ------ google ------ ##
 mapsCompose = "6.4.4"
 firebase-bom = "33.9.0"
+firebase-crashlytics-plugin = "3.0.3"
 ## ------ jetbrains ------ ##
 kotlinx-serialization-json = "1.6.0"
 ## ------ coil ------ ##
@@ -62,6 +63,8 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 gms = { id = "com.google.gms.google-services", version.ref = "gms" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 dagger-hilt = { id = "com.google.dagger.hilt.android", version.ref = "dagger-hilt" }
+firebase-crashlytics-plugin = { id = "com.google.firebase.crashlytics", version.ref = "firebase-crashlytics-plugin" }
+
 ## ------ ffmpeg ------ ##
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint-plugin" }
 

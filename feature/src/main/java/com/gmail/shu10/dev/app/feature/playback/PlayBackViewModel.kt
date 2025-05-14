@@ -70,19 +70,19 @@ class PlayBackViewModel @Inject constructor() : ViewModel() {
 
                 Log.d("VideoMerge", "動画結合開始: ${videoFiles.size}ファイル")
 
-                val success = ffmpegProcessor.concatenateVideos(
-                    context,
-                    videoFiles,
-                    outputFile
-                )
+//                val success = ffmpegProcessor.concatenateVideos(
+//                    context,
+//                    videoFiles,
+//                    outputFile
+//                )
 
                 withContext(Dispatchers.Main) {
-                    if (success && outputFile.exists() && outputFile.length() > 0) {
-                        _mergedVideoUri.value = outputFile.toUri()
-                        Log.d("VideoMerge", "動画連結完了: ${outputFile.absolutePath}")
-                    } else {
-                        Log.e("VideoMerge", "動画連結に失敗しました")
-                    }
+//                    if (success && outputFile.exists() && outputFile.length() > 0) {
+//                        _mergedVideoUri.value = outputFile.toUri()
+//                        Log.d("VideoMerge", "動画連結完了: ${outputFile.absolutePath}")
+//                    } else {
+//                        Log.e("VideoMerge", "動画連結に失敗しました")
+//                    }
                     _isProcessing.value = false
                 }
             } catch (e: Exception) {

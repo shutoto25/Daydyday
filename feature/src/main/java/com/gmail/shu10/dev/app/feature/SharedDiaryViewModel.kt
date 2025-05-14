@@ -160,12 +160,12 @@ class SharedDiaryViewModel @Inject constructor(
             viewModelScope.launch {
                 try {
                     // FFmpegを使って静止画から1秒動画を生成
-                    val success = ffmpegProcessor.createVideoFromImage(
-                        context,
-                        imageFile,
-                        targetVideoFile
-                    )
-                    Log.d("SharedDiaryViewModel", "　${date}を静止画から動画へ変換した結果:$success")
+//                    val success = ffmpegProcessor.createVideoFromImage(
+//                        context,
+//                        imageFile,
+//                        targetVideoFile
+//                    )
+//                    Log.d("SharedDiaryViewModel", "　${date}を静止画から動画へ変換した結果:$success")
                 } catch (e: Exception) {
                     Log.e(
                         "SharedDiaryViewModel",

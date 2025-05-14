@@ -144,18 +144,18 @@ class VideoEditorViewModel @Inject constructor() : ViewModel() {
     ) {
         viewModelScope.launch {
             try {
-                val success = ffmpegProcessor.trimVideoToOneSecond(
-                    context,
-                    inputUri,
-                    outputFile,
-                    startMs
-                )
+//                val success = ffmpegProcessor.trimVideoToOneSecond(
+//                    context,
+//                    inputUri,
+//                    outputFile,
+//                    startMs
+//                )
 
-                if (success) {
-                    withContext(Dispatchers.Main) { onSuccess() }
-                } else {
-                    withContext(Dispatchers.Main) { onError() }
-                }
+//                if (success) {
+//                    withContext(Dispatchers.Main) { onSuccess() }
+//                } else {
+//                    withContext(Dispatchers.Main) { onError() }
+//                }
             } catch (e: Exception) {
                 e.printStackTrace()
                 withContext(Dispatchers.Main) { onError() }

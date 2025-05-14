@@ -81,7 +81,7 @@ dependencies {
     implementation(libs.coil.compose)
 
     // ----- ffmpeg ----- //
-    implementation(libs.ffmpeg.kit.min)
+//    implementation(libs.ffmpeg.kit.min)
 
     // ----- compose lint checks ----- //
     lintChecks(libs.lint.checks.compose)

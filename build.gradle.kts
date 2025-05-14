@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.dagger.hilt) apply false
     alias(libs.plugins.ktlint) apply false
     alias(libs.plugins.firebase.crashlytics.plugin) apply false
+    alias(libs.plugins.ksp) apply false
 }
 // Needed to make the Suppress annotation work for the plugins block
 true

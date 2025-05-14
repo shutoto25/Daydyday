@@ -1,10 +1,10 @@
 plugins {
     alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.dagger.hilt)
-    alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.ktlint)
+    alias(libs.plugins.compose.compiler) apply false
+    alias(libs.plugins.ksp)
     kotlin("android")
-    kotlin("kapt")
 }
 
 android {
@@ -48,7 +48,7 @@ dependencies {
     // ----- androidx ----- //
     implementation(libs.core.ktx)
     implementation(libs.runtime.livedata)
-    kapt(libs.hilt.compiler)
+    ksp(libs.hilt.compiler)
     implementation(libs.hilt.work)
     implementation(libs.work)
     implementation(libs.lifecycle.runtime.ktx)
@@ -71,7 +71,8 @@ dependencies {
 
     // ----- google ----- //
     implementation(libs.dagger.hilt.android)
-    kapt(libs.dagger.hilt.compiler)
+    ksp(libs.hilt.compiler)
+    ksp(libs.dagger.hilt.compiler)
     implementation(libs.maps.compose)
 
     // ----- jetbrains ----- //

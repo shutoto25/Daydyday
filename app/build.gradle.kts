@@ -5,9 +5,8 @@ plugins {
     alias(libs.plugins.dagger.hilt)
     alias(libs.plugins.compose.compiler) apply false
     alias(libs.plugins.firebase.crashlytics.plugin)
-    id("com.google.devtools.ksp") version "2.1.0-1.0.29" apply false // TODO ちゃんと動かん
+    alias(libs.plugins.ksp)
     kotlin("android")
-    kotlin("kapt")
 }
 
 android {
@@ -83,7 +82,7 @@ dependencies {
     // ----- google ----- //
     // hilt
     implementation(libs.dagger.hilt.android)
-    kapt(libs.dagger.hilt.compiler)
+    ksp(libs.dagger.hilt.compiler)
     // firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)

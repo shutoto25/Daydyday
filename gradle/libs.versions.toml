@@ -11,10 +11,10 @@ jvmTarget = "17"
 ## ------ android ------ ##
 agp = "8.6.1"
 ## ------ jetbrains ------ ##
-kotlin = "2.0.20"
+kotlin = "2.0.21"
 ## ------ google ------ ##
 gms = "4.4.2"
-ksp = "2.1.0-1.0.29"
+ksp = "2.0.21-1.0.27"
 dagger-hilt = "2.49"
 
 # ------ libraries version ------ #

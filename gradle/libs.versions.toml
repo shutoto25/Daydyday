@@ -116,7 +116,6 @@ firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
 ## ------ coil ------ ##
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
-## ------ ffmpeg ------ ##
 ## ------ lint checks ------ ##
 lint-checks-compose = { module = "com.slack.lint.compose:compose-lint-checks", version.ref = "lint-checks-compose" }
 

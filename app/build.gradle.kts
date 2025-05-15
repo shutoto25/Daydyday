@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.gms)
     alias(libs.plugins.dagger.hilt)
-    alias(libs.plugins.compose.compiler) apply false
+    alias(libs.plugins.compose.compiler)
     alias(libs.plugins.firebase.crashlytics.plugin)
     alias(libs.plugins.ksp)
     kotlin("android")

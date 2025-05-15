@@ -9,7 +9,6 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.exoplayer.ExoPlayer
-import com.gmail.shu10.dev.app.feature.main.FFmpegVideoProcessor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,8 +26,6 @@ import com.google.common.collect.ImmutableList
  */
 @HiltViewModel
 class VideoEditorViewModel @Inject constructor() : ViewModel() {
-
-    private val ffmpegProcessor = FFmpegVideoProcessor()
 
     // 動画再生プレイヤー
     private var _exoPlayer: ExoPlayer? = null
@@ -144,18 +141,6 @@ class VideoEditorViewModel @Inject constructor() : ViewModel() {
     ) {
         viewModelScope.launch {
             try {
-//                val success = ffmpegProcessor.trimVideoToOneSecond(
-//                    context,
-//                    inputUri,
-//                    outputFile,
-//                    startMs
-//                )
-
-//                if (success) {
-//                    withContext(Dispatchers.Main) { onSuccess() }
-//                } else {
-//                    withContext(Dispatchers.Main) { onError() }
-//                }
             } catch (e: Exception) {
                 e.printStackTrace()
                 withContext(Dispatchers.Main) { onError() }

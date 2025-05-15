@@ -13,7 +13,6 @@ import com.gmail.shu10.dev.app.domain.GetDiaryUseCase
 import com.gmail.shu10.dev.app.domain.SaveDiaryUseCase
 import com.gmail.shu10.dev.app.domain.SetConfigUseCase
 import com.gmail.shu10.dev.app.feature.diarydetail.DiaryDetailUiState
-import com.gmail.shu10.dev.app.feature.main.FFmpegVideoProcessor
 import com.gmail.shu10.dev.app.feature.main.HomeUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -46,8 +45,6 @@ class SharedDiaryViewModel @Inject constructor(
 
     private val _detailUiState = MutableStateFlow<DiaryDetailUiState>(DiaryDetailUiState.Loading)
     val detailUiState: StateFlow<DiaryDetailUiState> = _detailUiState.asStateFlow()
-
-    private val ffmpegProcessor = FFmpegVideoProcessor()
 
     init {
         // roomからflowで日記リストを取得&同期
@@ -158,15 +155,7 @@ class SharedDiaryViewModel @Inject constructor(
 
             // 非同期処理で画像から動画を生成
             viewModelScope.launch {
-                try {
-                    // FFmpegを使って静止画から1秒動画を生成
-//                    val success = ffmpegProcessor.createVideoFromImage(
-//                        context,
-//                        imageFile,
-//                        targetVideoFile
-//                    )
-//                    Log.d("SharedDiaryViewModel", "　${date}を静止画から動画へ変換した結果:$success")
-                } catch (e: Exception) {
+                try { } catch (e: Exception) {
                     Log.e(
                         "SharedDiaryViewModel",
                         "静止画から動画への変換中にエラーが発生しました",

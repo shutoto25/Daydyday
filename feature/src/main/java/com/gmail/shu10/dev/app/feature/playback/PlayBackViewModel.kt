@@ -8,7 +8,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.gmail.shu10.dev.app.feature.main.FFmpegVideoProcessor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -18,8 +17,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PlayBackViewModel @Inject constructor() : ViewModel() {
-
-    private val ffmpegProcessor = FFmpegVideoProcessor()
 
     // 結合後の動画 URI を保持する状態
     private val _mergedVideoUri = mutableStateOf<Uri?>(null)
@@ -70,19 +67,7 @@ class PlayBackViewModel @Inject constructor() : ViewModel() {
 
                 Log.d("VideoMerge", "動画結合開始: ${videoFiles.size}ファイル")
 
-//                val success = ffmpegProcessor.concatenateVideos(
-//                    context,
-//                    videoFiles,
-//                    outputFile
-//                )
-
                 withContext(Dispatchers.Main) {
-//                    if (success && outputFile.exists() && outputFile.length() > 0) {
-//                        _mergedVideoUri.value = outputFile.toUri()
-//                        Log.d("VideoMerge", "動画連結完了: ${outputFile.absolutePath}")
-//                    } else {
-//                        Log.e("VideoMerge", "動画連結に失敗しました")
-//                    }
                     _isProcessing.value = false
                 }
             } catch (e: Exception) {

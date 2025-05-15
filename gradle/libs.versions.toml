@@ -9,7 +9,7 @@ jvmTarget = "17"
 
 # ------ plugins version ------ #
 ## ------ android ------ ##
-agp = "8.6.1"
+agp = "8.8.0"
 ## ------ jetbrains ------ ##
 kotlin = "2.0.21"
 ## ------ google ------ ##

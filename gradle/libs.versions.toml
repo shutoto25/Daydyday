@@ -41,7 +41,7 @@ mapsCompose = "6.4.4"
 firebase-bom = "33.9.0"
 firebase-crashlytics-plugin = "3.0.3"
 ## ------ jetbrains ------ ##
-kotlinx-serialization-json = "1.6.0"
+kotlinx-serialization-json = "1.8.1"
 ## ------ coil ------ ##
 coil = "2.4.0"
 ## ------ ktlint ------ ##

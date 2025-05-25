@@ -19,13 +19,24 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import javax.inject.Inject
 import androidx.core.graphics.scale
+import com.gmail.shu10.dev.app.domain.CreateVideoFromImagesUseCase
+import com.gmail.shu10.dev.app.domain.MergeVideosUseCase
+import com.gmail.shu10.dev.app.domain.TrimVideoUseCase
 import com.google.common.collect.ImmutableList
 
 /**
  * 動画編集画面のViewModel
  */
 @HiltViewModel
-class VideoEditorViewModel @Inject constructor() : ViewModel() {
+class VideoEditorViewModel @Inject constructor(
+    private val trimVideoUseCase: TrimVideoUseCase,
+    private val createVideoFromImagesUseCase: CreateVideoFromImagesUseCase,
+    private val mergeVideosUseCase: MergeVideosUseCase
+) : ViewModel() {
+
+    companion object {
+        private const val TAG = "VideoEditorViewModel"
+    }
 
     // 動画再生プレイヤー
     private var _exoPlayer: ExoPlayer? = null
@@ -40,96 +51,18 @@ class VideoEditorViewModel @Inject constructor() : ViewModel() {
     private val _position = MutableStateFlow(0L)
     val position: StateFlow<Long> = _position.asStateFlow()
 
-    /**
-     * 動画からサムネイル（フレーム）を切り出す
-     * @param context context
-     * @param videoUri 動画URL
-     * @return サムネイル（フレーム画像）リスト
-     */
-    fun extractThumbnails(context: Context, videoUri: Uri?) {
-        viewModelScope.launch {
-            videoUri?.let {
-                // フレームとメタデータを取得するクラス
-                val retriever = MediaMetadataRetriever()
-                retriever.setDataSource(context, videoUri)
-
-                // 幅・高さ情報
-                val videoWidth = retriever.extractMetadata(
-                    MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH
-                )?.toIntOrNull() ?: 0
-                val videoHeight = retriever.extractMetadata(
-                    MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT
-                )?.toIntOrNull() ?: 0
-
-                // 回転情報
-                val rotation = retriever.extractMetadata(
-                    MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION
-                )?.toIntOrNull() ?: 0
-
-                // 再生時間 (ミリ秒単位) 情報
-                val durationMs = retriever.extractMetadata(
-                    MediaMetadataRetriever.METADATA_KEY_DURATION
-                )?.toLongOrNull() ?: 0L
-                Log.d(
-                    "VideoEditorViewModel",
-                    "extractThumbnails() called:" +
-                            "Width: $videoWidth, Height: $videoHeight, " +
-                            "Rotation:$rotation, DurationMs: $durationMs"
-                )
-
-                // 0.5秒単位でサムネイルを取得
-                val interval = 500L
-                val count = (durationMs / interval).toInt()
-
-                val thumbnails = (0 until count).mapNotNull { i ->
-                    // ミリ秒変換して、指定した時間に一番近いフレームを取得
-                    val frame =
-                        retriever.getFrameAtTime(
-                            i * interval * 1000,
-                            MediaMetadataRetriever.OPTION_CLOSEST
-                        )
-                    frame?.let {
-                        cropToAspectRatio(it, videoHeight, videoWidth, rotation)
-                    }
-                }.also {
-                    // MediaMetadataRetrieverのメモリリソースを解放
-                    retriever.release()
-                }
-
-                _thumbnails.value = ImmutableList.copyOf(thumbnails)
-            }
-        }
-    }
+    // 処理中フラグ
+    private val _isProcessing = MutableStateFlow(false)
+    val isProcessing: StateFlow<Boolean> = _isProcessing.asStateFlow()
 
     /**
-     * アスペクト比にクロップ
-     *
-     * 動画のメタデータに回転角度という属性が含まれている場合があり、
-     * 例えば、スマートフォンで縦長動画を撮影した際にカメラは動画を横向き（Landscape）として保存しますが、
-     * 縦長で撮影したことを示すために「回転情報 = 90度」を付与している可能性がある。
-     * その場合はwidthとheightを入れ替えて使用する必要がある。
-     *
-     * @param bitmap ビットマップ画像
-     * @param videoWidth 幅
-     * @param videoHeight 高さ
-     * @param rotation 回転情報
-     * @return 加工済みビットマップ画像
-     */
-    private fun cropToAspectRatio(
-        bitmap: Bitmap, videoWidth: Int, videoHeight: Int, rotation: Int,
-    ): Bitmap {
-        if (rotation != 0) {
-            val matrix = Matrix().apply { postRotate(rotation.toFloat()) }
-            Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-        }
-        return bitmap.scale(
-            if (rotation == 0) videoHeight else videoWidth,
-            if (rotation == 0) videoWidth else videoHeight
-        )
-    }
-
-    /**
-     * 動画をトリミングする（FFmpegを使用）
+     * 動画をトリミング（UseCase使用版）
+     * @param context Context
+     * @param inputUri 入力動画URI
+     * @param outputFile 出力ファイル
+     * @param startMs 開始時間（ミリ秒）
+     * @param onSuccess 成功コールバック
+     * @param onError エラーコールバック
      */
     fun trimVideo(
         context: Context,
@@ -141,25 +74,218 @@ class VideoEditorViewModel @Inject constructor() : ViewModel() {
     ) {
         viewModelScope.launch {
             try {
+                _isProcessing.value = true
+
+                val startTimeUs = startMs * 1000L // ミリ秒をマイクロ秒に変換
+                val durationUs = 1_000_000L // 1秒固定
+
+                val result = trimVideoUseCase(
+                    context = context,
+                    inputUri = inputUri,
+                    outputFile = outputFile,
+                    startTimeUs = startTimeUs,
+                    durationUs = durationUs
+                )
+
+                withContext(Dispatchers.Main) {
+                    _isProcessing.value = false
+                    if (result) {
+                        onSuccess()
+                    } else {
+                        onError()
+                    }
+                }
             } catch (e: Exception) {
-                e.printStackTrace()
-                withContext(Dispatchers.Main) { onError() }
+                Log.e(TAG, "動画トリミングエラー", e)
+                withContext(Dispatchers.Main) {
+                    _isProcessing.value = false
+                    onError()
+                }
             }
         }
     }
 
     /**
+     * 画像から動画を生成
+     * @param context Context
+     * @param imagePaths 画像パスリスト
+     * @param outputFile 出力ファイル
+     * @param onSuccess 成功コールバック
+     * @param onError エラーコールバック
+     */
+    fun createVideoFromImages(
+        context: Context,
+        imagePaths: List<String>,
+        outputFile: File,
+        onSuccess: () -> Unit,
+        onError: () -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                _isProcessing.value = true
+
+                val result = createVideoFromImagesUseCase(
+                    context = context,
+                    imagePaths = imagePaths,
+                    outputFile = outputFile,
+                    frameRate = 30,
+                    durationPerImageMs = 2000L
+                )
+
+                withContext(Dispatchers.Main) {
+                    _isProcessing.value = false
+                    if (result) {
+                        onSuccess()
+                    } else {
+                        onError()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "画像から動画生成エラー", e)
+                withContext(Dispatchers.Main) {
+                    _isProcessing.value = false
+                    onError()
+                }
+            }
+        }
+    }
+
+    /**
+     * 複数動画を結合
+     * @param context Context
+     * @param inputUris 入力動画URIリスト
+     * @param outputFile 出力ファイル
+     * @param onSuccess 成功コールバック
+     * @param onError エラーコールバック
+     */
+    fun mergeVideos(
+        context: Context,
+        inputUris: List<Uri>,
+        outputFile: File,
+        onSuccess: () -> Unit,
+        onError: () -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                _isProcessing.value = true
+
+                val result = mergeVideosUseCase(
+                    context = context,
+                    inputUris = inputUris,
+                    outputFile = outputFile
+                )
+
+                withContext(Dispatchers.Main) {
+                    _isProcessing.value = false
+                    if (result) {
+                        onSuccess()
+                    } else {
+                        onError()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "動画結合エラー", e)
+                withContext(Dispatchers.Main) {
+                    _isProcessing.value = false
+                    onError()
+                }
+            }
+        }
+    }
+
+    /**
+     * 動画からサムネイル（フレーム）を切り出す
+     * @param context context
+     * @param videoUri 動画URL
+     */
+    fun extractThumbnails(context: Context, videoUri: Uri?) {
+        viewModelScope.launch {
+            videoUri?.let {
+                val retriever = MediaMetadataRetriever()
+                retriever.setDataSource(context, videoUri)
+
+                val videoWidth = retriever.extractMetadata(
+                    MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH
+                )?.toIntOrNull() ?: 0
+                val videoHeight = retriever.extractMetadata(
+                    MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT
+                )?.toIntOrNull() ?: 0
+                val rotation = retriever.extractMetadata(
+                    MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION
+                )?.toIntOrNull() ?: 0
+                val durationMs = retriever.extractMetadata(
+                    MediaMetadataRetriever.METADATA_KEY_DURATION
+                )?.toLongOrNull() ?: 0L
+
+                Log.d(TAG, "動画情報 - 幅: $videoWidth, 高さ: $videoHeight, 回転: $rotation, 長さ: $durationMs ms")
+
+                val interval = 500L // 0.5秒間隔
+                val count = (durationMs / interval).toInt()
+
+                val thumbnails = (0 until count).mapNotNull { i ->
+                    val frame = retriever.getFrameAtTime(
+                        i * interval * 1000,
+                        MediaMetadataRetriever.OPTION_CLOSEST
+                    )
+                    frame?.let {
+                        cropToAspectRatio(it, videoHeight, videoWidth, rotation)
+                    }
+                }.also {
+                    retriever.release()
+                }
+
+                _thumbnails.value = ImmutableList.copyOf(thumbnails)
+            }
+        }
+    }
+
+    /**
+     * アスペクト比にクロップ
+     * @param bitmap ビットマップ画像
+     * @param videoWidth 幅
+     * @param videoHeight 高さ
+     * @param rotation 回転情報
+     * @return 加工済みビットマップ画像
+     */
+    private fun cropToAspectRatio(
+        bitmap: Bitmap,
+        videoWidth: Int,
+        videoHeight: Int,
+        rotation: Int,
+    ): Bitmap {
+        val rotatedBitmap = if (rotation != 0) {
+            val matrix = Matrix().apply { postRotate(rotation.toFloat()) }
+            Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+        } else {
+            bitmap
+        }
+
+        return rotatedBitmap.scale(
+            if (rotation == 0) videoHeight else videoWidth,
+            if (rotation == 0) videoWidth else videoHeight
+        )
+    }
+
+    /**
      * 1秒動画のための出力ファイルを取得
+     * @param context Context
+     * @param date 日付
+     * @return 出力ファイル
      */
     fun targetFile(context: Context, date: String): File {
         val appDir = File(context.filesDir, "videos/1sec")
         if (!appDir.exists()) appDir.mkdirs()
-        val targetFile = File(appDir, "$date.mp4")
-        return targetFile
+        return File(appDir, "$date.mp4")
     }
 
     /**
-     * FFmpegを使った動画トリミング
+     * 動画トリミング開始（既存メソッド名に合わせる）
+     * @param context Context
+     * @param inputUri 入力動画URI
+     * @param outputFile 出力ファイル
+     * @param startMs 開始時間（ミリ秒）
+     * @param onSuccess 成功コールバック
+     * @param onError エラーコールバック
      */
     fun startReEncoding(
         context: Context,
@@ -169,7 +295,6 @@ class VideoEditorViewModel @Inject constructor() : ViewModel() {
         onSuccess: () -> Unit,
         onError: () -> Unit,
     ) {
-        // trimVideoメソッドを再利用
         trimVideo(context, inputUri, outputFile, startMs, onSuccess, onError)
     }
 
